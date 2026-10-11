@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4] - 2026-10-12 (experimental ten-second reverse)
+- Extend the experimental range to 0.5–10 seconds at 15fps, with at most five 2-second segments for a full ten-second selection.
+- Require an exact expected encoded-frame count for every WASM segment and for the joined MP4. Reject incomplete/extra-frame output, rather than silently accepting a loose duration.
+- Show a distinct warning for selections over five seconds; preserve the Android photo-provider MEMFS workaround, separate quality presets and cancellation.
+- Pin dedicated Builder commit b67b1e2 and its SHA-256-verified expiring Actions binary; no runtime fetch.
+- Keep iPhone deferred and the original G1 not passed. Android 10s reliability and 720p/1080p-class export remain future tests.
+
 ## [0.1.3] - 2026-10-11 (experimental chunk reversal)
 - Added 0.5–5-second video-only MP4 reversal via 1–3 sequential chunks on 2-second frame boundaries, each up to 2 seconds.
 - Added public-libav MP4 joining in reverse chronological order, with timestamp and codec-parameter checks; no partial outputs are downloadable.

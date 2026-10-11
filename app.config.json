@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.1.3",
-  "description": "Experimental browser-local silent MP4 reversal up to 5 seconds, using bounded video segments and public-libav remux. Real mobile performance is unverified.",
-  "descriptionJa": "最大5秒の動画を短い区間ごとに逆再生し、MP4に結合する実験版です。スマホ実機での5秒処理は検証中です。",
+  "version": "0.1.4",
+  "description": "Experimental up-to-10-second silent reverse MP4 via bounded FFmpeg WASM chunks and exact frame-count validation; 10-second Android runtime performance is unverified.",
+  "descriptionJa": "最大10秒の動画を分割逆再生してMP4へ結合する実験版です。各区間のフレーム数を検証します。Android実機での10秒処理は未検証です。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",

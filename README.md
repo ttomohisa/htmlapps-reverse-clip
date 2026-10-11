@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.1.3 Android/Windows-first experimental chunked WASM export (full Gate G1 pending).** Reverse up to 5 seconds of silent video. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
+**Development status: v0.1.4 Android/Windows-first experimental chunked WASM export (full Gate G1 pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -15,7 +15,7 @@ Select a short portion of a video and export a reversed or forward-then-reverse 
 - Includes reproducible **native FFmpeg algorithm tests** for frame-accurate middle-clip reversal and ping-pong without a duplicated turnaround frame.
 - Preserves the `htmlapps-template` single-HTML, offline-first, CSP, bilingual, Windows build and GitHub Actions conventions.
 
-**Experimentally available:** a single 0.5–5s reversed H.264 MP4 without audio; long edge 360px and 720px at 15fps (no upscaling). **Not available:** ping-pong, reverse audio, longer clip stitching, reliably supported HEVC/MOV, and verified phone performance. G1 remains open.
+**Experimentally available:** a 0.5–10s reversed H.264 MP4 without audio; long edge 360px and 720px at 15fps (no upscaling). **Not available:** ping-pong, reverse audio, longer clip stitching, reliably supported HEVC/MOV, and verified phone performance. G1 remains open.
 
 ## Development
 
@@ -43,7 +43,7 @@ App and native test source: MIT. Embedded experimental FFmpeg/x264 WASM: GPL-2.0
 
 ## Experimental WASM build provenance
 
-v0.1.1 imports an **experimental, expiring** Builder Actions artifact at **build time only**, pinned to commit `f91efb4` and SHA-256 for the core JavaScript, WASM and BrowserFFmpeg loader. Check `reverse-runtime.lock.json`. The generated HTML includes all bytes and makes no runtime API/CDN calls. This is **not** a stable release artifact: GitHub Actions artifacts expire, so the build download will eventually stop working. **Before v1.0**, merge/review the Builder profile and replace the Actions artifact with a permanent, version-tagged GPL-compliant Builder Release with corresponding sources.
+Earlier versions imported an **experimental, expiring** Builder Actions artifact at **build time only**, initially pinned to commit `f91efb4` and SHA-256 for the core JavaScript, WASM and BrowserFFmpeg loader. Check `reverse-runtime.lock.json`. The generated HTML includes all bytes and makes no runtime API/CDN calls. This is **not** a stable release artifact: GitHub Actions artifacts expire, so the build download will eventually stop working. **Before v1.0**, merge/review the Builder profile and replace the Actions artifact with a permanent, version-tagged GPL-compliant Builder Release with corresponding sources.
 
 Normal build on Windows: set `GITHUB_TOKEN` or `GH_TOKEN` with permission to read the public Builder artifact, then run `build-standalone.bat`. Once verified runtime files are cached in `.cache/reverse-runtime`, further local builds can run offline. The GitHub Actions build sets its own scoped token; users of the generated single HTML do **not** need any token.
 
@@ -72,3 +72,11 @@ The quality presets now explicitly mean **long edge 360px or 720px**; they do no
 ### Scope decision — 2026-10-12
 
 **Android Chrome and Windows Chrome/Edge are the current development/verification priorities.** The user explicitly deferred iPhone Safari and iPhone HEVC MOV work. iOS is **unverified**, not unsupported by design and not a blocker to continued experimental Android-first development. Do not represent it as supported or treat the original cross-platform G1 as passed. Full release scope and acceptance criteria remain subject to explicit review; the temporary Builder Actions artifact and source/license obligations must be resolved before stable publication.
+
+### v0.1.4 — 10-second experimental mode
+
+The current pinned binary is Builder commit `b67b1e2f19eef802791ca733884709155f10dfb5`, Actions run `38175167646`, artifact `11715866319`. Hashes for both JS and WASM live in `reverse-runtime.lock.json`. This build adds **`--frames` for each segment** and **`--expected-frames` when joining**. The actual H.264 packets are counted with public libavformat, rejecting a failed length/rounding match. The app continues to render at fixed 15fps using a maximum of 2 seconds per segment and **long edge 360px or 720px**, not standard 1280×720 output.
+
+Independent Linux Chromium experiments (not real Android) converted 10s / 100-marked-frame input to **150 correctly reversed frames, 10.000s**, byte-for-byte repeatably, plus non-frame-aligned ranges. A simulated Android Chrome UA converted 720×1280 portrait H.264 into 404×720, 150 frames / 10.000s, on two consecutive runs with byte-identical MP4 files and a successful cancellation cleanup. **Desktop timings are not mobile benchmarks.**
+
+A 10-second selection shows an explicit experimental warning. On a phone start with long edge 360px; no automatic quality downgrade occurs. The Android 5s/long-edge720px user result was 12.7s, but **10s on Android is not yet tested**. iPhone remains deferred. Memory limits, VFR and rotated HEVC MOV remain unverified. No stable release is authorized.

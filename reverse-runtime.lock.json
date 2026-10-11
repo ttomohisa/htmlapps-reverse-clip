@@ -3,16 +3,16 @@
   "kind": "experimental-github-actions-artifact",
   "status": "temporary-not-release",
   "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-  "builderCommit": "47448852c9a69a855ccd0b6868858db271a735d4",
-  "workflowRunId": 38129319876,
-  "artifactId": 11698036987,
+  "builderCommit": "b67b1e2f19eef802791ca733884709155f10dfb5",
+  "workflowRunId": 38175167646,
+  "artifactId": 11715866319,
   "profile": "video-reverse",
   "builderVersion": "1.10.4",
   "wasmLicense": "GPL-2.0-or-later",
   "assets": {
-    "ffmpeg.js": "13e7e175f5394533dc172d43fcc5087d8d893c78e68136403e841909d0587af9",
-    "ffmpeg.wasm": "45a67df85bd876e3ffb740f442dc1ff409c9a5fc6c3c5aad06ef88c20a4b646c",
+    "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
+    "ffmpeg.wasm": "108b70f13298c13c565ec6b62f5c00091f97173fbdd4d29e7350ac5a33af3127",
     "browser-ffmpeg.js": "34c29442c74d9d178666d9788f5ba9f74bb1c56e2052dc0f94dc417ccb427d43"
   },
-  "notes": "Temporary CI artifact (experimental WASM chunk joining). No runtime downloads. Replace with permanent GPL source-complete release before publishing."
+  "notes": "Experimental 10-second frame-exact chunk WASM from expiring CI artifact. SHA-256 verified at build. No runtime external downloads. Replace with source-complete GPL release for stable publication."
 }

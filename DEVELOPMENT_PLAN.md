@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.1.3 experimental chunked reverse; user-confirmed Android 1s / 5s (long-edge 360/720px, 12.7s at 720px); Android/PC-first, iPhone deferred; original G1 remains pending  
+> **Status:** v0.1.4 experimental up-to-10s reverse; Android user-confirmed 1s / 5s (12.7s at long-edge720px); desktop 10s frame-exact; Android 10s not yet measured; iPhone deferred; original G1 pending  
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
@@ -15,6 +15,16 @@
 - **Android-first継続判断：** 上記の成功によって実験的な機能実装を続行する根拠は得られた。ただしG1の旧クロスプラットフォーム判定は**未完了**、標準720p/10秒・1080p/5秒、実機の反復・メモリ・音声などを合格済みにはしない。
 - **優先順位：** ① Androidでの再実行・キャンセル・端末メモリ・入力別エラー対策、② 最大10秒へ拡張するための境界・処理時間の検証、③ 往復再生、④ 恒久的なGPL対応ソース付きFFmpeg WASM配布、⑤ PCでの`file://`検証と日英UI／保存UX。
 - **正式リリースの条件：** iPhoneの扱いを決めるまでは「iPhone対応」と表示しない。リリース対象プラットフォームと元のG1/G2/G3受入条件の最終変更は、安定版候補のレビュー時に明確に決める。期限付きActions成果物のまま正式公開しない。
+
+
+### v0.1.4 technical experiment — 10-second reverse (Android-first)
+
+- Extend **experimental** video-only selection from 5s to 10s without enlarging the per-chunk reverse frame buffer: at 15fps, split a 10s selection into five 2s segments.
+- Apply the new dedicated Builder WASM `--frames N` and `--expected-frames N` public-libav validations. Refuse a segment or joined MP4 with unexpected encoded-frame count. In the previous binary, some non-frame-aligned ranges produced extra frames.
+- Use `long edge 360px or 720px` labels; these are *not* standard 1280×720 output dimensions. Label >5s clearly as experimental and recommend 360px first on phones without automatically downscaling.
+- Verify exact 10s/150 frames, 9.9s/149 frames, 0.1–9.87s/146 frames, cancellation and repeat runs with real WASM in Chromium. Confirm portrait input, Android-UA MEMFS staging and no runtime HTTP(S) or layout overflow.
+- Android **5s** success remains user-reported, including **12.7s** at long-edge720px. Android **10s** remains **UNTESTED**, as do native-standard 720p10s, 1080p5s, VFR/HEVC, repeated real-device memory and direct `file://`.
+- Keep Builder artifact temporary and Draft PRs unmerged. A permanent source-complete GPL release and separate stable-release acceptance decision are required. iPhone stays deferred.
 
 ## 1. 開発原則
 

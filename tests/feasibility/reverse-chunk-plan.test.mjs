@@ -49,13 +49,41 @@ test('31 frames never produce an unsupported 1-frame tail',()=>{
   assert.equal(p.segments.length,2);
   assert.deepEqual(Array.from(p.segments,s=>s.frames),[2,29]);
 });
+test('10s uses exactly five 2-second reverse-chronological segments',()=>{
+  const p=validate(0,10);
+  assert.equal(p.frameCount,150);
+  assert.equal(p.segments.length,5);
+  assert.deepEqual(Array.from(p.segments,s=>s.frames),[30,30,30,30,30]);
+  assert.equal(p.segments[0].start,8);
+});
+test('9.9s snaps to 149 encoded frames across five segments',()=>{
+  const p=validate(0,9.9);
+  assert.equal(p.frameCount,149);
+  assert.deepEqual(Array.from(p.segments,s=>s.frames),[29,30,30,30,30]);
+});
+test('non-zero starting time can reverse a ten-second window',()=>{
+  const p=validate(2.5,12.5);
+  assert.equal(p.frameCount,150);
+  assert.equal(p.segments[0].start,10.5);
+});
+test('every tenths-of-a-second duration yields contiguous safe boundaries',()=>{
+  for(let i=5;i<=100;i++){
+    const duration=i/10;
+    const p=validate(.1,.1+duration);
+    assert.ok(p.segments.length<=8);
+  }
+});
+test('app passes expected frame counts to segment and join runners',()=>{
+  assert.ok(html.includes("'--frames',String(chunk.frames)"));
+  assert.ok(html.includes("'--expected-frames',String(plan.frameCount)"));
+});
 test('non-frame aligned bounds remain contiguous after rounding',()=>{
   const p=validate(.1,4.93);
   assert.ok(p.segments.length>=2&&p.segments.length<=3);
 });
 test('minimum 0.5-second range is accepted',()=>validate(0,.5));
 test('invalid bounds are rejected',()=>{
-  for(const [a,b] of [[-.1,.9],[0,.3],[0,5.1],[NaN,1],[0,Infinity]])
+  for(const [a,b] of [[-.1,.9],[0,.3],[0,10.1],[NaN,1],[0,Infinity]])
     assert.throws(()=>plan(a,b,15),/Select 0\.5/);
 });
 

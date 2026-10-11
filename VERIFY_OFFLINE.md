@@ -23,3 +23,14 @@
 ## Release blockers
 
 The Builder WASM currently comes from an **expiring GitHub Actions artifact**, pinned in `reverse-runtime.lock.json`. Before a stable release, replace it with a permanent versioned artifact carrying the required FFmpeg/x264/Emscripten corresponding source and GPL notices. Full G1/G2 acceptance and actual mobile testing remain necessary.
+
+## v0.1.4 ten-second checks (Android / Windows focus)
+
+1. Test 0–5s again to ensure the previously working Android path remains intact.
+2. Test 0–10s first with long edge360px, then optionally long edge720px. The app displays an experimental warning beyond five seconds; there is no automatic downgrade. Record conversion time and failures, but **do not infer mobile performance from desktop simulation**.
+3. Test start=0.1s, end=9.87s; the expected video is 146 frames at 15fps / ~9.733s after frame-grid snapping. Test 0–9.9s (149 frames) and 0–0.5s (8 frames). Unexpected frame counts must fail closed rather than leave a savable output.
+4. Repeat the same 10-second conversion twice, compare output hashes where possible, cancel during the second/third segment and during join, and ensure no previous/stale/partial result is downloadable.
+5. Test replacement of input during a slow 10-second conversion, Android photo-provider source and browser Downloads source, direct `file://` on Windows, long filenames, offline access and English/Japanese UI.
+6. **iPhone Safari / HEVC MOV testing is deferred by user instruction (2026-10-12)**; do not claim it passed or request it as part of the current Android-first milestone.
+
+A separate `tests/feasibility/browser-video-smoke.py` optional suite runs real WASM on both generated HTML variants using desktop Chromium. It does not validate physical Android devices or direct file://.
