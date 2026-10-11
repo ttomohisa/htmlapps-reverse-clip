@@ -1,13 +1,24 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.1.3 experimental bounded chunk reversal; Gate G1 still pending (Android 1s user-confirmed, desktop 5s verified)  
+> **Status:** v0.1.3 experimental chunked reverse; user-confirmed Android 1s / 5s (long-edge 360/720px, 12.7s at 720px); Android/PC-first, iPhone deferred; original G1 remains pending  
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
 
+## 2026-10-12 — Android / PC優先への計画変更
+
+**ユーザーの最新指示：iPhoneは当面対象外。** この節は、以下に残る当初の「iPhone Safari必須」「iPhone未検証なら先へ進まない」といった条件よりも優先する。元の受入項目は将来の再開用として保持し、**合格済みとして扱わない**。
+
+- **現在の開発・確認対象：** Android Chrome実機、Windows Chrome/Edge、単一HTML・オフライン・CSP。日本語／英語のUIは維持する。
+- **延期：** iPhone Safari実機、iPhone撮影HEVC MOV、iOS固有の保存UX・回転・メモリ測定。iPhone向けの確認依頼もいったん行わない。
+- **実測済み（ユーザー報告）：** Androidで1秒、5秒・長辺360px、5秒・長辺720pxが成功。最後の5秒・長辺720pxは**12.7秒**。画質選択の「720px」は長辺の制限であり、**標準の1280×720（720p）とは異なる**。
+- **Android-first継続判断：** 上記の成功によって実験的な機能実装を続行する根拠は得られた。ただしG1の旧クロスプラットフォーム判定は**未完了**、標準720p/10秒・1080p/5秒、実機の反復・メモリ・音声などを合格済みにはしない。
+- **優先順位：** ① Androidでの再実行・キャンセル・端末メモリ・入力別エラー対策、② 最大10秒へ拡張するための境界・処理時間の検証、③ 往復再生、④ 恒久的なGPL対応ソース付きFFmpeg WASM配布、⑤ PCでの`file://`検証と日英UI／保存UX。
+- **正式リリースの条件：** iPhoneの扱いを決めるまでは「iPhone対応」と表示しない。リリース対象プラットフォームと元のG1/G2/G3受入条件の最終変更は、安定版候補のレビュー時に明確に決める。期限付きActions成果物のまま正式公開しない。
+
 ## 1. 開発原則
 
-1. **技術検証が先、UI完成は後。** 初期にiPhone／AndroidでMP4作成・保存を試し、成立しなければ開発を中止する。
+1. **技術検証が先、UI完成は後。** 当面Android Chrome実機とWindowsブラウザーでMP4作成・保存を検証する。iPhoneは2026-10-12の方針変更により延期し、未検証を「非対応確定」とは扱わない。
 2. すべての段階で「入力→出力」を壊さず、モバイル・日英UI・単一HTML・通信制約を後回しにしない。
 3. このアプリには「短い区間の逆再生・往復再生」以外の動画編集機能を載せない。
 4. **FFmpeg Builder本体の変更**と**Reverse Clipアプリの変更**を別々に管理する。既存プロファイルへ無理に流用しない。
@@ -42,7 +53,9 @@
 
 ## 3. Go / No-Go Gate
 
-### Gate G1 — v0.1.0完了時：**開発継続の可否**
+### Gate G1 — 当初のクロスプラットフォーム条件（未完了）
+
+> **2026-10-12更新：** この節のiPhone必須条件は延期。Android/PC向けの実験開発はAndroid実機成功を根拠に継続する。ただし旧G1を合格済みとせず、未実施のiPhoneテストは将来の受入項目として残す。
 
 **必ず試すこと**
 
@@ -333,4 +346,4 @@ Changes needed in APP_SPEC:
 
 ---
 
-**次の着手点は v0.1.0 のFFmpeg専用プロファイル＋実機技術検証。** Gate G1の結果が出るまで、v0.2.0以降は実装しない。
+**現在の次の着手点：** Android/PC向けの短時間動画の安定化・10秒への段階的拡張・往復再生・Builderの恒久配布。iPhoneは延期し、旧G1が未完了であることは維持したまま、Android-first実験版を継続する。

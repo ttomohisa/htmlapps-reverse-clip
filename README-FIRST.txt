@@ -4,5 +4,7 @@ Run the Windows template build using build-standalone.bat. First-time builds nee
 a GitHub token able to download the pinned, expiring experimental Builder artifact.
 Runtime use of the generated HTML requires no account, installation, or network fetch.
 See README.md / README.ja.md, APP_SPEC.md, DEVELOPMENT_PLAN.md and VERIFY_OFFLINE.md.
-Gate G1 remains pending: iPhone real-device / 5-second Android performance and
-permanent, GPL-compliant Builder release with corresponding sources are not complete.
+Android 5s at long-edge 720px succeeded in a user test (12.7s reported).
+Current priorities: Android, Windows, repeat-run reliability, longer clips and
+permanent GPL-compliant Builder release. iPhone validation is deferred, NOT passed.
+Original cross-platform G1 remains pending; no stable release decision yet.

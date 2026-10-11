@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.1.3 experimental chunked WASM export (Gate G1: NOT PASSED).** Reverse up to 2 seconds of video, no audio. Mobile performance and original-capture codecs remain unverified.
+**Development status: v0.1.3 Android/Windows-first experimental chunked WASM export (full Gate G1 pending).** Reverse up to 5 seconds of silent video. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -27,7 +27,7 @@ Run the algorithm baseline with Node.js 20+ and native FFmpeg installed:
 node --test tests/feasibility/native-reverse.test.mjs
 ```
 
-This optional native test is not required by the standalone app. G1 requires real iPhone Safari and Android Chrome conversion, H.264 MP4 playback/save, resource-performance evidence and direct `file://` tests; passing the desktop smoke alone is insufficient.
+This optional native test is not required by the standalone app. Android real-device export has been user-confirmed, but repeat-run memory tests, longer clips, standard 720p/1080p output and direct `file://` remain pending. The original cross-platform G1 is not complete; iPhone Safari testing is explicitly deferred.
 
 ## Privacy
 
@@ -35,7 +35,7 @@ The diagnostic browser page uses an object URL to preview the selected local vid
 
 ## Browser support
 
-Chrome/Edge: target for initial desktop tests. iOS Safari / Android Chrome: test targets; **not yet verified**. Metadata and codec support depend on the browser/device.
+Chrome/Edge: priority desktop targets. Android Chrome: real-phone user reports confirm short 1s and 5s exports for the tested samples, but other codecs/devices and repeated runs remain unverified. **iOS Safari: not tested and deferred; no compatibility claim.** Metadata and codec support vary by browser/device.
 
 ## License
 
@@ -61,10 +61,14 @@ Because this is a feasibility experiment, no unconditional iPhone/Android suppor
 
 Some Android photo or cloud providers return a `File` that can be previewed but fails when FFmpeg's Worker reads it through `FileReaderSync`/`WORKERFS`. For **mobile-selected input files up to 64 MiB**, this version attempts to read the content immediately on the main thread, builds a temporary in-memory Blob, and loads it into the FFmpeg virtual filesystem through `MEMFS`; this path **does not invoke `FileReaderSync`** for the original provider file. The bytes never leave the browser. The extra copy uses more memory and is deliberately limited. Large files retain WORKERFS, with a clear error if this platform cannot read them. Desktop files retain WORKERFS and can retry through the bounded-memory path after a recognized read failure. If even the initial browser read is denied, download/save the video to local device storage before selecting it again.
 
-The fixed UI has **not** yet been proven on the reporting Android handset. G1 remains pending.
+The local-file workaround was followed by successful Android real-device export reports, including a 5s clip. G1 remains pending for broader performance, codec, and original cross-platform coverage.
 
 ### v0.1.3 — experimental segment joining
 
 A 0.5–5-second selection is snapped to the nearest 15fps frame boundary (up to about 0.033s shift, disclosed in the UI), then divided into 1–3 bounded segments with 2-second-aligned boundaries, each no longer than 2 seconds. The app reverses chunks from **latest to earliest**, before a dedicated public-libav remuxer validates H.264 stream consistency and rebases timestamps to produce one MP4. Source audio is not included and ping-pong is unavailable. Cancellation never enables saving a partial MP4.
 
-The quality presets now explicitly mean **long edge 360px or 720px**; they do not promise conventional 720p dimensions. A 5-second marker-video proof passed 50/50 frame-order checks in desktop Chromium. Actual 5-second Android/iPhone throughput and memory behavior remain unverified. The temporary Builder artifact is pinned to commit `47448852` / ID `11698036987` and must be replaced by a permanent, source-complete GPL release before stable publication.
+The quality presets now explicitly mean **long edge 360px or 720px**; they do not promise conventional 720p dimensions. A 5-second marker-video proof passed 50/50 frame-order checks in desktop Chromium. One Android 5s/long-edge720px conversion completed in a reported 12.7s; repeat-run memory and codec coverage are still unverified. iPhone verification is deferred. The temporary Builder artifact is pinned to commit `47448852` / ID `11698036987` and must be replaced by a permanent, source-complete GPL release before stable publication.
+
+### Scope decision — 2026-10-12
+
+**Android Chrome and Windows Chrome/Edge are the current development/verification priorities.** The user explicitly deferred iPhone Safari and iPhone HEVC MOV work. iOS is **unverified**, not unsupported by design and not a blocker to continued experimental Android-first development. Do not represent it as supported or treat the original cross-platform G1 as passed. Full release scope and acceptance criteria remain subject to explicit review; the temporary Builder Actions artifact and source/license obligations must be resolved before stable publication.
