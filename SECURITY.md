@@ -54,3 +54,9 @@ Before adding or upgrading a package:
 - Refresh the selected lock entry with the dependency scripts; never hand-edit a lock hash to bypass a mismatch.
 - Rebuild with a clean cache.
 - Test with the network disabled.
+
+## Reverse Clip experimental binary boundary
+
+The app embeds a single-thread FFmpeg/x264 WASM core licensed GPL-2.0-or-later, **not MIT**, and a small public-libav runner. The runtime is retrieved only at build time from a pinned Builder GitHub Actions artifact; every core file is SHA-256 verified against `reverse-runtime.lock.json`. There is no per-user runtime fetch: `connect-src 'none'` remains active. Actions artifacts are temporary, not a stable release distribution channel. The final release requires corresponding source and license-notice validation.
+
+Video inputs may be untrusted or provider-backed on Android. Files up to 64MiB may be copied to browser memory, then used by MEMFS to avoid unreliable Worker-side `FileReaderSync` grants. Output bytes and buffers must be released on source change, cancel and page exit. Peak memory must be measured on actual mobile hardware before raising length/resolution limits.

@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.1.0 feasibility in progress; G1 still pending  
+> **Status:** v0.1.3 experimental bounded chunk reversal; Gate G1 still pending (Android 1s user-confirmed, desktop 5s verified)  
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
