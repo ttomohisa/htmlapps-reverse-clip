@@ -1202,6 +1202,54 @@
             translate(unreadable?'reverseSourceUnreadable':preparing?'reverseSourcePreparing':
                       safe?'reverseReady':'reverseInvalid');
       }
+      function sourceIsCurrent(file, generation) {
+        return generation === state.generation && file === state.file;
+      }
+      // An Android picker can return a File whose original provider handle
+      // later refuses synchronous reads from a Worker. File.arrayBuffer() is
+      // initiated immediately, then a fresh in-memory Blob is used through MEMFS.
+      // The byte limit is deliberate: copying a large input would defeat
+      // WORKERFS's low-memory design, especially on phones.
+      async function copySelectedFile(file, generation) {
+        if (file.size > INPUT_MEMORY_LIMIT)
+          throw new RangeError('Selected file exceeds in-memory input limit.');
+        const buffer = await file.arrayBuffer();
+        if (!sourceIsCurrent(file, generation)) return null;
+        if (buffer.byteLength !== file.size)
+          throw new Error('The selected file was read incompletely.');
+        return new Blob([buffer], {type:file.type || 'application/octet-stream'});
+      }
+      function attachSourcePreview(blob) {
+        if (state.url) URL.revokeObjectURL(state.url);
+        state.url = URL.createObjectURL(blob);
+        video.src = state.url;
+        video.load();
+      }
+      function prepareMobileInput(file) {
+        if (!MOBILE_INPUT || file.size > INPUT_MEMORY_LIMIT) return false;
+        const generation = state.generation;
+        state.inputTransport = 'preparing';
+        // Do not decode the original provider File in <video> in parallel with
+        // file.arrayBuffer(): concurrent reads can race permissions/locks.
+        // Both preview and FFmpeg use the same detached in-memory Blob.
+        state.inputPreparePromise = copySelectedFile(file, generation).then(copy => {
+          if (!copy || !sourceIsCurrent(file, generation)) return;
+          state.copiedInput = copy;
+          state.inputTransport = 'memory';
+          attachSourcePreview(copy);
+        }).catch(error => {
+          if (!sourceIsCurrent(file, generation)) return;
+          state.inputPrepareError = String(error?.message || error);
+          state.inputTransport = 'unreadable';
+          setStatus('reverseSourceUnreadable');
+        });
+        return true;
+      }
+      function isWorkerFileReadError(error) {
+        return /FileReaderSync|readAsArrayBuffer|NotReadableError|requested file could not be read/i
+          .test(String(error?.message || error));
+      }
+
       function chooseFile(file) {
         if (!file) return;
         releaseSource();
