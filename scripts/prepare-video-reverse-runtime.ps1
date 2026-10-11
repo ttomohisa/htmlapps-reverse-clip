@@ -26,7 +26,7 @@ function ValidCache {
 }
 if (-not $ForceDownload -and (ValidCache)) {
   Write-Host '[Reverse WASM] Using pinned verified local cache (no download).'
-  exit 0
+  return
 }
 
 $token = [string]$env:GITHUB_TOKEN

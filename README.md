@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.1.0 feasibility spike (Gate G1: NOT PASSED).** This is a diagnostic build, not a video-reversing editor yet.
+**Development status: v0.1.1 experimental WASM export (Gate G1: NOT PASSED).** Reverse up to 2 seconds of video, no audio. Mobile performance and original-capture codecs remain unverified.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -15,7 +15,7 @@ Select a short portion of a video and export a reversed or forward-then-reverse 
 - Includes reproducible **native FFmpeg algorithm tests** for frame-accurate middle-clip reversal and ping-pong without a duplicated turnaround frame.
 - Preserves the `htmlapps-template` single-HTML, offline-first, CSP, bilingual, Windows build and GitHub Actions conventions.
 
-**Not yet available:** actual video reversal, audio reversal, MP4 export, a pinned FFmpeg WASM asset, or verified mobile stability. A successful native FFmpeg test is **not** G1 approval.
+**Experimentally available:** a single 0.5–2s reversed H.264 MP4 without audio; 360p and 720p at 15fps (no upscaling). **Not available:** ping-pong, reverse audio, longer clip stitching, reliably supported HEVC/MOV, and verified phone performance. G1 remains open.
 
 ## Development
 
@@ -27,7 +27,7 @@ Run the algorithm baseline with Node.js 20+ and native FFmpeg installed:
 node --test tests/feasibility/native-reverse.test.mjs
 ```
 
-This optional test does **not** require FFmpeg for the standalone HTML build. G1 cannot pass until the dedicated Builder WASM, iPhone Safari, Android Chrome, direct `file://` test, and real video save/replay results have been recorded.
+This optional native test is not required by the standalone app. G1 requires real iPhone Safari and Android Chrome conversion, H.264 MP4 playback/save, resource-performance evidence and direct `file://` tests; passing the desktop smoke alone is insufficient.
 
 ## Privacy
 
@@ -39,4 +39,20 @@ Chrome/Edge: target for initial desktop tests. iOS Safari / Android Chrome: test
 
 ## License
 
-App and native test source: MIT. Third-party codec runtime has **not** yet been added. When FFmpeg/x264 WASM is adopted, its exact licenses, corresponding source, version and SHA-256 must be recorded before shipping.
+App and native test source: MIT. Embedded experimental FFmpeg/x264 WASM: GPL-2.0-or-later, separate license obligations. See `THIRD_PARTY_NOTICES.md` and pinned hashes in `reverse-runtime.lock.json`. This is not a final GPL source-compliance or public-release approval.
+
+## Experimental WASM build provenance
+
+v0.1.1 imports an **experimental, expiring** Builder Actions artifact at **build time only**, pinned to commit `f91efb4` and SHA-256 for the core JavaScript, WASM and BrowserFFmpeg loader. Check `reverse-runtime.lock.json`. The generated HTML includes all bytes and makes no runtime API/CDN calls. This is **not** a stable release artifact: GitHub Actions artifacts expire, so the build download will eventually stop working. **Before v1.0**, merge/review the Builder profile and replace the Actions artifact with a permanent, version-tagged GPL-compliant Builder Release with corresponding sources.
+
+Normal build on Windows: set `GITHUB_TOKEN` or `GH_TOKEN` with permission to read the public Builder artifact, then run `build-standalone.bat`. Once verified runtime files are cached in `.cache/reverse-runtime`, further local builds can run offline. The GitHub Actions build sets its own scoped token; users of the generated single HTML do **not** need any token.
+
+### Experiment steps
+
+1. Choose an MP4/MOV and let the browser display metadata and a preview.
+2. Choose 0.5–2 seconds, output 360p or 720p; mode is reverse-only.
+3. Press **Create reversed MP4** and optionally cancel during conversion. If an error appears, expand the technical details.
+4. Play the *generated* output, check frame order and orientation, edit the MP4 filename, and press **Save MP4**.
+5. Use the separate diagnostic button if requested. The JSON optionally includes an output-success/error summary, but never raw video data or the input filename.
+
+Because this is a feasibility experiment, no unconditional iPhone/Android support claim is made.

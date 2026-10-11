@@ -455,6 +455,18 @@
     .rc-report{background:var(--surface-muted);border-radius:10px;min-height:70px;max-height:240px;overflow:auto;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;padding:12px}
     @media(max-width:600px){.export-row{flex-direction:column;align-items:stretch}.export-field{width:100%;min-width:0}.export-row .button{width:100%}}
     @media(max-width:540px){.rc-grid{grid-template-columns:minmax(0,1fr)}.rc-facts{grid-template-columns:minmax(0,1fr)}.rc-drop .button{min-height:44px}.rc-video{max-height:45vh}.rc-report{max-height:180px}}
+  
+    .rc-export {margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
+    .rc-export h3{font-size:18px;margin:0 0 5px}
+    .rc-export h4{font-size:15px;margin:18px 0 7px}
+    .rc-actions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+    .rc-save{display:flex;align-items:end;flex-wrap:wrap;gap:9px;padding:10px 0}
+    .rc-save .export-field{flex:1 1 200px;min-width:0}
+    .rc-save button{flex:0 0 auto}
+    #reverseProgress{width:100%;height:13px;accent-color:var(--accent);margin:8px 0}
+    #resultArea{margin-top:12px}
+    #reverseStatus{min-height:20px}
+    @media(max-width:600px){.rc-save{flex-direction:column;align-items:stretch}.rc-save .export-field{width:100%;flex:auto}.rc-save button{width:100%}.rc-actions .button{width:100%}}
   </style>
 </head>
 <body>
@@ -481,8 +493,8 @@
   <main class="main">
     <section class="page-intro" aria-labelledby="heroTitle">
       <div>
-        <h2 id="heroTitle" data-i18n="introTitle">動画逆再生 — 技術検証中</h2>
-        <p data-i18n="lead">動画の読み込み・区間指定・端末の対応を確かめる試験版です。逆再生MP4の出力はまだできません。</p>
+        <h2 id="heroTitle" data-i18n="introTitle">動画逆再生 — WASM実験版</h2>
+        <p data-i18n="lead">最大2秒の映像を逆再生MP4に変換します。スマホ動作は技術検証中です。</p>
       </div>
       <div class="local-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6z"/><path d="m9 12 2 2 4-5"/></svg>
@@ -517,13 +529,37 @@
     </div>
     <div class="rc-grid">
       <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
-      <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="5" disabled></label>
-      <label><span data-i18n="modeLabel">作成モード（計画値）</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option value="pingpong" data-i18n="modePingpong">往復再生</option></select></label>
-      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="720" data-i18n="qualityStandard">標準 720p</option><option value="1080" data-i18n="qualityHigh">高画質 1080p</option></select></label>
+      <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
+      <label><span data-i18n="modeLabel">作成モード（計画値）</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option value="pingpong" data-i18n="modePingpong" disabled>往復再生（今後）</option></select></label>
+      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">小さめ 360p</option><option value="720" data-i18n="qualityHigh">標準 720p</option></select></label>
     </div>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
     <p id="memoryEstimate" class="rc-hint"></p>
   </div>
+
+  <section class="rc-export" id="reversePanel" hidden aria-labelledby="reverseTitle">
+    <h3 id="reverseTitle" data-i18n="reverseTitle">短い動画を逆再生（実験版）</h3>
+    <p data-i18n="reverseDescription" class="rc-hint">映像のみ／最大2秒／15fps。WASMでMP4を作成します。音声・長い動画・往復再生は未対応です。</p>
+    <p id="reverseStatus" class="rc-status" role="status" aria-live="polite"></p>
+    <div class="rc-actions">
+      <button id="reverseButton" class="button primary" type="button" disabled data-i18n="reverseButton">逆再生MP4を作成</button>
+      <button id="cancelReverseButton" class="button" type="button" hidden data-i18n="cancelReverse">処理を中止</button>
+    </div>
+    <progress id="reverseProgress" max="100" value="0" hidden aria-label="Conversion progress"></progress>
+    <details id="reverseErrorDetails" hidden><summary data-i18n="errorDetailTitle">エラー詳細</summary><pre id="reverseErrorDetail" class="rc-report"></pre></details>
+    <div id="resultArea" hidden>
+      <h4 data-i18n="resultTitle">逆再生の結果</h4>
+      <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="Reversed result MP4"></video>
+      <p id="resultInfo" class="rc-hint"></p>
+      <div class="rc-save">
+        <label class="export-field" for="reverseFilename">
+          <span class="export-label" data-i18n="reverseFilenameLabel">保存するMP4の名前</span>
+          <span class="filename-control"><input class="filename-input" id="reverseFilename" type="text" maxlength="120" autocomplete="off" spellcheck="false"><span class="filename-extension" aria-hidden="true">.mp4</span></span>
+        </label>
+        <button class="button primary" id="saveReverseButton" type="button" data-i18n="saveReverse">MP4を保存</button>
+      </div>
+    </div>
+  </section>
 </section>
 <section class="shell workspace" aria-labelledby="probeTitle">
   <div class="workspace-head">
@@ -549,11 +585,11 @@
 
     <section class="shell section" aria-labelledby="guaranteesTitle">
   <div class="section-head"><h2 class="section-title" id="guaranteesTitle" data-i18n="guaranteesTitle">開発状況：技術検証中</h2>
-  <p data-i18n="guaranteesBody">v0.1.0では専用WASMが未完成のため、逆再生MP4は作成できません。</p></div>
+  <p data-i18n="guaranteesBody">映像のみ短い区間の変換を検証中。音声・長い動画・スマホ性能は未対応です。</p></div>
   <div class="card-grid">
     <article class="card"><div class="card-number">01</div><h3 data-i18n="card1Title">フレームの反転</h3><p data-i18n="card1Body">ネイティブFFmpegで20フレームの逆順と、折返しが重複しない39フレームの往復を確認。</p></article>
     <article class="card"><div class="card-number">02</div><h3 data-i18n="card2Title">ブラウザー検証</h3><p data-i18n="card2Body">ファイル読み込み・シーク・Worker・基本WASMの動作を端末別に確認中。</p></article>
-    <article class="card"><div class="card-number">03</div><h3 data-i18n="card3Title">動画書き出し</h3><p data-i18n="card3Body">FFmpeg WASM専用ランナーとMP4生成は未実装。実際に動くまでは完成と表示しません。</p></article>
+    <article class="card"><div class="card-number">03</div><h3 data-i18n="card3Title">動画書き出し</h3><p data-i18n="card3Body">短い動画のWASM逆再生を検証中。スマホ実機・音声・長い動画は未確認です。</p></article>
   </div>
 </section>
 
@@ -605,7 +641,7 @@
   <ol>
   <li data-i18n="helpStep1">動画を選択します。可能な端末では撮影からも取り込めます。</li>
   <li data-i18n="helpStep2">元動画をプレビューして、開始・終了秒を設定します。</li>
-  <li data-i18n="helpStep3">動画を選んでから「ブラウザーの動作を確認」を押すと、シーク・Worker・WASMをまとめて測定します。診断JSONは必要に応じて保存できます。逆再生MP4の試験ではありません。</li>
+  <li data-i18n="helpStep3">0.5〜2秒の範囲を選び「逆再生MP4を作成」を押します。結果をプレビューして保存できます。診断も別に用意しています。</li>
   </ol>
   <h3 data-i18n="helpPrivacyTitle">プライバシー</h3>
   <p data-i18n="helpPrivacyBody">動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。</p>
@@ -613,7 +649,7 @@
   <ul>
     <li data-i18n="helpNoteStorage">ブラウザーの制限によってMOVやHEVCをプレビューできない場合があります。</li>
     <li data-i18n="helpNoteBrowser">ここでのWASMテストは小さな空モジュールの読み込み確認であり、FFmpegの動画変換確認ではありません。</li>
-    <li data-i18n="helpNoteTemplate">専用FFmpeg WASMと逆再生MP4保存は技術検証合格後に追加します。</li>
+    <li data-i18n="helpNoteTemplate">映像のみ最大2秒を逆再生できます。再生・画面の向きを確認してください。スマホ実機は検証中です。</li>
   </ul>
   <p class="dialog-note" data-i18n="helpOffline">単一HTMLはローカルで開けます。動画のアップロードは不要です。</p>
 <!-- APP:HELP:END -->
@@ -730,11 +766,11 @@
 
       const translations = {
   "ja": {
-    "brandMeta": "動画逆再生 · v0.1.0 技術検証",
+    "brandMeta": "動画逆再生 · v0.1.1 実験版",
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
-    "introTitle": "動画逆再生 — 技術検証中",
-    "lead": "動画の読み込み・区間指定・端末の対応を確かめる試験版です。逆再生MP4の出力はまだできません。",
+    "introTitle": "動画逆再生 — WASM実験版",
+    "lead": "最大2秒の映像を逆再生MP4に変換します。スマホ動作は技術検証中です。",
     "localBadge": "動画をアップロードしません",
     "workspaceTitle": "動画を読み込む",
     "workspaceBody": "ブラウザー内でプレビューして短い範囲を選びます。",
@@ -754,15 +790,15 @@
     "fileSize": "容量",
     "rangeStartLabel": "開始（秒）",
     "rangeEndLabel": "終了（秒）",
-    "modeLabel": "作成モード（計画値）",
+    "modeLabel": "モード（往復は準備中）",
     "modeReverse": "逆再生",
-    "modePingpong": "往復再生",
-    "qualityLabel": "予定の画質",
-    "qualityStandard": "標準 720p",
-    "qualityHigh": "高画質 1080p",
-    "rangeValid": "この範囲は将来の変換制限内です。",
-    "rangeInvalid": "開始・終了を確認してください（0.5秒以上）。",
-    "rangeTooLong": "この画質で選べる範囲は最大 {limit}秒です。自動では短くしません。",
+    "modePingpong": "往復再生（準備中）",
+    "qualityLabel": "実験版の画質",
+    "qualityStandard": "小さめ 360p",
+    "qualityHigh": "標準 720p",
+    "rangeValid": "この範囲は実験版で処理できます。",
+    "rangeInvalid": "開始・終了を確認してください（0.5〜2秒）。",
+    "rangeTooLong": "この実験版では最大2秒です。自動で短くはしません。",
     "memoryNotice": "フレーム保持の理論上の下限: 約 {mib} MiB（実際のメモリ使用量はこれより大きくなります）",
     "probeTitle": "動作テスト",
     "probeBody": "動画を選んでから実行すると、シーク・Worker・基本WASMをまとめて確認します。逆再生やMP4保存の試験ではありません。",
@@ -781,23 +817,23 @@
     "reportSaved": "診断ログを保存しました。",
     "noVideo": "動画を選んでから実行してください。",
     "guaranteesTitle": "開発状況：技術検証中",
-    "guaranteesBody": "専用WASMが未実装のため、逆再生MP4はまだ作成できません。",
+    "guaranteesBody": "映像のみ短い区間の変換を検証中。音声・長い動画・スマホ性能は未対応です。",
     "card1Title": "反転アルゴリズム",
     "card1Body": "ネイティブFFmpegで20フレームの逆順と、折返しに重複がない39フレームの往復を確認。",
     "card2Title": "ブラウザー検証",
     "card2Body": "動画選択・シーク・Worker・基本WASMを端末別に確認中です。",
     "card3Title": "MP4作成",
-    "card3Body": "専用FFmpeg WASM、MP4保存、スマホ実機の性能は未検証です。",
+    "card3Body": "短い動画のWASM逆再生を検証中。スマホ実機・音声・長い動画は未確認です。",
     "helpBasicsTitle": "使い方",
     "helpStep1": "動画を選択します。可能な端末では撮影からも取り込めます。",
     "helpStep2": "元動画をプレビューして、開始・終了秒を設定します。",
-    "helpStep3": "動画を選んでから「ブラウザーの動作を確認」を押すと、シーク・Worker・WASMをまとめて測定します。診断JSONは必要に応じて保存できます。逆再生MP4の試験ではありません。",
+    "helpStep3": "0.5〜2秒の範囲を選び「逆再生MP4を作成」を押します。結果をプレビューして保存できます。診断も別に用意しています。",
     "helpPrivacyTitle": "プライバシー",
     "helpPrivacyBody": "動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。",
     "helpNotesTitle": "制限と注意",
     "helpNoteStorage": "ブラウザーの制限によってMOVやHEVCをプレビューできない場合があります。",
     "helpNoteBrowser": "WASMテストは小さな空モジュールの読み込み確認であり、FFmpegの変換確認ではありません。",
-    "helpNoteTemplate": "専用FFmpeg WASMと逆再生MP4保存は技術検証合格後に追加します。",
+    "helpNoteTemplate": "映像のみ最大2秒を逆再生できます。再生・画面の向きを確認してください。スマホ実機は検証中です。",
     "helpOffline": "単一HTMLはローカルでも開けます。動画のアップロードは不要です。",
     "buildInfo": "ビルド情報",
     "appVersion": "アプリの版数",
@@ -807,14 +843,33 @@
     "confirmTitle": "確認",
     "confirmAction": "実行する",
     "cancel": "キャンセル",
-    "undo": "元に戻す"
+    "undo": "元に戻す",
+    "rangeMemoryHigh": "推定フレーム保持量が実験版の上限96MiBを超えています。範囲か画質を下げてください。",
+    "reverseTitle": "短い動画を逆再生（実験版）",
+    "reverseDescription": "映像のみ・最大2秒・15fps。端末内のWASMでMP4を作ります。音声・長い動画・往復再生は未対応です。",
+    "reverseButton": "逆再生MP4を作成",
+    "cancelReverse": "処理を中止",
+    "reverseFilenameLabel": "保存するMP4の名前",
+    "saveReverse": "MP4を保存",
+    "errorDetailTitle": "エラー詳細",
+    "resultTitle": "逆再生の結果",
+    "reverseReady": "最大2秒の範囲を選んでください。",
+    "reverseRunning": "逆再生中… {progress}%",
+    "reverseLoading": "変換の準備中…",
+    "reverseInvalid": "範囲・画質を確認してください。",
+    "reverseCancelled": "処理を中止しました。再実行できます。",
+    "reverseFailure": "逆再生できませんでした。動画形式または端末のメモリ制限を確認してください。",
+    "reverseSuccess": "逆再生MP4を作成しました。結果を再生して保存してください。",
+    "reverseUnsupported": "このブラウザーでは逆再生用WASMを起動できません。",
+    "reverseSaved": "逆再生MP4を保存しました。",
+    "resultInfo": "{duration}秒・{size}・映像のみ・処理時間{elapsed}秒"
   },
   "en": {
-    "brandMeta": "Reverse Clip · v0.1.0 feasibility",
+    "brandMeta": "Reverse Clip · v0.1.1 experimental",
     "helpTitle": "How to use & limitations",
     "close": "Close",
-    "introTitle": "Reverse Clip — feasibility testing",
-    "lead": "This diagnostic build checks video loading, clip ranges, and browser capabilities. It cannot export reversed MP4 files yet.",
+    "introTitle": "Reverse Clip — WASM experimental build",
+    "lead": "Reverse up to 2 seconds into an MP4. Phone performance is still under evaluation.",
     "localBadge": "No video upload",
     "workspaceTitle": "Load a video",
     "workspaceBody": "Preview locally and select a short section.",
@@ -834,15 +889,15 @@
     "fileSize": "File size",
     "rangeStartLabel": "Start (seconds)",
     "rangeEndLabel": "End (seconds)",
-    "modeLabel": "Planned mode",
+    "modeLabel": "Mode (ping-pong not ready)",
     "modeReverse": "Reverse",
-    "modePingpong": "Forward & reverse",
-    "qualityLabel": "Planned quality",
-    "qualityStandard": "Standard 720p",
-    "qualityHigh": "High 1080p",
-    "rangeValid": "Selected range is within the planned limits.",
-    "rangeInvalid": "Check start and end (at least 0.5 seconds).",
-    "rangeTooLong": "This quality supports at most {limit} seconds. The range will not be shortened automatically.",
+    "modePingpong": "Ping-pong (later)",
+    "qualityLabel": "Experimental quality",
+    "qualityStandard": "Smaller 360p",
+    "qualityHigh": "Standard 720p",
+    "rangeValid": "This segment is within the experimental limits.",
+    "rangeInvalid": "Check start and end (0.5–2 seconds).",
+    "rangeTooLong": "This experimental build allows up to 2 seconds. It will not trim silently.",
     "memoryNotice": "Theoretical lower bound for buffered frames: ~{mib} MiB (real usage will be higher).",
     "probeTitle": "Browser checks",
     "probeBody": "After selecting a video, run one check for seeking, Worker and basic WASM. This does not reverse or export video.",
@@ -861,23 +916,23 @@
     "reportSaved": "Diagnostic JSON downloaded.",
     "noVideo": "Choose a video first.",
     "guaranteesTitle": "Development status: feasibility",
-    "guaranteesBody": "Dedicated WASM is not implemented; reversed MP4 export is unavailable.",
+    "guaranteesBody": "Testing short video-only segments. Audio, long clips and real-phone performance remain unverified.",
     "card1Title": "Reverse algorithm",
     "card1Body": "Native FFmpeg baseline passed 20-frame reversal and 39-frame ping-pong with no repeated turning frame.",
     "card2Title": "Browser compatibility",
     "card2Body": "Testing local video selection, seeking, Workers and basic WebAssembly support.",
     "card3Title": "MP4 export",
-    "card3Body": "Dedicated FFmpeg WASM, MP4 saving and real-phone performance remain unverified.",
+    "card3Body": "Short WASM video reversal is experimental; phone tests, audio and long clips remain pending.",
     "helpBasicsTitle": "How to test",
     "helpStep1": "Choose a video, or record one where supported.",
     "helpStep2": "Preview the source and enter the start/end times.",
-    "helpStep3": "With a video selected, run the single browser check to test seeking, Worker and WASM. Save the optional diagnostic JSON. This is not a reversed MP4.",
+    "helpStep3": "Select a 0.5–2 second segment, create reversed MP4, preview and save it. Browser diagnostics remain available separately.",
     "helpPrivacyTitle": "Privacy",
     "helpPrivacyBody": "Your video stays in the browser. Only an explicit download creates a diagnostic report.",
     "helpNotesTitle": "Limitations",
     "helpNoteStorage": "MOV or HEVC preview may be unavailable depending on the browser.",
     "helpNoteBrowser": "The small WASM check only tests loading an empty module. It does not validate FFmpeg.",
-    "helpNoteTemplate": "Reverse MP4 output will be implemented after the separate feasibility gate.",
+    "helpNoteTemplate": "Up to 2 seconds of silent reversed MP4 can be exported. Check playback and orientation. Real phone tests remain pending.",
     "helpOffline": "The standalone HTML also opens locally without uploading files.",
     "buildInfo": "Build information",
     "appVersion": "App version",
@@ -887,10 +942,28 @@
     "confirmTitle": "Confirm",
     "confirmAction": "Continue",
     "cancel": "Cancel",
-    "undo": "Undo"
+    "undo": "Undo",
+    "rangeMemoryHigh": "Estimated frame cache exceeds the experimental 96 MiB limit. Reduce time or quality.",
+    "reverseTitle": "Reverse a short clip (experimental)",
+    "reverseDescription": "Video only · 2 seconds max · 15 fps. Embedded WASM produces MP4 locally. Audio, longer clips and ping-pong are not yet supported.",
+    "reverseButton": "Create reversed MP4",
+    "cancelReverse": "Cancel conversion",
+    "reverseFilenameLabel": "MP4 filename",
+    "saveReverse": "Save MP4",
+    "errorDetailTitle": "Error details",
+    "resultTitle": "Reversed result",
+    "reverseReady": "Select up to 2 seconds.",
+    "reverseRunning": "Reversing video… {progress}%",
+    "reverseLoading": "Preparing conversion…",
+    "reverseInvalid": "Check the selected time range and quality.",
+    "reverseCancelled": "Conversion cancelled. You can retry.",
+    "reverseFailure": "Could not reverse this video. Check codec or device memory.",
+    "reverseSuccess": "Reversed MP4 ready. Preview and save it.",
+    "reverseUnsupported": "This browser cannot start the reverse WASM.",
+    "reverseSaved": "Reversed MP4 saved.",
+    "resultInfo": "{duration}s · {size} · video only · {elapsed}s processing"
   }
 };
-
       const storageKeys = { language: APP_CONFIG.slug + ':language' };
       const $ = selector => document.querySelector(selector);
       const outputFilename = $('#outputFilename');
@@ -993,13 +1066,15 @@
       window.AppToast = AppToast;
       function showToast(message, options = {}) { AppToast.show({ message, ...options }); }
       const video = $('#sourceVideo');
-      const state = { generation: 0, file: null, url: null, ready: false, probe: null, seek: null, note: null };
+      const state = { generation: 0, file: null, url: null, ready: false, probe: null, seek: null, note: null, validRange: false, conversion: null };
+      let conversionEpoch = 0, conversionController = null, conversionRunner = null, resultUrl = null;
       const memoryRate = 1.5; // YUV420p approximation; it is not a memory budget.
       const format = (key, vars = {}) => translate(key).replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ''));
       function setStatus(key) {
         $('#loadStatus').textContent = translate(key);
       }
       function releaseSource() {
+        resetConversion();
         state.generation += 1;
         state.file = null;
         state.ready = false;
@@ -1015,25 +1090,39 @@
         $('#modeInput').disabled = true;
         $('#qualityInput').disabled = true;
         $('#seekButton').disabled = true;
+        $('#reversePanel').hidden = true;
+        state.validRange = false;
       }
       function humanSize(bytes) {
         return (bytes / 1048576).toFixed(1) + ' MiB';
       }
+      const OUTPUT_FPS = 15;
+      function outputDimensions() {
+        const width = video.videoWidth, height = video.videoHeight;
+        const edge = Number($('#qualityInput').value);
+        const scale = Math.min(1, edge / Math.max(1,width,height));
+        return {width:Math.max(16,Math.floor(width*scale/2)*2),
+                height:Math.max(16,Math.floor(height*scale/2)*2)};
+      }
       function rangeInfo() {
         if (!state.ready) return;
-        const start = Number($('#rangeStart').value);
-        const end = Number($('#rangeEnd').value);
-        const max = $('#qualityInput').value === '1080' ? 5 : 10;
-        let notice = 'rangeValid';
-        if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end > video.duration + .001 || end - start < .5) notice = 'rangeInvalid';
-        else if (end - start > max + .001) notice = 'rangeTooLong';
-        $('#rangeNotice').textContent = format(notice, {limit: max});
-        const shortEdge = Math.max(1, Math.min(video.videoWidth, video.videoHeight));
-        const scale = Math.min(1, Number($('#qualityInput').value) / shortEdge);
-        const w = Math.max(2, 2 * Math.floor(video.videoWidth * scale / 2));
-        const h = Math.max(2, 2 * Math.floor(video.videoHeight * scale / 2));
-        const mib = (w * h * memoryRate * 30 * Math.max(0,end-start) / 1048576).toFixed(0);
-        $('#memoryEstimate').textContent = format('memoryNotice',{mib});
+        const rawStart=$('#rangeStart').value.trim(), rawEnd=$('#rangeEnd').value.trim();
+        const start=Number(rawStart), end=Number(rawEnd), duration=end-start;
+        const dims=outputDimensions();
+        const mib=dims.width*dims.height*1.5*OUTPUT_FPS*Math.max(0,duration)/1048576;
+        const basic=rawStart!==''&&rawEnd!==''&&Number.isFinite(start)&&Number.isFinite(end)&&
+          start>=0&&end<=video.duration+.001&&duration>=.5&&duration<=2&&
+          Number.isFinite(dims.width)&&Number.isFinite(dims.height)&&
+          dims.width<=2048&&dims.height<=2048;
+        state.validRange=Boolean(basic&&mib<=96&&$('#modeInput').value==='reverse');
+        let notice='rangeValid';
+        if (!basic) notice=duration>2?'rangeTooLong':'rangeInvalid';
+        else if (mib>96) notice='rangeMemoryHigh';
+        $('#rangeNotice').textContent=translate(notice);
+        $('#memoryEstimate').textContent=format('memoryNotice',{mib:mib.toFixed(0)});
+        $('#reverseButton').disabled=!state.validRange||Boolean(conversionController);
+        if (!conversionController&&!state.conversion) $('#reverseStatus').textContent=
+          translate(state.validRange?'reverseReady':'reverseInvalid');
       }
       function chooseFile(file) {
         if (!file) return;
@@ -1057,8 +1146,9 @@
         state.ready = true;
         $('#videoArea').hidden = false;
         $('#rangeStart').value = '0';
-        $('#rangeEnd').value = String(Math.min(5,video.duration).toFixed(1));
-        for (const id of ['rangeStart','rangeEnd','modeInput','qualityInput','seekButton']) $('#' + id).disabled = false;
+        $('#rangeEnd').value = String(Math.min(1,video.duration).toFixed(1));
+        for (const id of ['rangeStart','rangeEnd','qualityInput','seekButton']) $('#' + id).disabled = false;
+        $('#reversePanel').hidden = false;
         $('#sourceName').textContent = state.file.name;
         $('#durationLabel').textContent = video.duration.toFixed(1) + ' s';
         $('#dimensionsLabel').textContent = video.videoWidth + ' × ' + video.videoHeight;
@@ -1080,6 +1170,7 @@
         setStatus(state.ready ? 'loaded' : state.file ? 'loading' : 'nothingSelected');
         $('#probeReport').textContent = (state.probe || state.seek) ? JSON.stringify({capabilities:state.probe,seek:state.seek},null,2) : translate('notRun');
         rangeInfo();
+        if (state.conversion?.ok) $('#reverseStatus').textContent = translate('reverseSuccess');
       }
       async function probeBrowser() {
         const probe = { measuredAt: new Date().toISOString(), secureContext: isSecureContext,
@@ -1156,6 +1247,142 @@
           if(id === state.generation) $('#seekButton').disabled=false;
         }
       }
+
+      function normalizeMP4Filename() {
+        const field=$('#reverseFilename');
+        let name=field.value.trim().replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-')
+          .replace(/\.+$/g,'').replace(/\.mp4$/i,'').trim()||'reverse-clip';
+        if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(name)) name+='-file';
+        field.value=name.slice(0,120);
+        return field.value+'.mp4';
+      }
+      function resetConversion() {
+        conversionEpoch+=1;
+        if(conversionController) conversionController.abort();
+        conversionController=null;
+        if(conversionRunner) conversionRunner.dispose();
+        conversionRunner=null;
+        if(resultUrl) URL.revokeObjectURL(resultUrl);
+        resultUrl=null;
+        $('#resultVideo').pause();
+        $('#resultVideo').removeAttribute('src');
+        $('#resultVideo').load();
+        $('#resultArea').hidden=true;
+        $('#reverseProgress').hidden=true;
+        $('#cancelReverseButton').hidden=true;
+        $('#reverseErrorDetails').hidden=true;
+        $('#reverseErrorDetail').textContent='';
+        state.conversion=null;
+        $('#reverseButton').disabled=!state.validRange||!state.ready;
+      }
+      async function reverseShortClip() {
+        if(!state.ready||!state.file||!state.validRange){showToast(translate('reverseInvalid'));return;}
+        resetConversion();
+        const generation=state.generation, job=++conversionEpoch;
+        const file=state.file, start=Number($('#rangeStart').value);
+        const duration=Number($('#rangeEnd').value)-start, dims=outputDimensions();
+        const controller=new AbortController();
+        conversionController=controller;
+        $('#reverseButton').disabled=true;
+        $('#cancelReverseButton').hidden=false;
+        $('#reverseProgress').hidden=false;
+        $('#reverseProgress').value=0;
+        $('#reverseStatus').textContent=translate('reverseLoading');
+        const started=performance.now();
+        const logs=[];
+        try {
+          if(!window.StandaloneAssets.has('reverse-wasm','coreWasm'))
+            throw new Error('Pinned reverse WASM was not embedded.');
+          if(!window.BrowserFFmpeg)
+            await window.StandaloneAssets.loadClassicScript('reverse-wasm','runtimeJs','BrowserFFmpeg');
+          if(!window.BrowserFFmpeg?.loadEmbedded)
+            throw new Error('BrowserFFmpeg runtime is unavailable.');
+          const [coreJsText,wasmBytes]=await Promise.all([
+            window.StandaloneAssets.textAsync('reverse-wasm','coreJs'),
+            window.StandaloneAssets.bytesAsync('reverse-wasm','coreWasm')
+          ]);
+          if(job!==conversionEpoch||generation!==state.generation)return;
+          const runner=await window.BrowserFFmpeg.loadEmbedded({coreJsText,wasmBytes});
+          conversionRunner=runner;
+          const result=await runner.run({
+            files:[{name:'/workerfs/input.mp4',data:file,workerfs:true}],
+            outputs:['/reverse.mp4'],
+            args:['--input','/workerfs/input.mp4','--output','/reverse.mp4',
+              '--start-time',String(start),'--duration',String(duration),
+              '--width',String(dims.width),'--height',String(dims.height),
+              '--fps',String(OUTPUT_FPS),'--crf','28'],
+            signal:controller.signal,
+            onProgress:p=>{
+              if(job!==conversionEpoch)return;
+              const pc=Math.max(0,Math.min(100,Math.round(p*100)));
+              $('#reverseProgress').value=pc;
+              $('#reverseStatus').textContent=format('reverseRunning',{progress:pc});
+            },
+            onLog:({message})=>{if(logs.length<40)logs.push(String(message).slice(0,180));}
+          });
+          if(job!==conversionEpoch||generation!==state.generation)return;
+          const bytes=result.files?.[0]?.data;
+          if(result.exitCode!==0||!bytes||bytes.byteLength<1000||
+              String.fromCharCode(...bytes.slice(4,8))!=='ftyp')
+            throw new Error('Reverse MP4 header or runner exit code invalid.');
+          resultUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));
+          const resultVideo=$('#resultVideo');
+          await new Promise((resolve,reject)=>{
+            let timer;
+            function cleanup(){
+              clearTimeout(timer);
+              resultVideo.removeEventListener('loadedmetadata',success);
+              resultVideo.removeEventListener('error',failure);
+            }
+            function success(){cleanup();resolve();}
+            function failure(){cleanup();reject(new Error('Browser cannot preview reversed MP4.'));}
+            timer=setTimeout(()=>{cleanup();reject(new Error('Reverse MP4 preview timed out.'));},15000);
+            resultVideo.addEventListener('loadedmetadata',success);
+            resultVideo.addEventListener('error',failure);
+            resultVideo.src=resultUrl;
+            resultVideo.load();
+          });
+          if(job!==conversionEpoch||generation!==state.generation)return;
+          const elapsed=(performance.now()-started)/1000;
+          state.conversion={ok:true,elapsedSeconds:Number(elapsed.toFixed(2)),
+            outputBytes:bytes.byteLength,outputDuration:resultVideo.duration,
+            outputWidth:resultVideo.videoWidth,outputHeight:resultVideo.videoHeight,
+            start,duration,quality:$('#qualityInput').value,fps:OUTPUT_FPS,audio:'none'};
+          $('#resultInfo').textContent=format('resultInfo',{
+            duration:resultVideo.duration.toFixed(2),
+            size:humanSize(bytes.byteLength),elapsed:elapsed.toFixed(2)
+          });
+          $('#resultArea').hidden=false;
+          $('#reverseStatus').textContent=translate('reverseSuccess');
+          showToast(translate('reverseSuccess'),{tone:'success'});
+        }catch(error){
+          if(job!==conversionEpoch)return;
+          state.conversion={ok:false,error:String(error?.message||error),
+            elapsedSeconds:Number(((performance.now()-started)/1000).toFixed(2))};
+          $('#reverseErrorDetails').hidden=false;
+          $('#reverseErrorDetail').textContent=(String(error?.message||error)+'\n'+logs.slice(-8).join('\n')).slice(0,1400);
+          $('#reverseStatus').textContent=translate(controller.signal.aborted?'reverseCancelled':'reverseFailure');
+          showToast(translate(controller.signal.aborted?'reverseCancelled':'reverseFailure'));
+        }finally{
+          if(job===conversionEpoch){
+            conversionController=null;
+            if(conversionRunner)conversionRunner.dispose();
+            conversionRunner=null;
+            $('#cancelReverseButton').hidden=true;
+            $('#reverseProgress').hidden=true;
+            $('#reverseButton').disabled=!state.validRange;
+          }
+        }
+      }
+      function saveReverseResult() {
+        if(!resultUrl||!state.conversion?.ok)return;
+        const a=document.createElement('a');
+        a.href=resultUrl;
+        a.download=normalizeMP4Filename();
+        a.click();
+        showToast(translate('reverseSaved'),{tone:'success'});
+      }
+
       function reportFilename() {
         const raw = outputFilename.value.trim().replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').replace(/\.+$/g,'');
         let name = raw.replace(/\.json$/i,'').trim() || 'reverse-clip-check';
@@ -1164,7 +1391,7 @@
       }
       function saveDiagnostic() {
         const details = {createdAt:new Date().toISOString(),application:'Reverse Clip',version:APP_CONFIG.version,
-          userAgent:navigator.userAgent,mode:location.protocol,language,capabilities:state.probe,seek:state.seek,
+          userAgent:navigator.userAgent,mode:location.protocol,language,capabilities:state.probe,seek:state.seek,reverseConversion:state.conversion,
           media:state.ready ? {mime:state.file.type,bytes:state.file.size,duration:video.duration,
             width:video.videoWidth,height:video.videoHeight,start:Number($('#rangeStart').value),
             end:Number($('#rangeEnd').value),quality:$('#qualityInput').value,plannedMode:$('#modeInput').value} : null,
@@ -1185,7 +1412,11 @@
       drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('is-dragover');});
       drop.addEventListener('dragleave',()=>drop.classList.remove('is-dragover'));
       drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('is-dragover');chooseFile(e.dataTransfer?.files?.[0]);});
-      for(const id of ['rangeStart','rangeEnd','modeInput','qualityInput']) $('#'+id).addEventListener('change',rangeInfo);
+      for(const id of ['rangeStart','rangeEnd','qualityInput']) $('#'+id).addEventListener('change',()=>{resetConversion();rangeInfo();});
+      $('#reverseButton').addEventListener('click',reverseShortClip);
+      $('#cancelReverseButton').addEventListener('click',()=>{resetConversion();rangeInfo();$('#reverseStatus').textContent=translate('reverseCancelled');});
+      $('#saveReverseButton').addEventListener('click',saveReverseResult);
+      $('#reverseFilename').addEventListener('blur',normalizeMP4Filename);
       $('#probeButton').addEventListener('click',probeBrowser);
       $('#seekButton').addEventListener('click',probeSeek);
       $('#downloadReportButton').addEventListener('click',saveDiagnostic);
@@ -1198,8 +1429,9 @@
         const rect=helpDialog.getBoundingClientRect();
         if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)helpDialog.close();
       });
-      window.addEventListener('pagehide',()=>{if(state.url)URL.revokeObjectURL(state.url);});
+      window.addEventListener('pagehide',()=>{resetConversion();if(state.url)URL.revokeObjectURL(state.url);});
       outputFilename.value='reverse-clip-check';
+      $('#reverseFilename').value='reverse-clip-reversed';
       $('#versionBadge').textContent='v'+APP_CONFIG.version;
       $('#buildVersion').textContent=APP_CONFIG.version;
       $('#builtAt').textContent=BUILD_MANIFEST.generatedAtUtc||'—';

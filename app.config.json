@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.1.0",
-  "description": "Feasibility test for short, fully local video reversal; MP4 export is not yet implemented.",
-  "descriptionJa": "短い動画の逆再生をブラウザ内で検証する技術テスト版です。MP4書き出しは未実装です。",
+  "version": "0.1.1",
+  "description": "Experimental offline-first reversal of 0.5–2 second video-only MP4 clips using embedded FFmpeg WASM; real-device support is unverified.",
+  "descriptionJa": "端末内のFFmpeg WASMで映像のみ0.5〜2秒の逆再生MP4を作成する実験版です。スマホ実機での動作は検証中です。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",
