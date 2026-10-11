@@ -1136,13 +1136,15 @@
         const chunkCount = Math.ceil(frameCount / (fps * 2));
         if (frameCount < 2 || chunkCount < 1 || chunkCount > 8)
           throw new RangeError('Invalid number of output frames.');
-        const base = Math.floor(frameCount / chunkCount), extra = frameCount % chunkCount;
-        let cursor = first;
+        let cursor = first, remaining = frameCount;
         const chronological = [];
         for (let i = 0; i < chunkCount; i++) {
-          const frames = base + (i < extra ? 1 : 0);
+          let frames = Math.min(fps * 2, remaining);
+          // Use near-integer-second boundaries; avoid a 1-frame final fragment.
+          if (remaining - frames === 1) frames -= 1;
           if (frames < 2 || frames > fps * 2)
             throw new RangeError('Unsafe reverse chunk duration.');
+          remaining -= frames;
           chronological.push({
             start: Number((cursor / fps).toFixed(6)),
             duration: Number((frames / fps).toFixed(6)),

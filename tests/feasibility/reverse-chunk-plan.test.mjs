@@ -26,22 +26,28 @@ function validate(start,end,fps=15){
   assert.ok(Math.abs(p.selectedEnd-end)<=.5/fps+.00001);
   return p;
 }
+test('Android picker stage and Worker read recovery remain part of the app',()=>{
+  assert.ok(html.includes('function prepareMobileInput(file)'));
+  assert.ok(html.includes('function attachSourcePreview(blob)'));
+  assert.ok(html.includes('function copySelectedFile(file, generation)'));
+  assert.ok(html.includes('function isWorkerFileReadError(error)'));
+});
 test('single 1s segment remains supported',()=>{
   const p=validate(0,1);
   assert.equal(p.segments.length,1);
   assert.equal(p.frameCount,15);
 });
-test('5s splits into 3 balanced segments from last to first',()=>{
+test('5s splits at 2s boundaries, in reverse chronology',()=>{
   const p=validate(0,5);
   assert.equal(p.frameCount,75);
   assert.equal(p.segments.length,3);
-  assert.deepEqual(Array.from(p.segments,s=>s.frames),[25,25,25]);
+  assert.deepEqual(Array.from(p.segments,s=>s.frames),[15,30,30]);
   assert.ok(p.segments[0].start>p.segments[1].start);
 });
 test('31 frames never produce an unsupported 1-frame tail',()=>{
   const p=validate(0,31/15);
   assert.equal(p.segments.length,2);
-  assert.deepEqual(Array.from(p.segments,s=>s.frames),[15,16]);
+  assert.deepEqual(Array.from(p.segments,s=>s.frames),[2,29]);
 });
 test('non-frame aligned bounds remain contiguous after rounding',()=>{
   const p=validate(.1,4.93);
