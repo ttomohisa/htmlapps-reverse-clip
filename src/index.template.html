@@ -1162,21 +1162,31 @@
           throw new Error('The selected file was read incompletely.');
         return new Blob([buffer], {type:file.type || 'application/octet-stream'});
       }
+      function attachSourcePreview(blob) {
+        if (state.url) URL.revokeObjectURL(state.url);
+        state.url = URL.createObjectURL(blob);
+        video.src = state.url;
+        video.load();
+      }
       function prepareMobileInput(file) {
-        if (!MOBILE_INPUT || file.size > INPUT_MEMORY_LIMIT) return;
+        if (!MOBILE_INPUT || file.size > INPUT_MEMORY_LIMIT) return false;
         const generation = state.generation;
         state.inputTransport = 'preparing';
+        // Do not decode the original provider File in <video> in parallel with
+        // file.arrayBuffer(): concurrent reads can race permissions/locks.
+        // Both preview and FFmpeg use the same detached in-memory Blob.
         state.inputPreparePromise = copySelectedFile(file, generation).then(copy => {
-          if (!sourceIsCurrent(file, generation)) return;
+          if (!copy || !sourceIsCurrent(file, generation)) return;
           state.copiedInput = copy;
           state.inputTransport = 'memory';
-          if (state.ready) rangeInfo();
+          attachSourcePreview(copy);
         }).catch(error => {
           if (!sourceIsCurrent(file, generation)) return;
           state.inputPrepareError = String(error?.message || error);
           state.inputTransport = 'unreadable';
-          if (state.ready) rangeInfo();
+          setStatus('reverseSourceUnreadable');
         });
+        return true;
       }
       function isWorkerFileReadError(error) {
         return /FileReaderSync|readAsArrayBuffer|NotReadableError|requested file could not be read/i
@@ -1190,11 +1200,8 @@
         if (!isVideo) { setStatus('invalidType'); return; }
         if (file.size > 1073741824) { setStatus('tooLarge'); return; }
         state.file = file;
-        prepareMobileInput(file);
-        state.url = URL.createObjectURL(file);
         setStatus('loading');
-        video.src = state.url;
-        video.load();
+        if (!prepareMobileInput(file)) attachSourcePreview(file);
       }
       video.addEventListener('loadedmetadata', () => {
         if (!state.file || !state.url || video.currentSrc !== state.url) return;
