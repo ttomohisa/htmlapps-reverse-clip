@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "kind": "experimental-github-actions-artifact",
+  "status": "temporary-not-release",
+  "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
+  "builderCommit": "f91efb41408a91146a63eb3e4a96b780782a1857",
+  "workflowRunId": 38121966922,
+  "artifactId": 11694894835,
+  "profile": "video-reverse",
+  "builderVersion": "1.10.4",
+  "wasmLicense": "GPL-2.0-or-later",
+  "assets": {
+    "ffmpeg.js": "13e7e175f5394533dc172d43fcc5087d8d893c78e68136403e841909d0587af9",
+    "ffmpeg.wasm": "500c694e4dfdd75ae13997e3492b5bf68313f68261973c5722317fb561aa4595",
+    "browser-ffmpeg.js": "34c29442c74d9d178666d9788f5ba9f74bb1c56e2052dc0f94dc417ccb427d43"
+  },
+  "notes": "Temporary public Actions artifact; expires under retention policy. Before release replace with verified immutable Builder Release asset and corresponding source. Never load this artifact at runtime."
+}
