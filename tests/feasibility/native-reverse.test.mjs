@@ -43,6 +43,23 @@ try {
     assert.deepEqual(frameIds(output), Array.from({length:20},(_,i)=>24-i));
   });
 
+  test('two bounded 1-second chunks concatenate in reverse order', () => {
+    const segments = [];
+    for (let i = 0; i < 2; i++) {
+      const seg = path.join(root, 'chunk-' + i + '.mp4');
+      run(['-hide_banner','-loglevel','error','-ss',String(.5+i),'-t','1','-i',input,
+        '-vf','reverse,setpts=PTS-STARTPTS,format=yuv420p',
+        '-fps_mode','cfr','-r','10','-c:v','libx264','-preset','ultrafast','-crf','0','-an',seg]);
+      segments.push(seg);
+    }
+    const list = path.join(root, 'parts.txt');
+    writeFileSync(list, segments.reverse().map(seg => "file '" + seg + "'").join('\n') + '\n');
+    const output = path.join(root, 'chunked.mp4');
+    run(['-hide_banner','-loglevel','error','-f','concat','-safe','0','-i',list,
+      '-c','copy',output]);
+    assert.deepEqual(frameIds(output), Array.from({length:20},(_,i)=>24-i));
+  });
+
   test('pingpong no duplicated turnaround (A-02 native baseline)', () => {
     const output=path.join(root,'pingpong.mp4');
     const graph='[0:v]trim=start=0.5:end=2.5,setpts=PTS-STARTPTS,split=2[f][r];'+
