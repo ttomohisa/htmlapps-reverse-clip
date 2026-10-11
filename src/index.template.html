@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#f5f5f2">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; media-src 'self' data: blob:; worker-src 'self' blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data: blob:; media-src 'self' data: blob:; worker-src 'self' blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Reverse Clip</title>
   <link rel="icon" href="__APP_ICON_DATA_URI__">
   <style>
@@ -453,6 +453,7 @@
     .rc-hint{font-size:12px;color:var(--muted);margin:12px 0;overflow-wrap:anywhere}
     .rc-status{font-weight:650;color:var(--accent);margin:14px 0;overflow-wrap:anywhere}
     .rc-report{background:var(--surface-muted);border-radius:10px;min-height:70px;max-height:240px;overflow:auto;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;padding:12px}
+    @media(max-width:600px){.export-row{flex-direction:column;align-items:stretch}.export-field{width:100%;min-width:0}.export-row .button{width:100%}}
     @media(max-width:540px){.rc-grid{grid-template-columns:minmax(0,1fr)}.rc-facts{grid-template-columns:minmax(0,1fr)}.rc-drop .button{min-height:44px}.rc-video{max-height:45vh}.rc-report{max-height:180px}}
   </style>
 </head>
