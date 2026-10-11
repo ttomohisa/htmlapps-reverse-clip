@@ -338,6 +338,60 @@ foreach ($dependency in $dependencies) {
   }
 }
 
+# App-specific immutable local asset import. This is an experimental PoC:
+# a pinned Builder Actions artifact is fetched at build time only, never at runtime.
+# Restore to the template dependency loader when a stable Builder release exists.
+& (Join-Path $Root 'scripts/prepare-video-reverse-runtime.ps1') -ForceDownload:$ForceDownload
+$reverseLock = Get-Json (Join-Path $Root 'reverse-runtime.lock.json')
+$reverseCache = Join-Path $CacheRoot 'reverse-runtime'
+$reverseAssets = [ordered]@{}
+$reverseManifestAssets = @()
+foreach ($entry in @(
+  @{ key='coreJs'; file='ffmpeg.js'; mime='text/javascript' },
+  @{ key='coreWasm'; file='ffmpeg.wasm'; mime='application/wasm' },
+  @{ key='runtimeJs'; file='browser-ffmpeg.js'; mime='text/javascript' }
+)) {
+  $key = [string]$entry.key
+  $filename = [string]$entry.file
+  $sourcePath = Join-Path $reverseCache $filename
+  $bytes = Get-AssetBytes $sourcePath $false
+  if ((Get-Sha256FileHex $sourcePath) -ne [string]$reverseLock.assets.$filename) {
+    throw "Reverse runtime SHA-256 mismatch during standalone build: $filename"
+  }
+  $storedBytes = Compress-GzipBytes $bytes
+  $reverseAssets[$key] = [ordered]@{
+    mime = [string]$entry.mime
+    compression = 'gzip'
+    originalBytes = $bytes.Length
+    storedBytes = $storedBytes.Length
+    base64 = [Convert]::ToBase64String($storedBytes)
+  }
+  $reverseManifestAssets += [ordered]@{
+    key = $key
+    path = "pinned Builder artifact/$filename"
+    mime = [string]$entry.mime
+    compression = 'gzip'
+    bytes = $bytes.Length
+    storedBytes = $storedBytes.Length
+    sha256 = (Get-Sha256FileHex $sourcePath)
+  }
+}
+$assetBundle.dependencies['reverse-wasm'] = [ordered]@{
+  package = [string]$reverseLock.builderRepository
+  version = [string]$reverseLock.builderCommit
+  assets = $reverseAssets
+}
+$manifestDependencies += [ordered]@{
+  id = 'reverse-wasm'
+  package = [string]$reverseLock.builderRepository
+  version = [string]$reverseLock.builderCommit
+  license = [string]$reverseLock.wasmLicense
+  homepage = 'https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder'
+  tarballSha256 = 'experimental-artifact-id-' + [string]$reverseLock.artifactId
+  locked = $true
+  assets = $reverseManifestAssets
+}
+
 $manifest = [ordered]@{
   schemaVersion = 2
   builder = "single-html-app-template/1.3"
