@@ -766,7 +766,7 @@
 
       const translations = {
   "ja": {
-    "brandMeta": "動画逆再生 · v0.1.1 実験版",
+    "brandMeta": "動画逆再生 · v0.1.2 実験版",
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
     "introTitle": "動画逆再生 — WASM実験版",
@@ -832,7 +832,7 @@
     "helpPrivacyBody": "動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。",
     "helpNotesTitle": "制限と注意",
     "helpNoteStorage": "ブラウザーの制限によってMOVやHEVCをプレビューできない場合があります。",
-    "helpNoteBrowser": "WASMテストは小さな空モジュールの読み込み確認であり、FFmpegの変換確認ではありません。",
+    "helpNoteBrowser": "Androidなどでは選択元によって動画を読み取れない場合があります。64MiB以下の動画は端末内へ一時コピーして処理します。処理は外部送信されません。",
     "helpNoteTemplate": "映像のみ最大2秒を逆再生できます。再生・画面の向きを確認してください。スマホ実機は検証中です。",
     "helpOffline": "単一HTMLはローカルでも開けます。動画のアップロードは不要です。",
     "buildInfo": "ビルド情報",
@@ -862,10 +862,14 @@
     "reverseSuccess": "逆再生MP4を作成しました。結果を再生して保存してください。",
     "reverseUnsupported": "このブラウザーでは逆再生用WASMを起動できません。",
     "reverseSaved": "逆再生MP4を保存しました。",
-    "resultInfo": "{duration}秒・{size}・映像のみ・処理時間{elapsed}秒"
+    "resultInfo": "{duration}秒・{size}・映像のみ・処理時間{elapsed}秒",
+    "reverseSourcePreparing": "動画を端末内で準備中です…",
+    "reverseSourceUnreadable": "選択した動画を読み込めません。写真・クラウド上の動画を端末に保存してから選び直してください。",
+    "reverseMemoryRetry": "直接読み込めなかったため、端末内の一時コピーで再試行しています…",
+    "reverseMemoryLimit": "この動画は大きいため、読み込み方法を切り替えられません。64MiB以下の動画を端末に保存して選び直してください。"
   },
   "en": {
-    "brandMeta": "Reverse Clip · v0.1.1 experimental",
+    "brandMeta": "Reverse Clip · v0.1.2 experiment",
     "helpTitle": "How to use & limitations",
     "close": "Close",
     "introTitle": "Reverse Clip — WASM experimental build",
@@ -931,7 +935,7 @@
     "helpPrivacyBody": "Your video stays in the browser. Only an explicit download creates a diagnostic report.",
     "helpNotesTitle": "Limitations",
     "helpNoteStorage": "MOV or HEVC preview may be unavailable depending on the browser.",
-    "helpNoteBrowser": "The small WASM check only tests loading an empty module. It does not validate FFmpeg.",
+    "helpNoteBrowser": "Some Android photo/cloud providers do not permit Worker file reads. Files up to 64 MiB are copied into local browser memory for conversion; nothing is uploaded.",
     "helpNoteTemplate": "Up to 2 seconds of silent reversed MP4 can be exported. Check playback and orientation. Real phone tests remain pending.",
     "helpOffline": "The standalone HTML also opens locally without uploading files.",
     "buildInfo": "Build information",
@@ -961,7 +965,11 @@
     "reverseSuccess": "Reversed MP4 ready. Preview and save it.",
     "reverseUnsupported": "This browser cannot start the reverse WASM.",
     "reverseSaved": "Reversed MP4 saved.",
-    "resultInfo": "{duration}s · {size} · video only · {elapsed}s processing"
+    "resultInfo": "{duration}s · {size} · video only · {elapsed}s processing",
+    "reverseSourcePreparing": "Preparing a local copy of the selected video…",
+    "reverseSourceUnreadable": "Could not read the selected video. Save it locally on your device, then select it again instead of selecting it directly from a cloud or photo provider.",
+    "reverseMemoryRetry": "Direct reading failed. Retrying with a temporary local copy…",
+    "reverseMemoryLimit": "This file is too large for safe in-memory fallback. Save a local video under 64 MiB and select it again."
   }
 };
       const storageKeys = { language: APP_CONFIG.slug + ':language' };
@@ -1066,7 +1074,13 @@
       window.AppToast = AppToast;
       function showToast(message, options = {}) { AppToast.show({ message, ...options }); }
       const video = $('#sourceVideo');
-      const state = { generation: 0, file: null, url: null, ready: false, probe: null, seek: null, note: null, validRange: false, conversion: null };
+      const state = { generation: 0, file: null, url: null, ready: false, probe: null, seek: null, note: null, validRange: false, conversion: null,
+        copiedInput: null, inputPreparePromise: null, inputTransport: 'workerfs', inputPrepareError: null };
+      // On mobile, materialize only small selected files before their picker/provider
+      // grants become inaccessible in WORKERFS/FileReaderSync. Avoid OOM for large files.
+      const INPUT_MEMORY_LIMIT = 64 * 1024 * 1024;
+      const MOBILE_INPUT = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+        (navigator.userAgentData?.mobile === true);
       let conversionEpoch = 0, conversionController = null, conversionRunner = null, resultUrl = null;
       const memoryRate = 1.5; // YUV420p approximation; it is not a memory budget.
       const format = (key, vars = {}) => translate(key).replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ''));
@@ -1079,6 +1093,10 @@
         state.file = null;
         state.ready = false;
         state.seek = null;
+        state.copiedInput = null;
+        state.inputPreparePromise = null;
+        state.inputPrepareError = null;
+        state.inputTransport = 'workerfs';
         if (state.url) URL.revokeObjectURL(state.url);
         state.url = null;
         video.pause();
@@ -1120,10 +1138,51 @@
         else if (mib>96) notice='rangeMemoryHigh';
         $('#rangeNotice').textContent=translate(notice);
         $('#memoryEstimate').textContent=format('memoryNotice',{mib:mib.toFixed(0)});
-        $('#reverseButton').disabled=!state.validRange||Boolean(conversionController);
+        const preparing = state.inputTransport === 'preparing';
+        const unreadable = state.inputTransport === 'unreadable';
+        $('#reverseButton').disabled=!state.validRange||Boolean(conversionController)||preparing||unreadable;
         if (!conversionController&&!state.conversion) $('#reverseStatus').textContent=
-          translate(state.validRange?'reverseReady':'reverseInvalid');
+          translate(unreadable?'reverseSourceUnreadable':preparing?'reverseSourcePreparing':
+                    state.validRange?'reverseReady':'reverseInvalid');
       }
+      function sourceIsCurrent(file, generation) {
+        return generation === state.generation && file === state.file;
+      }
+      // An Android picker can return a File whose original provider handle
+      // later refuses synchronous reads from a Worker. File.arrayBuffer() is
+      // initiated immediately, then a fresh in-memory Blob is used through MEMFS.
+      // The byte limit is deliberate: copying a large input would defeat
+      // WORKERFS's low-memory design, especially on phones.
+      async function copySelectedFile(file, generation) {
+        if (file.size > INPUT_MEMORY_LIMIT)
+          throw new RangeError('Selected file exceeds in-memory input limit.');
+        const buffer = await file.arrayBuffer();
+        if (!sourceIsCurrent(file, generation)) return null;
+        if (buffer.byteLength !== file.size)
+          throw new Error('The selected file was read incompletely.');
+        return new Blob([buffer], {type:file.type || 'application/octet-stream'});
+      }
+      function prepareMobileInput(file) {
+        if (!MOBILE_INPUT || file.size > INPUT_MEMORY_LIMIT) return;
+        const generation = state.generation;
+        state.inputTransport = 'preparing';
+        state.inputPreparePromise = copySelectedFile(file, generation).then(copy => {
+          if (!sourceIsCurrent(file, generation)) return;
+          state.copiedInput = copy;
+          state.inputTransport = 'memory';
+          if (state.ready) rangeInfo();
+        }).catch(error => {
+          if (!sourceIsCurrent(file, generation)) return;
+          state.inputPrepareError = String(error?.message || error);
+          state.inputTransport = 'unreadable';
+          if (state.ready) rangeInfo();
+        });
+      }
+      function isWorkerFileReadError(error) {
+        return /FileReaderSync|readAsArrayBuffer|NotReadableError|requested file could not be read/i
+          .test(String(error?.message || error));
+      }
+
       function chooseFile(file) {
         if (!file) return;
         releaseSource();
@@ -1131,6 +1190,7 @@
         if (!isVideo) { setStatus('invalidType'); return; }
         if (file.size > 1073741824) { setStatus('tooLarge'); return; }
         state.file = file;
+        prepareMobileInput(file);
         state.url = URL.createObjectURL(file);
         setStatus('loading');
         video.src = state.url;
@@ -1277,6 +1337,14 @@
       }
       async function reverseShortClip() {
         if(!state.ready||!state.file||!state.validRange){showToast(translate('reverseInvalid'));return;}
+        if (state.inputTransport === 'preparing') {
+          showToast(translate('reverseSourcePreparing'));
+          return;
+        }
+        if (state.inputTransport === 'unreadable') {
+          showToast(translate('reverseSourceUnreadable'));
+          return;
+        }
         resetConversion();
         const generation=state.generation, job=++conversionEpoch;
         const file=state.file, start=Number($('#rangeStart').value);
@@ -1304,22 +1372,48 @@
           if(job!==conversionEpoch||generation!==state.generation)return;
           const runner=await window.BrowserFFmpeg.loadEmbedded({coreJsText,wasmBytes});
           conversionRunner=runner;
-          const result=await runner.run({
-            files:[{name:'/workerfs/input.mp4',data:file,workerfs:true}],
-            outputs:['/reverse.mp4'],
-            args:['--input','/workerfs/input.mp4','--output','/reverse.mp4',
-              '--start-time',String(start),'--duration',String(duration),
-              '--width',String(dims.width),'--height',String(dims.height),
-              '--fps',String(OUTPUT_FPS),'--crf','28'],
-            signal:controller.signal,
-            onProgress:p=>{
-              if(job!==conversionEpoch)return;
-              const pc=Math.max(0,Math.min(100,Math.round(p*100)));
-              $('#reverseProgress').value=pc;
-              $('#reverseStatus').textContent=format('reverseRunning',{progress:pc});
-            },
-            onLog:({message})=>{if(logs.length<40)logs.push(String(message).slice(0,180));}
-          });
+          // MEMFS receives a copied Blob; it avoids WORKERFS's synchronous
+          // FileReaderSync reads against potentially expiring Android URIs.
+          // Desktop and large input retain WORKERFS until a read failure.
+          let inputMode = state.copiedInput ? 'memory' : 'workerfs';
+          const runWithInput = (data, memoryBacked) => {
+            const inputPath = memoryBacked ? '/input.mp4' : '/workerfs/input.mp4';
+            return runner.run({
+              files:[{name:inputPath,data,workerfs:!memoryBacked}],
+              outputs:['/reverse.mp4'],
+              args:['--input',inputPath,'--output','/reverse.mp4',
+                '--start-time',String(start),'--duration',String(duration),
+                '--width',String(dims.width),'--height',String(dims.height),
+                '--fps',String(OUTPUT_FPS),'--crf','28'],
+              signal:controller.signal,
+              onProgress:p=>{
+                if(job!==conversionEpoch)return;
+                const pc=Math.max(0,Math.min(100,Math.round(p*100)));
+                $('#reverseProgress').value=pc;
+                $('#reverseStatus').textContent=format('reverseRunning',{progress:pc});
+              },
+              onLog:({message})=>{if(logs.length<40)logs.push(String(message).slice(0,180));}
+            });
+          };
+          let result;
+          try {
+            result=await runWithInput(state.copiedInput || file,Boolean(state.copiedInput));
+          }catch(error){
+            if (!isWorkerFileReadError(error) || state.copiedInput || controller.signal.aborted)
+              throw error;
+            if (file.size > INPUT_MEMORY_LIMIT)
+              throw new Error(translate('reverseMemoryLimit'));
+            if(job!==conversionEpoch||generation!==state.generation)return;
+            $('#reverseStatus').textContent=translate('reverseMemoryRetry');
+            const copy=await copySelectedFile(file, generation).catch(() => {
+              throw new Error(translate('reverseSourceUnreadable'));
+            });
+            if(!copy||job!==conversionEpoch||generation!==state.generation)return;
+            state.copiedInput=copy;
+            state.inputTransport='memory';
+            inputMode='memory-fallback';
+            result=await runWithInput(copy,true);
+          }
           if(job!==conversionEpoch||generation!==state.generation)return;
           const bytes=result.files?.[0]?.data;
           if(result.exitCode!==0||!bytes||bytes.byteLength<1000||
@@ -1347,7 +1441,7 @@
           state.conversion={ok:true,elapsedSeconds:Number(elapsed.toFixed(2)),
             outputBytes:bytes.byteLength,outputDuration:resultVideo.duration,
             outputWidth:resultVideo.videoWidth,outputHeight:resultVideo.videoHeight,
-            start,duration,quality:$('#qualityInput').value,fps:OUTPUT_FPS,audio:'none'};
+            start,duration,quality:$('#qualityInput').value,fps:OUTPUT_FPS,audio:'none',inputTransport:inputMode};
           $('#resultInfo').textContent=format('resultInfo',{
             duration:resultVideo.duration.toFixed(2),
             size:humanSize(bytes.byteLength),elapsed:elapsed.toFixed(2)
@@ -1395,7 +1489,7 @@
           media:state.ready ? {mime:state.file.type,bytes:state.file.size,duration:video.duration,
             width:video.videoWidth,height:video.videoHeight,start:Number($('#rangeStart').value),
             end:Number($('#rangeEnd').value),quality:$('#qualityInput').value,plannedMode:$('#modeInput').value} : null,
-          note:'Does not contain file name or video contents; no FFmpeg reverse conversion was performed.'};
+          note:'No raw media bytes or input file name are included. reverseConversion records only observed app output or errors.'};
         const blob = new Blob([JSON.stringify(details,null,2)],{type:'application/json;charset=utf-8'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.1.1 experimental WASM export (Gate G1: NOT PASSED).** Reverse up to 2 seconds of video, no audio. Mobile performance and original-capture codecs remain unverified.
+**Development status: v0.1.2 experimental WASM export (Gate G1: NOT PASSED).** Reverse up to 2 seconds of video, no audio. Mobile performance and original-capture codecs remain unverified.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -56,3 +56,9 @@ Normal build on Windows: set `GITHUB_TOKEN` or `GH_TOKEN` with permission to rea
 5. Use the separate diagnostic button if requested. The JSON optionally includes an output-success/error summary, but never raw video data or the input filename.
 
 Because this is a feasibility experiment, no unconditional iPhone/Android support claim is made.
+
+### Android file-picker reading workaround (v0.1.2)
+
+Some Android photo or cloud providers return a `File` that can be previewed but fails when FFmpeg's Worker reads it through `FileReaderSync`/`WORKERFS`. For **mobile-selected input files up to 64 MiB**, this version attempts to read the content immediately on the main thread, builds a temporary in-memory Blob, and loads it into the FFmpeg virtual filesystem through `MEMFS`; this path **does not invoke `FileReaderSync`** for the original provider file. The bytes never leave the browser. The extra copy uses more memory and is deliberately limited. Large files retain WORKERFS, with a clear error if this platform cannot read them. Desktop files retain WORKERFS and can retry through the bounded-memory path after a recognized read failure. If even the initial browser read is denied, download/save the video to local device storage before selecting it again.
+
+The fixed UI has **not** yet been proven on the reporting Android handset. G1 remains pending.
