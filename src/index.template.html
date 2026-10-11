@@ -528,7 +528,7 @@
 <section class="shell workspace" aria-labelledby="probeTitle">
   <div class="workspace-head">
     <div><h2 id="probeTitle" data-i18n="probeTitle">動作テスト</h2>
-    <p data-i18n="probeBody">シーク、Worker、基本WASMの対応を調べます。動画の逆再生・MP4保存機能ではありません。</p></div>
+    <p data-i18n="probeBody">動画を選んでから実行すると、シーク・Worker・基本WASMをまとめて確認します。逆再生やMP4保存の試験ではありません。</p></div>
   </div>
   <div class="button-row">
     <button class="button primary" id="probeButton" type="button" data-i18n="runProbe">ブラウザーの動作を確認</button>
@@ -605,7 +605,7 @@
   <ol>
   <li data-i18n="helpStep1">動画を選択します。可能な端末では撮影からも取り込めます。</li>
   <li data-i18n="helpStep2">元動画をプレビューして、開始・終了秒を設定します。</li>
-  <li data-i18n="helpStep3">動作テストを行い、必要なら診断JSONを保存します。これは逆再生MP4ではありません。</li>
+  <li data-i18n="helpStep3">動画を選んでから「ブラウザーの動作を確認」を押すと、シーク・Worker・WASMをまとめて測定します。診断JSONは必要に応じて保存できます。逆再生MP4の試験ではありません。</li>
   </ol>
   <h3 data-i18n="helpPrivacyTitle">プライバシー</h3>
   <p data-i18n="helpPrivacyBody">動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。</p>
@@ -765,7 +765,7 @@
     "rangeTooLong": "この画質で選べる範囲は最大 {limit}秒です。自動では短くしません。",
     "memoryNotice": "フレーム保持の理論上の下限: 約 {mib} MiB（実際のメモリ使用量はこれより大きくなります）",
     "probeTitle": "動作テスト",
-    "probeBody": "シーク、Worker、基本WASMの対応を調べます。動画の逆再生・MP4保存機能ではありません。",
+    "probeBody": "動画を選んでから実行すると、シーク・Worker・基本WASMをまとめて確認します。逆再生やMP4保存の試験ではありません。",
     "runProbe": "ブラウザーの動作を確認",
     "runSeek": "動画のシークを確認",
     "outputFilename": "診断ファイル名",
@@ -791,7 +791,7 @@
     "helpBasicsTitle": "使い方",
     "helpStep1": "動画を選択します。可能な端末では撮影からも取り込めます。",
     "helpStep2": "元動画をプレビューして、開始・終了秒を設定します。",
-    "helpStep3": "動作テストを行い、必要なら診断JSONを保存します。これは逆再生MP4ではありません。",
+    "helpStep3": "動画を選んでから「ブラウザーの動作を確認」を押すと、シーク・Worker・WASMをまとめて測定します。診断JSONは必要に応じて保存できます。逆再生MP4の試験ではありません。",
     "helpPrivacyTitle": "プライバシー",
     "helpPrivacyBody": "動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。",
     "helpNotesTitle": "制限と注意",
@@ -845,7 +845,7 @@
     "rangeTooLong": "This quality supports at most {limit} seconds. The range will not be shortened automatically.",
     "memoryNotice": "Theoretical lower bound for buffered frames: ~{mib} MiB (real usage will be higher).",
     "probeTitle": "Browser checks",
-    "probeBody": "Test seeking, Worker and basic WASM capability. These checks do not reverse video or export MP4.",
+    "probeBody": "After selecting a video, run one check for seeking, Worker and basic WASM. This does not reverse or export video.",
     "runProbe": "Check browser capabilities",
     "runSeek": "Test video seeking",
     "outputFilename": "Diagnostic filename",
@@ -871,7 +871,7 @@
     "helpBasicsTitle": "How to test",
     "helpStep1": "Choose a video, or record one where supported.",
     "helpStep2": "Preview the source and enter the start/end times.",
-    "helpStep3": "Run browser checks and optionally save a diagnostic JSON file. This is not a reversed MP4.",
+    "helpStep3": "With a video selected, run the single browser check to test seeking, Worker and WASM. Save the optional diagnostic JSON. This is not a reversed MP4.",
     "helpPrivacyTitle": "Privacy",
     "helpPrivacyBody": "Your video stays in the browser. Only an explicit download creates a diagnostic report.",
     "helpNotesTitle": "Limitations",
@@ -1078,7 +1078,7 @@
         $('#brandName').textContent = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
         $('#footerName').textContent = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
         setStatus(state.ready ? 'loaded' : state.file ? 'loading' : 'nothingSelected');
-        $('#probeReport').textContent = state.probe ? JSON.stringify(state.probe,null,2) : translate('notRun');
+        $('#probeReport').textContent = (state.probe || state.seek) ? JSON.stringify({capabilities:state.probe,seek:state.seek},null,2) : translate('notRun');
         rangeInfo();
       }
       async function probeBrowser() {
@@ -1111,14 +1111,23 @@
           finally { if(worker) worker.terminate(); URL.revokeObjectURL(url); }
         }
         state.probe = probe;
-        $('#probeReport').textContent = JSON.stringify(probe,null,2);
-        showToast(translate(probe.wasmAvailable && probe.blobWorkerPassed ? 'probeReady' : 'probeFailed'));
+        // Run seeking as part of the same check when the video is playable.
+        // A null seek in older reports meant "not run" rather than a failed seek.
+        const sourceGeneration = state.generation;
+        if (state.ready) await probeSeek({silent:true});
+        $('#probeReport').textContent = JSON.stringify({capabilities:state.probe,seek:state.seek},null,2);
+        const success = probe.wasmAvailable && probe.blobWorkerPassed &&
+          (sourceGeneration !== state.generation || !state.ready || (state.seek && !state.seek.error));
+        showToast(translate(success ? 'probeReady' : 'probeFailed'));
       }
-      async function probeSeek() {
+      async function probeSeek({silent = false} = {}) {
         if (!state.ready) { showToast(translate('noVideo')); return; }
         const id = state.generation;
-        const target = Math.min(Math.max(.1,Number($('#rangeStart').value)+.2), video.duration-.05);
-        const original = video.currentTime;
+        let target = Math.min(Math.max(.1,Number($('#rangeStart').value)+.2), video.duration-.05);
+        // Seeking to the current position need not emit the seeked event.
+        if (Math.abs(target - video.currentTime) < .1) {
+          target = Math.abs(video.duration - .1 - target) > .25 ? video.duration - .1 : .1;
+        }
         const started = performance.now();
         $('#seekButton').disabled = true;
         let timer, onSeeked, onError;
@@ -1135,10 +1144,14 @@
           });
           if (id !== state.generation) return;
           state.seek = { targetSeconds:target, actualSeconds:video.currentTime, elapsedMs:Math.round(elapsed) };
-          showToast(format('seekDone',{ms:Math.round(elapsed)}));
+          if (!silent) showToast(format('seekDone',{ms:Math.round(elapsed)}));
           $('#probeReport').textContent = JSON.stringify({capabilities:state.probe,seek:state.seek},null,2);
         } catch(error) {
-          if(id === state.generation){ state.seek={error:String(error)};showToast(translate('seekFailed')); }
+          if (id === state.generation) {
+            state.seek = {error:String(error)};
+            if (!silent) showToast(translate('seekFailed'));
+            $('#probeReport').textContent = JSON.stringify({capabilities:state.probe,seek:state.seek},null,2);
+          }
         } finally {
           if(id === state.generation) $('#seekButton').disabled=false;
         }
