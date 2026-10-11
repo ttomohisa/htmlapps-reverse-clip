@@ -5,6 +5,7 @@ on:
   pull_request:
     branches:
       - main
+      - feat/reverse-clip-feasibility-v0.1
     paths:
       - "src/**"
       - "scripts/**"
