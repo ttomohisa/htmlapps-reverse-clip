@@ -1234,7 +1234,7 @@
         document.title = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
         $('#brandName').textContent = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
         $('#footerName').textContent = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
-        setStatus(state.ready ? 'loaded' : state.file ? 'loading' : 'nothingSelected');
+        setStatus(state.inputTransport === 'unreadable' ? 'reverseSourceUnreadable' : state.ready ? 'loaded' : state.file ? 'loading' : 'nothingSelected');
         $('#probeReport').textContent = (state.probe || state.seek) ? JSON.stringify({capabilities:state.probe,seek:state.seek},null,2) : translate('notRun');
         rangeInfo();
         if (state.conversion?.ok) $('#reverseStatus').textContent = translate('reverseSuccess');
