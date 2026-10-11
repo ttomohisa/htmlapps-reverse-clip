@@ -50,6 +50,6 @@ test('non-frame aligned bounds remain contiguous after rounding',()=>{
 test('minimum 0.5-second range is accepted',()=>validate(0,.5));
 test('invalid bounds are rejected',()=>{
   for(const [a,b] of [[-.1,.9],[0,.3],[0,5.1],[NaN,1],[0,Infinity]])
-    assert.throws(()=>plan(a,b,15),/Reverse clip range/);
+    assert.throws(()=>plan(a,b,15),/Select 0\.5/);
 });
 
