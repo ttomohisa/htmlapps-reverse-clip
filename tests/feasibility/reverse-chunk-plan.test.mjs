@@ -64,7 +64,7 @@ test('9.9s snaps to 149 encoded frames across five segments',()=>{
 test('non-zero starting time can reverse a ten-second window',()=>{
   const p=validate(2.5,12.5);
   assert.equal(p.frameCount,150);
-  assert.equal(p.segments[0].start,10.5);
+  assert.ok(Math.abs(p.segments[0].start - 10.533333) < 0.00001); // 2.5s snaps up to frame 38/15
 });
 test('every tenths-of-a-second duration yields contiguous safe boundaries',()=>{
   for(let i=5;i<=100;i++){
