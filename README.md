@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.1.2 experimental WASM export (Gate G1: NOT PASSED).** Reverse up to 2 seconds of video, no audio. Mobile performance and original-capture codecs remain unverified.
+**Development status: v0.1.3 experimental chunked WASM export (Gate G1: NOT PASSED).** Reverse up to 2 seconds of video, no audio. Mobile performance and original-capture codecs remain unverified.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -15,7 +15,7 @@ Select a short portion of a video and export a reversed or forward-then-reverse 
 - Includes reproducible **native FFmpeg algorithm tests** for frame-accurate middle-clip reversal and ping-pong without a duplicated turnaround frame.
 - Preserves the `htmlapps-template` single-HTML, offline-first, CSP, bilingual, Windows build and GitHub Actions conventions.
 
-**Experimentally available:** a single 0.5–2s reversed H.264 MP4 without audio; 360p and 720p at 15fps (no upscaling). **Not available:** ping-pong, reverse audio, longer clip stitching, reliably supported HEVC/MOV, and verified phone performance. G1 remains open.
+**Experimentally available:** a single 0.5–5s reversed H.264 MP4 without audio; long edge 360px and 720px at 15fps (no upscaling). **Not available:** ping-pong, reverse audio, longer clip stitching, reliably supported HEVC/MOV, and verified phone performance. G1 remains open.
 
 ## Development
 
@@ -50,7 +50,7 @@ Normal build on Windows: set `GITHUB_TOKEN` or `GH_TOKEN` with permission to rea
 ### Experiment steps
 
 1. Choose an MP4/MOV and let the browser display metadata and a preview.
-2. Choose 0.5–2 seconds, output 360p or 720p; mode is reverse-only.
+2. Choose 0.5–5 seconds, output long edge 360px or 720px; mode is reverse-only.
 3. Press **Create reversed MP4** and optionally cancel during conversion. If an error appears, expand the technical details.
 4. Play the *generated* output, check frame order and orientation, edit the MP4 filename, and press **Save MP4**.
 5. Use the separate diagnostic button if requested. The JSON optionally includes an output-success/error summary, but never raw video data or the input filename.
@@ -62,3 +62,9 @@ Because this is a feasibility experiment, no unconditional iPhone/Android suppor
 Some Android photo or cloud providers return a `File` that can be previewed but fails when FFmpeg's Worker reads it through `FileReaderSync`/`WORKERFS`. For **mobile-selected input files up to 64 MiB**, this version attempts to read the content immediately on the main thread, builds a temporary in-memory Blob, and loads it into the FFmpeg virtual filesystem through `MEMFS`; this path **does not invoke `FileReaderSync`** for the original provider file. The bytes never leave the browser. The extra copy uses more memory and is deliberately limited. Large files retain WORKERFS, with a clear error if this platform cannot read them. Desktop files retain WORKERFS and can retry through the bounded-memory path after a recognized read failure. If even the initial browser read is denied, download/save the video to local device storage before selecting it again.
 
 The fixed UI has **not** yet been proven on the reporting Android handset. G1 remains pending.
+
+### v0.1.3 — experimental segment joining
+
+A 0.5–5-second selection is snapped to the nearest 15fps frame boundary (up to about 0.033s shift, disclosed in the UI), then divided into 1–3 balanced segments, each no longer than 2 seconds. The app reverses chunks from **latest to earliest**, before a dedicated public-libav remuxer validates H.264 stream consistency and rebases timestamps to produce one MP4. Source audio is not included and ping-pong is unavailable. Cancellation never enables saving a partial MP4.
+
+The quality presets now explicitly mean **long edge 360px or 720px**; they do not promise conventional 720p dimensions. A 5-second marker-video proof passed 50/50 frame-order checks in desktop Chromium. Actual 5-second Android/iPhone throughput and memory behavior remain unverified. The temporary Builder artifact is pinned to commit `47448852` / ID `11698036987` and must be replaced by a permanent, source-complete GPL release before stable publication.

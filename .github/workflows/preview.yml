@@ -37,6 +37,10 @@ jobs:
         with:
           node-version: 24
 
+      - name: Reverse timeline tests
+        shell: pwsh
+        run: node --test ./tests/feasibility/reverse-chunk-plan.test.mjs
+
       - name: Validate PowerShell syntax and encoding
         shell: powershell
         run: .\scripts\check-powershell-syntax.ps1

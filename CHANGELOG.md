@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3] - 2026-10-11 (experimental chunk reversal)
+- Added 0.5–5-second video-only MP4 reversal via 1–3 sequential chunks, each up to 2 seconds.
+- Added public-libav MP4 joining in reverse chronological order, with timestamp and codec-parameter checks; no partial outputs are downloadable.
+- Disclose 15fps frame snapping. Quality presets specify long edge 360/720px (not full native 360p/720p).
+- Added conversion stage labels, cancel and output timing checks.
+- Upgraded pinned Builder WASM to commit 47448852; source-complete permanent release and mobile performance tests remain pending.
+- Gate G1 remains INVESTIGATE.
+
 ## [0.1.2] - 2026-10-11 (Android file read recovery)
 
 - Avoid Android photo-provider `FileReaderSync.readAsArrayBuffer` failures during WORKERFS reads: immediately copy selected mobile videos **up to 64 MiB** into a new local in-memory Blob, then stage via FFmpeg MEMFS (no FileReaderSync).
