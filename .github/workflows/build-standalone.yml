@@ -117,3 +117,9 @@ jobs:
         env:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/dual-thread-browser-smoke.py
+
+      - name: Verify Pages ST and service-worker-isolated MT in real Chrome
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/pages-browser-smoke.py
