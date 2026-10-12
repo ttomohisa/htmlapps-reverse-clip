@@ -34,3 +34,12 @@ The Builder WASM currently comes from an **expiring GitHub Actions artifact**, p
 6. **iPhone Safari / HEVC MOV testing is deferred by user instruction (2026-10-12)**; do not claim it passed or request it as part of the current Android-first milestone.
 
 A separate `tests/feasibility/browser-video-smoke.py` optional suite runs real WASM on both generated HTML variants using desktop Chromium. It does not validate physical Android devices or direct file://.
+
+## ST / MT distribution acceptance (v0.1.5)
+
+- The normal Windows standalone build must produce four HTML files: `dist/index.html`, `dist/index.mt.html`, and both respective self-extract outputs. Root ST and MT copies must match each output byte-for-byte.
+- ST standalone must operate directly from `file://` (when allowed by the local browser); MT may only run on a server that supplies COOP/COEP and exposes SharedArrayBuffer. Missing MT isolation must disable conversion with a clear message; **do not silently execute ST while labeling MT**.
+- `pages-dist/index.html` is ST; `pages-dist/mt/index.html` is MT with a **pinned, same-origin COI SW**. Neither standalone HTML variant embeds a Pages worker reference.
+- GitHub Pages ST and MT must both pass real MP4 conversion, cancellation, saved output, per-threading SHA-256 and no runtime external media/network requests. Pages MT may reload once to install its SW.
+- Browser Kitty must import the actual MT Pages HTML and apply COOP/COEP/CORP only on `/apps/reverse-clip.html`. The required headers must be observed on the live HTTP response; runtime must show `crossOriginIsolated` and `SharedArrayBuffer` available. The portal homepage and other apps must be unchanged.
+- A successful build does not prove MT is faster on Android, nor make iPhone supported. Stable release is blocked on corresponding GPL source and immutable Builder assets.

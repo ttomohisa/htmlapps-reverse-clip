@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.5] - 2026-10-12 (two real ST/MT WASM distributions)
+- Request dual ST/MT pthread builds in the dedicated Reverse Clip Builder profile.
+- Generate ST + MT readable and self-extract single HTML, with separately pinned JS/WASM hashes.
+- Publish GitHub Pages root (ST) and /mt/ (MT). A fixed, MIT-licensed, SHA-256-verified same-origin COI Service Worker is deployed **only** under Pages /mt/.
+- MT conversion requires crossOriginIsolated plus SharedArrayBuffer; missing isolation disables the MT conversion UI with a clear Japanese/English explanation.
+- Prepare Browser Kitty to use MT with route-scoped COOP/COEP/CORP; no global cross-origin isolation and no silent ST fallback.
+- No claims of MT speedup or stable release until actual runtime/phone/hosting checks and permanent source-complete GPL runtime distribution.
+
+
 ## [0.1.4] - 2026-10-12 (experimental ten-second reverse)
 - Extend the experimental range to 0.5–10 seconds at 15fps, with at most five 2-second segments for a full ten-second selection.
 - Require an exact expected encoded-frame count for every WASM segment and for the joined MP4. Reject incomplete/extra-frame output, rather than silently accepting a loose duration.

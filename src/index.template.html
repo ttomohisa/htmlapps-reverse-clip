@@ -478,7 +478,7 @@
         </div>
         <div class="brand-copy">
           <p class="brand-name"><span id="brandName">Reverse Clip</span><span class="version-badge" id="versionBadge">v0.1.0</span></p>
-          <p class="brand-meta" data-i18n="brandMeta">技術検証 · 端末内処理</p>
+          <p class="brand-meta"><span data-i18n="brandMeta">端末内処理</span> · <span id="runtimeModeLabel">ST</span></p>
         </div>
       </div>
       <div class="header-actions">
@@ -495,6 +495,7 @@
       <div>
         <h2 id="heroTitle" data-i18n="introTitle">動画逆再生 — 最大10秒の実験版</h2>
         <p data-i18n="lead">最大10秒の動画を分割逆再生します。5秒を超える変換は検証中です。</p>
+    <p id="mtBrowserNotice" class="rc-hint" hidden role="status" aria-live="polite"></p>
       </div>
       <div class="local-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6z"/><path d="m9 12 2 2 4-5"/></svg>
@@ -651,7 +652,7 @@
     <li data-i18n="helpNoteBrowser">ここでのWASMテストは小さな空モジュールの読み込み確認であり、FFmpegの動画変換確認ではありません。</li>
     <li data-i18n="helpNoteTemplate">10秒への拡張は検証中です。予期しないフレーム数の出力は保存できません。</li>
   </ul>
-  <p class="dialog-note" data-i18n="helpOffline">単一HTMLはローカルで開けます。動画のアップロードは不要です。</p>
+  <p id="helpOffline" class="dialog-note" data-i18n="helpOffline">単一HTMLはローカルで開けます。動画のアップロードは不要です。</p>
 <!-- APP:HELP:END -->
     </div>
   </dialog>
@@ -661,6 +662,7 @@
       'use strict';
 
       const APP_CONFIG = __APP_CONFIG_JSON__;
+      const RUNTIME_VARIANT = "__RUNTIME_VARIANT__";
       const BUILD_MANIFEST = __BUILD_MANIFEST_JSON__;
       // Asset payloads are Base64 exactly once. The JSON bundle itself is embedded directly.
       const assetBundle = __EMBEDDED_ASSET_BUNDLE_JSON__;
@@ -766,7 +768,7 @@
 
       const translations = {
   "ja": {
-    "brandMeta": "動画逆再生 · v0.1.4 10秒実験版",
+    "brandMeta": "動画逆再生 · v0.1.5 ST/MT実験版",
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
     "introTitle": "動画逆再生 — 最大10秒の実験版",
@@ -871,10 +873,14 @@
     "rangeSnapNote": "15fpsのフレーム境界に合わせるため、選択時刻から最大約0.03秒ずれます。",
     "reverseChunk": "区間 {current}/{total} を逆再生中… {progress}%",
     "reverseJoin": "MP4を1本に結合しています… {progress}%",
-    "rangeTenSecondWarning": "5秒を超える変換は実機で検証中です。まず長辺360pxをお試しください。"
+    "rangeTenSecondWarning": "5秒を超える変換は実機で検証中です。まず長辺360pxをお試しください。",
+    "stVariant": "ST 標準版",
+    "mtVariant": "MT 高速版",
+    "mtUnavailable": "マルチスレッド版を使うには対応ブラウザーと専用のWebサーバー設定が必要です。GitHub PagesのMTページを開き直すか、標準版をご利用ください。",
+    "mtHelpOffline": "マルチスレッド版はWebサーバーの安全な設定が必要です。HTML単体をfile://で開く場合は標準（ST）版を使用してください。動画は外部に送信しません。"
   },
   "en": {
-    "brandMeta": "Reverse Clip · v0.1.4 10s experiment",
+    "brandMeta": "Reverse Clip · v0.1.5 ST/MT experiment",
     "helpTitle": "How to use & limitations",
     "close": "Close",
     "introTitle": "Reverse Clip — up to 10 seconds (experimental)",
@@ -979,7 +985,11 @@
     "rangeSnapNote": "15fps output may shift selection boundaries by up to about 0.03s to align frames.",
     "reverseChunk": "Reversing segment {current}/{total}… {progress}%",
     "reverseJoin": "Joining MP4 segments… {progress}%",
-    "rangeTenSecondWarning": "More than 5 seconds is not yet tested on real phones. Try long edge 360px first."
+    "rangeTenSecondWarning": "More than 5 seconds is not yet tested on real phones. Try long edge 360px first.",
+    "stVariant": "ST standard",
+    "mtVariant": "MT accelerated",
+    "mtUnavailable": "Multi-thread mode requires a supported browser and cross-origin isolation. Reload the GitHub Pages MT page or use the standard single-thread build.",
+    "mtHelpOffline": "The multi-thread build needs cross-origin isolation from a configured web server. Use the ST HTML for direct file:// access. Videos are not uploaded."
   }
 };
       const storageKeys = { language: APP_CONFIG.slug + ':language' };
@@ -1124,6 +1134,11 @@
       function humanSize(bytes) {
         return (bytes / 1048576).toFixed(1) + ' MiB';
       }
+      function threadingReady() {
+        return RUNTIME_VARIANT === 'single-thread' ||
+          (globalThis.crossOriginIsolated === true &&
+           typeof SharedArrayBuffer === 'function');
+      }
       const OUTPUT_FPS = 15;
       const MAX_CLIP_SECONDS = 10; // Experimental: 10s needs Android/PC real-device verification.
       // Pure and testable: split at the output's 15fps cadence. Evenly sized
@@ -1201,10 +1216,10 @@
         const preparing = state.inputTransport === 'preparing';
         const unreadable = state.inputTransport === 'unreadable';
         $('#reverseButton').disabled = !safe || Boolean(conversionController) ||
-                                       preparing || unreadable;
+                                       preparing || unreadable || !threadingReady();
         if (!conversionController && !state.conversion)
           $('#reverseStatus').textContent =
-            translate(unreadable?'reverseSourceUnreadable':preparing?'reverseSourcePreparing':
+            translate(!threadingReady()?'mtUnavailable':unreadable?'reverseSourceUnreadable':preparing?'reverseSourcePreparing':
                       safe?'reverseReady':'reverseInvalid');
       }
       function sourceIsCurrent(file, generation) {
@@ -1288,6 +1303,10 @@
       video.addEventListener('error', () => { if (state.file) { state.ready = false; setStatus('cantRead'); }});
       function applyLanguage() {
         document.documentElement.lang = language;
+        $('#runtimeModeLabel').textContent = translate(RUNTIME_VARIANT === 'multi-thread' ? 'mtVariant' : 'stVariant');
+        $('#mtBrowserNotice').hidden = threadingReady();
+        $('#mtBrowserNotice').textContent = translate('mtUnavailable');
+        $('#helpOffline').textContent = translate(RUNTIME_VARIANT === 'multi-thread' ? 'mtHelpOffline' : 'helpOffline');
         document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = translate(el.dataset.i18n); });
         document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = translate(el.dataset.i18nTitle); });
         document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label',translate(el.dataset.i18nAriaLabel)); });
@@ -1416,6 +1435,11 @@
         }
         const start=Number($('#rangeStart').value), end=Number($('#rangeEnd').value);
         const dims=outputDimensions();
+        if (!threadingReady()) {
+          showToast(translate('mtUnavailable'));
+          $('#reverseStatus').textContent=translate('mtUnavailable');
+          return;
+        }
         let plan;
         try { plan=planReverseFrames(start,end,OUTPUT_FPS); }
         catch (_) { showToast(translate('reverseInvalid'));return; }
@@ -1444,7 +1468,7 @@
             window.StandaloneAssets.bytesAsync('reverse-wasm','coreWasm')
           ]);
           if(job!==conversionEpoch||generation!==state.generation)return;
-          const runner=await window.BrowserFFmpeg.loadEmbedded({coreJsText,wasmBytes});
+          const runner=await window.BrowserFFmpeg.loadEmbedded({coreJsText,wasmBytes,threading:RUNTIME_VARIANT});
           conversionRunner=runner;
 
           const count=plan.segments.length, stages=count+(count>1?1:0);
@@ -1603,7 +1627,9 @@
         return name.slice(0,120);
       }
       function saveDiagnostic() {
-        const details = {createdAt:new Date().toISOString(),application:'Reverse Clip',version:APP_CONFIG.version,
+        const details = {createdAt:new Date().toISOString(),application:'Reverse Clip',version:APP_CONFIG.version, runtimeThreading:RUNTIME_VARIANT,
+          crossOriginIsolated:globalThis.crossOriginIsolated===true,
+          sharedArrayBuffer:typeof SharedArrayBuffer==='function',
           userAgent:navigator.userAgent,mode:location.protocol,language,capabilities:state.probe,seek:state.seek,reverseConversion:state.conversion,
           media:state.ready ? {mime:state.file.type,bytes:state.file.size,duration:video.duration,
             width:video.videoWidth,height:video.videoHeight,start:Number($('#rangeStart').value),

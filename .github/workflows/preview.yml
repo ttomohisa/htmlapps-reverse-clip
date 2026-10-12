@@ -49,6 +49,16 @@ jobs:
         shell: pwsh
         run: ./scripts/check-repository.ps1
 
+      - name: Verify pinned ST and MT runtime bytes
+        shell: pwsh
+        run: node --test ./tests/feasibility/threading-distribution.test.mjs
+
+      - name: Prepare multi-thread Preview isolation headers
+        shell: pwsh
+        run: |
+          ./scripts/prepare-preview-headers.ps1
+          node --test ./tests/feasibility/pages-dual-thread.test.mjs
+
       - name: Check Cloudflare preview credentials
         id: cloudflare
         shell: pwsh

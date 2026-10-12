@@ -1,9 +1,8 @@
-Reverse Clip v0.1.4 — experimental up-to-10-second reverse MP4 (not a stable release).
-Android Chrome and Windows Chrome/Edge are the current development priorities.
-5s long-edge720px on Android is user-confirmed (12.7s); 10s is desktop-verified
-but not yet confirmed on real Android. Long edge presets are NOT standard 720p.
-Generated single HTML contains pinned FFmpeg/x264 GPL WASM; browser use requires
-no installation, login or runtime network. The first BUILD needs a GitHub token
-to fetch the expiring pinned Builder Actions artifact; cached builds work offline.
-See README.ja.md, README.md, APP_SPEC.md, DEVELOPMENT_PLAN.md and VERIFY_OFFLINE.md.
-Do not mark original G1 passed. iPhone testing is deferred.
+Reverse Clip v0.1.5 - single-thread (ST) + multi-thread (MT) experimental builds.
+GitHub Pages root / = portable ST; GitHub Pages /mt/ = MT with pinned COI worker.
+Browser Kitty imports MT once the separate app/site Draft PRs are merged.
+ST standalone supports direct file://; MT requires HTTP(S) cross-origin isolation.
+Actual Android 5s/10s tests were for ST; MT speed has not yet been demonstrated.
+The code is browser-only (no video upload or runtime CDN).
+The Builder Actions artifact is temporary; source-complete GPL release remains required.
+Read README.ja.md, README.md and docs/THREADING_DISTRIBUTION.md before release.

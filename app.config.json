@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.1.4",
-  "description": "Experimental up-to-10-second silent reverse MP4 via bounded FFmpeg WASM chunks and exact frame-count validation; 10-second Android runtime performance is unverified.",
-  "descriptionJa": "最大10秒の動画を分割逆再生してMP4へ結合する実験版です。各区間のフレーム数を検証します。Android実機での10秒処理は未検証です。",
+  "version": "0.1.5",
+  "description": "Browser-local reverse MP4 (0.5–10s experimental) with separately built ST and MT FFmpeg WebAssembly runtimes; GitHub Pages offers both, Android/Windows prioritized.",
+  "descriptionJa": "ブラウザー内で最大10秒の逆再生MP4を作成する実験版です。単一HTMLのST/MT版を個別に配布し、GitHub Pagesでは両方を利用できます。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",
@@ -16,11 +16,13 @@
     "blockRuntimeNetwork": true,
     "selfExtract": {
       "enabled": true,
-      "output": "dist/index.self-extract.html"
+      "output": "dist/index.self-extract.html",
+      "multiThreadOutput": "dist/index.mt.self-extract.html"
     },
     "sizeBudget": {
       "readableWarningMb": 25,
       "selfExtractWarningMb": 12
-    }
+    },
+    "multiThreadOutput": "dist/index.mt.html"
   }
 }

@@ -1,0 +1,63 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import zlib from 'node:zlib';
+const read = p=>fs.readFileSync(p,'utf8');
+const lock=JSON.parse(read('reverse-runtime.lock.json'));
+function extractJson(html,name) {
+  const marker='const '+name+' = ';
+  const pos=html.indexOf(marker);
+  assert.ok(pos>=0,name+' must be embedded');
+  assert.equal(html.indexOf(marker,pos+marker.length),-1,name+' duplicated');
+  const start=html.indexOf('{',pos+marker.length);
+  let inString=false,escape=false,depth=0;
+  for(let i=start;i<html.length;i++){
+    const c=html[i];
+    if(inString){
+      if(escape)escape=false;
+      else if(c==='\\')escape=true;
+      else if(c==='"')inString=false;
+      continue;
+    }
+    if(c==='"'){inString=true;continue;}
+    if(c==='{')depth++;
+    else if(c==='}'&&--depth===0)return JSON.parse(html.slice(start,i+1));
+  }
+  throw new Error('Unterminated '+name);
+}
+function hash(buf){return crypto.createHash('sha256').update(buf).digest('hex');}
+for(const [threading,path] of [['single-thread','dist/index.html'],['multi-thread','dist/index.mt.html']]){
+  test('actual '+threading+' HTML contains only a verified dedicated WASM',()=>{
+    const html=read(path);
+    assert.ok(html.includes('const RUNTIME_VARIANT = "'+threading+'";'));
+    const manifest=extractJson(html,'BUILD_MANIFEST');
+    assert.equal(manifest.runtime.threading,threading);
+    assert.equal(manifest.runtime.profile,'video-reverse');
+    assert.equal(manifest.runtime.requiresCrossOriginIsolation,threading==='multi-thread');
+    const embedded=extractJson(html,'assetBundle');
+    const assets=embedded.dependencies['reverse-wasm'].assets;
+    const p=lock.variants[threading];
+    for(const [name,key] of [['ffmpeg.js','coreJs'],['ffmpeg.wasm','coreWasm'],['browser-ffmpeg.js','runtimeJs']]){
+      const asset=assets[key];
+      assert.ok(asset?.base64);
+      assert.ok(asset.storedBytes>0&&asset.originalBytes>0);
+      const stored=Buffer.from(asset.base64,'base64');
+      assert.equal(stored.length,asset.storedBytes);
+      const actual=asset.compression==='gzip'?zlib.gunzipSync(stored):stored;
+      assert.equal(actual.length,asset.originalBytes);
+      assert.equal(hash(actual),name==='browser-ffmpeg.js'?lock.browserRuntimeSha256:p.assets[name]);
+    }
+    assert.ok(html.includes("connect-src 'none'"));
+    assert.ok(html.includes("worker-src 'self' blob:"));
+    assert.ok(!html.includes('coi-serviceworker.js'));
+    assert.ok(!html.includes('__RUNTIME_VARIANT__'));
+  });
+}
+test('both variants require the same Builder commit but distinct binaries',()=>{
+  assert.equal(lock.schemaVersion,2);
+  assert.equal(lock.profile,'video-reverse');
+  assert.match(lock.builderCommit,/^[a-f0-9]{40}$/);
+  assert.notEqual(lock.variants['single-thread'].assets['ffmpeg.wasm'],
+    lock.variants['multi-thread'].assets['ffmpeg.wasm']);
+});

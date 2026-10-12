@@ -1,7 +1,9 @@
 param(
   [switch]$ForceDownload,
   [switch]$SkipSelfExtract,
-  [string]$OutputPath = ""
+  [string]$OutputPath = "",
+  [ValidateSet("single-thread","multi-thread")][string]$Variant = "single-thread",
+  [switch]$OnlyVariant
 )
 
 $ErrorActionPreference = "Stop"
@@ -196,7 +198,7 @@ $dependencyLock = Get-Json $DependencyLockPath
 $rootHtmlOutputPath = ""
 $rootHtmlOutputName = ""
 if (-not $OutputPathWasSpecified) {
-  $configuredOutput = [string]$appConfig.build.output
+  $configuredOutput = if ($Variant -eq "multi-thread") { [string]$appConfig.build.multiThreadOutput } else { [string]$appConfig.build.output }
   if ([string]::IsNullOrWhiteSpace($configuredOutput)) { $configuredOutput = "dist/index.html" }
   $OutputPath = if ([System.IO.Path]::IsPathRooted($configuredOutput)) { $configuredOutput } else { Join-Path $Root $configuredOutput }
 
@@ -217,7 +219,7 @@ if (-not $OutputPathWasSpecified) {
     throw "app.config.json: repository.name contains characters that cannot be used in the repository-root HTML filename."
   }
 
-  $rootHtmlOutputName = $rootHtmlBaseName + ".html"
+  $rootHtmlOutputName = $rootHtmlBaseName + $(if ($Variant -eq 'multi-thread') { '.mt' } else { '' }) + ".html"
   $rootHtmlOutputPath = Join-Path $Root $rootHtmlOutputName
 }
 if (-not $dependencyConfig.dependencies) { $dependencies = @() } else { $dependencies = @($dependencyConfig.dependencies) }
@@ -341,9 +343,11 @@ foreach ($dependency in $dependencies) {
 # App-specific immutable local asset import. This is an experimental PoC:
 # a pinned Builder Actions artifact is fetched at build time only, never at runtime.
 # Restore to the template dependency loader when a stable Builder release exists.
-& (Join-Path $Root 'scripts/prepare-video-reverse-runtime.ps1') -ForceDownload:$ForceDownload
+& (Join-Path $Root 'scripts/prepare-video-reverse-runtime.ps1') -Variant $Variant -ForceDownload:$ForceDownload
 $reverseLock = Get-Json (Join-Path $Root 'reverse-runtime.lock.json')
-$reverseCache = Join-Path $CacheRoot 'reverse-runtime'
+$reverseVariant = $reverseLock.variants.PSObject.Properties[$Variant].Value
+if (-not $reverseVariant) { throw "Reverse runtime lock has no $Variant entry." }
+$reverseCache = Join-Path $CacheRoot "reverse-runtime/$Variant"
 $reverseAssets = [ordered]@{}
 $reverseManifestAssets = @()
 foreach ($entry in @(
@@ -355,7 +359,7 @@ foreach ($entry in @(
   $filename = [string]$entry.file
   $sourcePath = Join-Path $reverseCache $filename
   $bytes = Get-AssetBytes $sourcePath $false
-  if ((Get-Sha256FileHex $sourcePath) -ne [string]$reverseLock.assets.$filename) {
+  if ((Get-Sha256FileHex $sourcePath) -ne $(if ($filename -eq 'browser-ffmpeg.js') { [string]$reverseLock.browserRuntimeSha256 } else { [string]$reverseVariant.assets.$filename })) {
     throw "Reverse runtime SHA-256 mismatch during standalone build: $filename"
   }
   $storedBytes = Compress-GzipBytes $bytes
@@ -401,6 +405,14 @@ $manifest = [ordered]@{
     slug = [string]$appConfig.slug
     version = [string]$appConfig.version
   }
+  runtime = [ordered]@{
+    source = [string]$reverseLock.builderRepository
+    profile = [string]$reverseLock.profile
+    builderCommit = [string]$reverseLock.builderCommit
+    threading = $Variant
+    requiresCrossOriginIsolation = ($Variant -eq 'multi-thread')
+    requiresSharedArrayBuffer = ($Variant -eq 'multi-thread')
+  }
   dependencies = $manifestDependencies
 }
 
@@ -412,12 +424,14 @@ $replacements = [ordered]@{
   "__BUILD_MANIFEST_JSON__" = ConvertTo-SafeJson $manifest 40
   "__EMBEDDED_ASSET_BUNDLE_JSON__" = $assetBundleJson
   "__APP_ICON_DATA_URI__" = $appIconDataUri
+  "__RUNTIME_VARIANT__" = $Variant
 }
 $replacementExpectedCounts = @{
   "__APP_CONFIG_JSON__" = 1
   "__BUILD_MANIFEST_JSON__" = 1
   "__EMBEDDED_ASSET_BUNDLE_JSON__" = 1
   "__APP_ICON_DATA_URI__" = 2
+  "__RUNTIME_VARIANT__" = 1
 }
 
 foreach ($entry in $replacements.GetEnumerator()) {
@@ -432,7 +446,8 @@ foreach ($entry in $replacements.GetEnumerator()) {
 $outputDirectory = Split-Path -Parent $OutputPath
 New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 [System.IO.File]::WriteAllText($OutputPath, $template, (New-Object System.Text.UTF8Encoding($false)))
-[System.IO.File]::WriteAllText((Join-Path $outputDirectory "dependency-manifest.json"), ($manifest | ConvertTo-Json -Depth 40), (New-Object System.Text.UTF8Encoding($false)))
+$dependencyManifestName = if ($Variant -eq "multi-thread") { "dependency-manifest.mt.json" } else { "dependency-manifest.json" }
+[System.IO.File]::WriteAllText((Join-Path $outputDirectory $dependencyManifestName), ($manifest | ConvertTo-Json -Depth 40), (New-Object System.Text.UTF8Encoding($false)))
 [System.IO.File]::WriteAllText((Join-Path $outputDirectory ".nojekyll"), "", (New-Object System.Text.UTF8Encoding($false)))
 
 & $VerifyPath `
@@ -460,7 +475,7 @@ if (-not $SkipSelfExtract -and ($appConfig.build.PSObject.Properties.Name -conta
       $customBaseName = [System.IO.Path]::GetFileNameWithoutExtension($OutputPath)
       $selfExtractOutputPath = Join-Path $customDirectory ($customBaseName + ".self-extract.html")
     } else {
-      $configuredSelfExtractOutput = [string]$selfExtractConfig.output
+      $configuredSelfExtractOutput = if ($Variant -eq "multi-thread") { [string]$selfExtractConfig.multiThreadOutput } else { [string]$selfExtractConfig.output }
       if ([string]::IsNullOrWhiteSpace($configuredSelfExtractOutput)) {
         throw "app.config.json: build.selfExtract.output cannot be empty."
       }
@@ -509,7 +524,8 @@ $sizeReport = [ordered]@{
   embeddedAssetSavedBytes = [long]($assetRawBytes - $assetStoredBytes)
   assets = $sizeAssets
 }
-$sizeReportPath = Join-Path (Split-Path -Parent $OutputPath) "build-size-report.json"
+$sizeReportFile = if ($Variant -eq "multi-thread") { "build-size-report.mt.json" } else { "build-size-report.json" }
+$sizeReportPath = Join-Path (Split-Path -Parent $OutputPath) $sizeReportFile
 [System.IO.File]::WriteAllText($sizeReportPath, ($sizeReport | ConvertTo-Json -Depth 20), (New-Object System.Text.UTF8Encoding($false)))
 
 Write-Host ""
@@ -543,4 +559,9 @@ Write-Host "[OK] SHA-256: $outputHash"
 Write-Host "[OK] Fetch/XHR/WebSocket-style runtime network access is blocked by CSP."
 if ($selfExtractEnabled) {
   Write-Host "[OK] Self-extracting HTML: $selfExtractOutputPath" -ForegroundColor Green
+}
+
+if ($Variant -eq 'single-thread' -and -not $OnlyVariant -and -not $OutputPathWasSpecified) {
+  Write-Step "Generating separate multi-thread standalone build"
+  & $PSCommandPath -Variant 'multi-thread' -OnlyVariant -ForceDownload:$ForceDownload -SkipSelfExtract:$SkipSelfExtract
 }

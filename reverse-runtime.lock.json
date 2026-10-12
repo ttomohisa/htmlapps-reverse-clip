@@ -1,18 +1,28 @@
 {
-  "schemaVersion": 1,
-  "kind": "experimental-github-actions-artifact",
+  "schemaVersion": 2,
+  "kind": "experimental-dual-github-actions-artifact",
   "status": "temporary-not-release",
   "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-  "builderCommit": "b67b1e2f19eef802791ca733884709155f10dfb5",
-  "workflowRunId": 38175167646,
-  "artifactId": 11715866319,
+  "builderCommit": "8fc25b01e66613234cd64efab7eed56ba2b79afc",
+  "workflowRunId": 38208271161,
+  "artifactId": 11728810899,
   "profile": "video-reverse",
   "builderVersion": "1.10.4",
   "wasmLicense": "GPL-2.0-or-later",
-  "assets": {
-    "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
-    "ffmpeg.wasm": "108b70f13298c13c565ec6b62f5c00091f97173fbdd4d29e7350ac5a33af3127",
-    "browser-ffmpeg.js": "34c29442c74d9d178666d9788f5ba9f74bb1c56e2052dc0f94dc417ccb427d43"
+  "browserRuntimeSha256": "34c29442c74d9d178666d9788f5ba9f74bb1c56e2052dc0f94dc417ccb427d43",
+  "variants": {
+    "single-thread": {
+      "assets": {
+        "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
+        "ffmpeg.wasm": "108b70f13298c13c565ec6b62f5c00091f97173fbdd4d29e7350ac5a33af3127"
+      }
+    },
+    "multi-thread": {
+      "assets": {
+        "ffmpeg.js": "e88f95f77ee94acc8df3cef559e48e76cbf78a6175e831d712a471a48d614007",
+        "ffmpeg.wasm": "46e9edf355eb535659208e4729ad1d6ca36f6269247abdb4ad998759be29c956"
+      }
+    }
   },
-  "notes": "Experimental 10-second frame-exact chunk WASM from expiring CI artifact. SHA-256 verified at build. No runtime external downloads. Replace with source-complete GPL release for stable publication."
+  "notes": "Two distinct ST/MT cores from the same pinned commit; SHA-256 checked at build. Actions artifact expires. Stable publication requires an immutable Builder release with corresponding GPL sources. No runtime CDN/upload."
 }

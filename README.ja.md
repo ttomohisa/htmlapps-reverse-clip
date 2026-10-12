@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**開発状況：v0.1.4 最大10秒の分割逆再生実験版（旧G1未完了）。** Android実機で1秒と5秒の作成・保存が報告され、長辺720pxの5秒変換は**12.7秒**でした。iPhone検証は当面延期しています。
+**開発状況：v0.1.5 ST・MT両配布の実験版（旧G1未完了）。** Android実機で1秒と5秒の作成・保存が報告され、長辺720pxの5秒変換は**12.7秒**でした。iPhone検証は当面延期しています。
 
 [製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [検証記録](docs/feasibility/G1.md) · [English README](README.md)
 
@@ -76,3 +76,16 @@ Androidの写真・クラウドアプリから選んだ動画はプレビュー�
 Windows/Linux上のChromiumでは10秒→150フレーム・10.000秒、連続2回同一のMP4内容を確認しました。Android相当のブラウザ設定による縦動画試験も通りましたが、**実Android端末で10秒の速度・メモリ・繰り返し動作は未検証**です。まず長辺360pxでの確認が推奨です。iPhoneは引き続き延期しています。
 
 現在の固定WASMはBuilderコミット `b67b1e2f19eef802791ca733884709155f10dfb5`／Actions成果物 `11715866319`。元ファイルは端末内で処理し、WASMは単一HTMLに埋め込みます。正式公開前にはソースを伴う恒久的なGPLリリースが必要です。
+
+## v0.1.5 — ST・MTの両方を配布（2026-10-12）
+
+Reverse Clip専用のFFmpeg WASMを、**ST（シングルスレッド）**と**MT（マルチスレッド）**で別々にビルド・検証します。FFmpeg Filter Builderの配布方式を参考にした構成です。
+
+- **GitHub Pagesの通常URL** `https://ttomohisa.github.io/htmlapps-reverse-clip/` はST版です。
+- **GitHub Pagesの `/mt/`** `https://ttomohisa.github.io/htmlapps-reverse-clip/mt/` はMT版です。GitHub PagesはCOOP/COEPをヘッダー指定できないため、固定・SHA-256検証した同一オリジンのService Workerが初回のみ再読み込みする場合があります。
+- **Browser Kittyで採用するのはMT版**です。`/apps/reverse-clip.html` のレスポンスにだけCOOP/COEP/CORPを設定し、サイト全体には適用しません。Browser Kitty上ではページからのService Worker取得は不要です。
+- 単一HTMLもST/MTを独立に出力します。ST版は `file://` 利用向け、MT版は `SharedArrayBuffer` と分離されたHTTPS/localhost環境が必要です。
+
+MT版で動作条件を満たさない場合、理由を画面に表示して変換を無効にし、STに黙って切り替えることはありません。どちらも動画ファイルは端末内で処理します。詳しくは [配布方式](docs/THREADING_DISTRIBUTION.md) を参照してください。
+
+**従来のAndroidの処理時間（10秒・84.73秒など）はST版での実績です。MT版の高速化率を保証しません。** また、正式版までに恒久配布とGPL対応ソース・ライセンスを整理します。

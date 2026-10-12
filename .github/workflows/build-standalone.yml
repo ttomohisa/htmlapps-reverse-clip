@@ -10,6 +10,9 @@ on:
       - "src/**"
       - "tests/feasibility/**"
       - "reverse-runtime.lock.json"
+      - "coi-serviceworker.lock.json"
+      - "vendor/coi-serviceworker/**"
+      - "licenses/coi-serviceworker-MIT.txt"
       - "scripts/**"
       - "app.config.json"
       - "dependencies.json"
@@ -53,6 +56,16 @@ jobs:
         shell: pwsh
         run: ./scripts/check-repository.ps1
 
+      - name: Verify pinned ST and MT runtime bytes
+        shell: pwsh
+        run: node --test ./tests/feasibility/threading-distribution.test.mjs
+
+      - name: Verify ST and MT Pages staging
+        shell: pwsh
+        run: |
+          ./scripts/prepare-pages.ps1
+          node --test ./tests/feasibility/pages-dual-thread.test.mjs
+
       - name: Upload standalone artifact
         uses: actions/upload-artifact@v7
         with:
@@ -60,8 +73,12 @@ jobs:
           path: |
             *.html
             dist/index.html
+            dist/index.mt.html
             dist/index.self-extract.html
+            dist/index.mt.self-extract.html
             dist/dependency-manifest.json
+            dist/dependency-manifest.mt.json
+            pages-dist/**
             dist/self-extract-manifest.json
             dist/.nojekyll
           if-no-files-found: error

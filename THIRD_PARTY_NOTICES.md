@@ -7,3 +7,7 @@ Provenance: `ttomohisa/htmlapps-ffmpeg-wasm-builder` at commit `b67b1e2f19eef802
 The BrowserFFmpeg loader and the public-libav runner are supplied from the same Builder source revision. The Builder repository's pinned dependencies, license metadata, notices, corresponding sources and release packaging must accompany any eventual permanent release.
 
 Temporary CI artifact ID 11715866319 expires. Use only for preview / technical G1 testing until a stable, source-complete Builder Release is available.
+
+## GitHub Pages MT-only isolation helper
+
+The GitHub Pages `/mt/` deployment conditionally loads `coi-serviceworker` **v0.1.7** by Guido Zuidhof and contributors (MIT license). Exact commit and SHA-256 are pinned in `coi-serviceworker.lock.json`, and its full MIT notice is in `licenses/coi-serviceworker-MIT.txt`. This script is **not embedded in either ST or MT single HTML artifact**, because it is only a Pages fallback for COOP/COEP; Browser Kitty supplies HTTP isolation headers instead. It contains no video upload or telemetry.

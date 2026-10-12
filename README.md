@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.1.4 Android/Windows-first experimental chunked WASM export (full Gate G1 pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
+**Development status: v0.1.5 ST/MT experimental distributions (Android/Windows-first; stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -80,3 +80,16 @@ The current pinned binary is Builder commit `b67b1e2f19eef802791ca733884709155f1
 Independent Linux Chromium experiments (not real Android) converted 10s / 100-marked-frame input to **150 correctly reversed frames, 10.000s**, byte-for-byte repeatably, plus non-frame-aligned ranges. A simulated Android Chrome UA converted 720×1280 portrait H.264 into 404×720, 150 frames / 10.000s, on two consecutive runs with byte-identical MP4 files and a successful cancellation cleanup. **Desktop timings are not mobile benchmarks.**
 
 A 10-second selection shows an explicit experimental warning. On a phone start with long edge 360px; no automatic quality downgrade occurs. The Android 5s/long-edge720px user result was 12.7s, but **10s on Android is not yet tested**. iPhone remains deferred. Memory limits, VFR and rotated HEVC MOV remain unverified. No stable release is authorized.
+
+## v0.1.5 — ST / MT distribution (2026-10-12)
+
+The same Reverse Clip app is built with **two actual FFmpeg WebAssembly binaries** from one pinned Builder source: **ST (single thread)** and **MT (pthreads)**. These are not the same binary with a UI switch. Following the proven `htmlapps-ffmpeg-filter-builder` layout:
+
+- **GitHub Pages root:** portable ST at `/`, `https://ttomohisa.github.io/htmlapps-reverse-clip/`.
+- **GitHub Pages MT:** `/mt/`, `https://ttomohisa.github.io/htmlapps-reverse-clip/mt/`, with an MIT-licensed SHA-pinned same-origin cross-origin-isolation Service Worker that may reload on first visit.
+- **Browser Kitty intended import:** MT only, at `/apps/reverse-clip.html`, served with route-scoped COOP `same-origin`, COEP `require-corp`, CORP `same-origin`. The Cloudflare origin provides isolation; the Pages bootstrap remains inactive.
+- **Standalone HTML:** separate ST `dist/index.html` and MT `dist/index.mt.html`, plus separate self-extract versions. ST can open through `file://`; MT requires HTTP(S) hosting and cross-origin isolation.
+
+The MT app checks `crossOriginIsolated` and `SharedArrayBuffer` and **does not silently run the ST core while claiming MT**. Pages ST is the explicit fallback. Neither version uploads selected video or retrieves runtime code on use. The runtime is embedded at build time from pinned, independently SHA-256 verified JS and WASM, after successful Builder Docker/browser smoke. See [threading distribution](docs/THREADING_DISTRIBUTION.md).
+
+**Important:** Existing Android 1s/5s/10s performance results apply to the original ST runtime. MT performance on actual phones has **not yet been measured or promised**. The temporary Builder Actions artifact must be replaced by a permanent GPL source-complete release before stable publication. A successful build/PR alone does not publish these new Pages routes.

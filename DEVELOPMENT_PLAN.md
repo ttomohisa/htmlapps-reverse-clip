@@ -26,6 +26,10 @@
 - Android **5s** success remains user-reported, including **12.7s** at long-edge720px. Android **10s** remains **UNTESTED**, as do native-standard 720p10s, 1080p5s, VFR/HEVC, repeated real-device memory and direct `file://`.
 - Keep Builder artifact temporary and Draft PRs unmerged. A permanent source-complete GPL release and separate stable-release acceptance decision are required. iPhone stays deferred.
 
+## 2026-10-12 — ST / MT併用への新しい配布要求
+
+FFmpeg Filter BuilderのST/MTアーキテクチャを参考に、Reverse Clip専用Builderの両バリアントを**実WASMで別々に生成**する。GitHub Pagesは `/` をST、`/mt/` をMTとし、後者に同一オリジンのCOI Service Workerを置く。Browser KittyにはMT版だけを取り込み、専用ルートへCOOP/COEP/CORPを設定する。ST単一HTMLはfile://で利用でき、MT単一HTMLは分離されたHTTPS/localhostで使用する。STからMTへの性能改善は実測前に断定しない。PRのマージと本番公開はユーザーの判断とする。詳細は `docs/THREADING_DISTRIBUTION.md`。
+
 ## 1. 開発原則
 
 1. **技術検証が先、UI完成は後。** 当面Android Chrome実機とWindowsブラウザーでMP4作成・保存を検証する。iPhoneは2026-10-12の方針変更により延期し、未検証を「非対応確定」とは扱わない。
