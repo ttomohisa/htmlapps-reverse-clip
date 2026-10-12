@@ -83,3 +83,37 @@ jobs:
             dist/.nojekyll
           if-no-files-found: error
           retention-days: 14
+
+  dual-runtime-browser-smoke:
+    name: Real Chrome reverse MP4 (ST and isolated MT)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+      - name: Download verified standalone HTML
+        uses: actions/download-artifact@v4
+        with:
+          name: standalone-html-${{ github.event.pull_request.head.sha || github.sha }}
+          path: .
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2.2.0
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Setup local smoke dependencies
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          command -v ffmpeg && command -v ffprobe || {
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          }
+      - name: Reverse H.264 MP4 using ST and real pthread MT
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/dual-thread-browser-smoke.py
