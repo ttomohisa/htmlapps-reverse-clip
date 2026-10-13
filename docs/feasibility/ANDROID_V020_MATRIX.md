@@ -20,6 +20,8 @@ Record physical device model, Android version, browser name/version, source code
 | A20-08 | Full output path, ST: 1–5s long-edge360/720px | Silent reversed MP4 plays and saves, no repeated boundary frames | PENDING new v0.2 build |
 | A20-09 | Repeat A20-08 on a cross-origin-isolated MT Preview, three times | All outputs play/save, no unexpectedly reloaded tabs or unstable memory | PENDING |
 | A20-10 | Stress with a large original file (up to 1GiB; short trim only) | No full-file copy, no tab crash; clear error when provider access fails | PENDING |
+| A20-11 | Start a slow Photos/cloud video selection and select "読み込みを中止" | Cancel button hides; old content never returns; new source can be selected | PENDING |
+| A20-12 | Drop multiple videos on the app (supported desktop/Android setups) | Reject all with a clear one-file-only message, no stale MP4 output | PENDING / platform dependent |
 
 Existing older-user-reported ST results: 1s and 5s reverse succeeded, including 5s at **long-edge720px / 12.7s**. These reports do **not** validate the new v0.2 build, MT performance, full 1280×720 5s, 720p 10s, 1080p, iPhone Safari or audio.
 

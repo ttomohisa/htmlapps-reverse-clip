@@ -5,6 +5,9 @@
 - Bound stuck photo-provider reads or stalled media metadata to 30 seconds, show a localized recovery message, revoke stale Blob URLs, and reject any late async result from the old source.
 - Generate a safe default MP4 filename from the selected source; include v0.2.0 source phase/error code (not media name/data) in the opt-in diagnostic JSON.
 - Extend real Chrome ST/MT tests for corrupt container headers, invalid codec-like media, stalled and stale provider reads, source switching and automatic save names. Add targeted Node unit tests.
+- Add an explicit "Cancel loading" action while a source is being inspected; it invalidates the file generation immediately instead of forcing users to wait for the 30-second timeout. Pending browser/provider reads may finish internally but can no longer change the app.
+- Reject multi-video drag/drop instead of silently taking the first file. Remove the inert focus stop on the drop area; the actual choose/record buttons remain keyboard accessible.
+- Exercise ST/MT UI at 320/360/390/1024px in the real-browser smoke suite to catch horizontal overflow.
 - Physical Android device intake/error and repeated MT performance acceptance remain **PENDING**. Browser Kitty PR #41 remains closed unmerged.
 
 

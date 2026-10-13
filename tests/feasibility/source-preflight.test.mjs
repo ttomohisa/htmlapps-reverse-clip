@@ -54,3 +54,12 @@ test('source timeout, stale file guards and no whole-file sniff copy are present
   assert.ok(html.includes("'reverseSourceUnreadable'"));
   assert.ok(html.includes("'invalidContainer'"));
 });
+
+test('source import can be cancelled; multi-file drop is rejected as a unit',()=>{
+  assert.ok(html.includes('id="cancelLoadButton"'));
+  assert.ok(html.includes("$('#cancelLoadButton').hidden = phase !== 'inspecting'"));
+  assert.ok(html.includes("if (state.sourcePhase !== 'inspecting') return;"));
+  assert.ok(html.includes("setStatus('sourceLoadCancelled')"));
+  assert.ok(html.includes("if(files.length!==1)"));
+  assert.ok(html.includes("setSourcePhase('error',state.generation,'multipleFiles')"));
+});
