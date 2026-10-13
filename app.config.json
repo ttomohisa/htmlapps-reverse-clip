@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.3.0",
-  "description": "Reverse Clip v0.3.0 Trim & Reverse: touch/keyboard range handles and selected-source playback; experimental browser-local ST/MT MP4 reversal.",
-  "descriptionJa": "Reverse Clip v0.3.0「区間指定と逆再生」。開始・終了ハンドルと区間プレビュー、ST/MTのローカル逆再生MP4生成を開発中。",
+  "version": "0.4.0",
+  "description": "Reverse Clip v0.4.0: experimental silent MP4 reverse and frame-exact forward/return ping-pong composition with separately pinned ST/MT FFmpeg WASM runtimes.",
+  "descriptionJa": "Reverse Clip v0.4.0：逆再生と往復再生（通常再生→逆再生）の映像のみMP4を分割処理。折り返しとループ端のフレーム重複を除外する実験版。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",

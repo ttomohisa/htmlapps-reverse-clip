@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.3.0 Trim & Reverse development (Android/Windows-first; device acceptance and stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
+**Development status: v0.4.0 experimental Ping-pong development (Android/Windows-first; device acceptance and stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -130,3 +130,11 @@ Reverse Clip now checks a **32-byte prefix** for a plausible ISO-BMFF/QuickTime 
 - The Help dialog prevents **background scrolling** including mobile scroll chaining while retaining its own internal scrolling, and restores the old page position on Close, Escape or backdrop dismissal.
 
 **Current status:** v0.3.0 is development-in-progress. Desktop ST/MT tests are necessary but not sufficient for Android physical-device acceptance, 720p10s or 1080p5s, audio/ping-pong, and a permanent GPL corresponding-source release. Browser Kitty integration remains on hold.
+
+## v0.4.0 — Ping-pong / silent return loop (2026-10-13)
+
+The new mode composes **forward playback followed by reverse playback** in the finished MP4, not merely a repeated-playback instruction. If the selected clip contains N output frames at 15fps, the sequence is `0..N−1, N−2..1` (**2N−2 frames**), avoiding doubled frames at the turn or the loop seam. The source interval remains 0.5–10s, with the experimental true-HD 720p-class pilot limited to 5s. The output remains H.264 MP4 with **no audio** until v0.5.0.
+
+A new dedicated Builder runtime can generate forward chunks using `--direction forward`, while preserving old reverse-only behavior by default. Both forward and reversed 0.1–2s chunks use identical encoding settings; the public libavformat join validates stream compatibility and exact frame counts, up to 16 parts. The app has a shared pure frame planner with unit tests covering all tenths-of-a-second intervals, 31-frame boundaries, source offsets and 10-second clips. The mode switch updates expected duration and auto-suggested `-reverse.mp4`/`-pingpong.mp4` names without destroying a manual filename.
+
+**Fail-closed runtime gate:** existing reverse-only WASM assets must not accept the new mode. The app enables Ping-pong **only** when the source-complete Builder's real ST/MT binary is built, tested and independently hash-pinned in `reverse-runtime.lock.json`. If its newer core has not been re-pinned yet, the Ping-pong option remains disabled; that is intentional, not a fake UI feature. Physical Android, VFR, rotation, repeated 720p/1080p and stable GPL release review remain pending. Browser Kitty integration is still postponed.

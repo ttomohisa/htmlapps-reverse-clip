@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.4.0] - 2026-10-13 (experimental silent ping-pong implementation)
+
+- Stage a real `pingpong` video mode (forward H.264 chunks followed by reverse return), next to existing reverse mode. The dedicated Builder `video-reverse` profile now supports a bounded `--direction forward` chunk, using the same x264 encoder and scale/fps settings, and extends the public-libav MP4 remux join to at most **16** chunks.
+- The frame-exact composition for N selected source frames is **0..N-1, N-2..1** (2N-2 frames). Skip the turning frame on the return, and the starting frame at the end so repeated playback has no doubled loop-boundary frame. Do not skip arbitrary H.264 packets. No audio yet.
+- A pure shared timeline planner balances chunks to avoid a 1-frame reverse tail, preserves 0.5–10s trim and HD pilot <=5s, counts all output frames before saving, and rejects missing or excess encoded packets in the Builder.
+- Modes are exclusive; changing mode clears stale output and updates the suggested suffix between `-reverse.mp4` and `-pingpong.mp4` without overwriting a user-edited filename. UI previews only the completed MP4 and shows expected duration.
+- The ping-pong control is **fail-closed** while the app still pins the earlier reverse-only Builder asset: the build embeds a capability flag from the reviewed `reverse-runtime.lock.json`. Enable the mode only after an actual new dual ST/MT WASM build passes browser tests and is pinned by SHA-256. No fake compatibility fallback.
+- v0.4.0 remains a development milestone: Android physical MT, VFR/rotation, full-size 720p/1080p and an immutable corresponding-source GPL release require further acceptance. Do not update Browser Kitty.
+
+
 ## [0.3.0] - 2026-10-13 (Trim & Reverse development)
 - Add two native, touch/keyboard-accessible trim handles directly below the source video, synchronized with numeric start/end fields and an illustrated selected interval. Keep user-typed invalid numeric ranges invalid rather than silently shortening them. Moving a handle enforces 0.5s minimum and current output quality limits.
 - Add "Play selected section" of the **original** source; playback stops at the end boundary. Actual reversed MP4 remains previewed only after conversion and may be saved with a user-edited filename.
