@@ -862,6 +862,12 @@
     "audioPresent": "元動画に音声トラックがあります。音声付き出力の検証中です。",
     "audioAbsent": "この動画に音声はありません。音声なしのMP4を作成します。",
     "audioUnavailable": "音声付き出力は、この動画と実行環境でまだ利用できません。",
+    "audioUnknown": "音声トラックを確認できません。動画を端末に保存し直すか、音声なしで保存してください。",
+    "audioLoading": "選択動画の音声を確認しています…",
+    "audioEncoding": "選択区間の音声を変換中… {progress}%",
+    "audioMuxing": "映像とAAC音声を結合中… {progress}%",
+    "reverseResultAudio": "{duration}秒・{size}・AAC音声付き・{chunks}区間・処理時間{elapsed}秒",
+    "pingpongResultAudio": "往復再生・{duration}秒・{size}・AAC音声付き・{chunks}区間・処理時間{elapsed}秒",
     "modeLabel": "作成モード",
     "modeReverse": "逆再生",
     "modePingpong": "往復再生",
@@ -1010,6 +1016,12 @@
     "audioPresent": "This video has an audio track. Audio export is under validation.",
     "audioAbsent": "This video has no audio; export will be silent.",
     "audioUnavailable": "Audio export is not yet available for this source and runtime.",
+    "audioUnknown": "Could not inspect this video's audio track. Try a locally saved copy, or export without sound.",
+    "audioLoading": "Checking the selected audio stream…",
+    "audioEncoding": "Processing the selected audio… {progress}%",
+    "audioMuxing": "Joining video and AAC audio… {progress}%",
+    "reverseResultAudio": "{duration}s · {size} · AAC audio · {chunks} chunks · {elapsed}s processing",
+    "pingpongResultAudio": "Ping-pong · {duration}s · {size} · AAC audio · {chunks} chunks · {elapsed}s processing",
     "modeLabel": "Conversion mode",
     "modeReverse": "Reverse",
     "modePingpong": "Ping-pong",
@@ -1216,6 +1228,8 @@
       const video = $('#sourceVideo');
       const state = { generation: 0, file: null, url: null, ready: false, sourcePhase: 'empty', sourceErrorKey: null,
         lastSelectedMode: 'reverse', audioPresent: null, audioChecked: false,
+        audioCodec: null, audioInspectionError: null,
+        audioInspectController: null, audioInspectRunner: null,
         probe: null, seek: null, note: null, validRange: false, conversion: null,
         copiedInput: null, inputPreparePromise: null, inputTransport: 'workerfs', inputPrepareError: null };
       // On mobile, materialize only small selected files before their picker/provider
@@ -1259,8 +1273,16 @@
       function releaseSource() {
         previewSelectionActive=false;
         resetConversion();
+        if(state.audioInspectController)state.audioInspectController.abort();
+        state.audioInspectController=null;
+        if(state.audioInspectRunner){
+          state.audioInspectRunner.dispose();
+          state.audioInspectRunner=null;
+        }
         state.audioPresent=null;
         state.audioChecked=false;
+        state.audioCodec=null;
+        state.audioInspectionError=null;
         $('#audioInput').value='none';
         $('#audioInput').disabled=true;
         $('#audioReverseOption').disabled=true;
@@ -1557,7 +1579,8 @@
         const preparing = state.inputTransport === 'preparing';
         const unreadable = state.inputTransport === 'unreadable';
         $('#reverseButton').disabled = !safe || Boolean(conversionController) ||
-                                       preparing || unreadable || !threadingReady();
+                                       preparing || unreadable || !threadingReady() ||
+                                       (AUDIO_MUX_ENABLED && !state.audioChecked);
         if (!conversionController && !state.conversion)
           $('#reverseStatus').textContent =
             translate(!threadingReady()?'mtUnavailable':unreadable?'reverseSourceUnreadable':preparing?'reverseSourcePreparing':
@@ -1659,6 +1682,73 @@
         armSourceTimeout(file, generation);
         if (!prepareMobileInput(file)) void inspectSourceBlob(file, file, generation);
       }
+      async function inspectSourceAudio() {
+        if(!AUDIO_MUX_ENABLED || !state.ready || !state.file)return;
+        const file=state.file, generation=state.generation;
+        const controller=new AbortController();
+        state.audioInspectController=controller;
+        state.audioChecked=false;
+        state.audioPresent=null;
+        state.audioInspectionError=null;
+        updateModeUi();
+        rangeInfo();
+        const current=()=>generation===state.generation &&
+          state.file===file && state.ready && !controller.signal.aborted;
+        let inspector=null;
+        try {
+          if(!window.BrowserFFmpeg)
+            await window.StandaloneAssets.loadClassicScript('reverse-wasm','runtimeJs','BrowserFFmpeg');
+          const [coreJsText,wasmBytes]=await Promise.all([
+            window.StandaloneAssets.textAsync('reverse-wasm','coreJs'),
+            window.StandaloneAssets.bytesAsync('reverse-wasm','coreWasm')
+          ]);
+          if(!current())return;
+          inspector=await window.BrowserFFmpeg.loadEmbedded({
+            coreJsText,wasmBytes,threading:RUNTIME_VARIANT
+          });
+          if(!current())return;
+          state.audioInspectRunner=inspector;
+          const memory=Boolean(state.copiedInput);
+          const inputPath=memory?'/source.mp4':'/workerfs/source.mp4';
+          const inspected=await inspector.run({
+            files:[{name:inputPath,data:state.copiedInput||file,workerfs:!memory}],
+            outputs:['/audio-info.json'],
+            args:['--inspect-audio','--input',inputPath,'--output','/audio-info.json'],
+            signal:controller.signal
+          });
+          if(!current())return;
+          const bytes=inspected?.files?.[0]?.data;
+          if(inspected.exitCode!==0 || !bytes || bytes.byteLength>4096)
+            throw new Error('Audio track inspection failed');
+          const info=JSON.parse(new TextDecoder().decode(bytes));
+          const codec=info.audio?.codec||null, channels=info.audio?.channels;
+          const supported=['aac','mp3','opus','flac'].includes(codec) &&
+            Number.isInteger(channels) && channels>=1 && channels<=2;
+          state.audioPresent=Boolean(supported);
+          state.audioCodec=supported?codec:null;
+          if(codec && !supported)state.audioInspectionError='Unsupported audio codec/channels';
+        }catch(error){
+          if(current()){
+            state.audioPresent=false;
+            state.audioCodec=null;
+            state.audioInspectionError=String(error?.message||error);
+          }
+        }finally{
+          // A stale probe must dispose *only* its own runner and must not
+          // overwrite a new video's audio state after source replacement.
+          if(inspector){
+            try{inspector.dispose();}catch(_){}
+            if(state.audioInspectRunner===inspector)state.audioInspectRunner=null;
+          }
+          if(state.audioInspectController===controller)
+            state.audioInspectController=null;
+          if(current()){
+            state.audioChecked=true;
+            updateModeUi();
+            rangeInfo();
+          }
+        }
+      }
       video.addEventListener('loadedmetadata', () => {
         if (!state.file || !state.url || video.currentSrc !== state.url) return;
         if (!Number.isFinite(video.duration) || video.duration < .5 || !video.videoWidth || !video.videoHeight) {
@@ -1682,6 +1772,7 @@
         $('#dimensionsLabel').textContent = video.videoWidth + ' × ' + video.videoHeight;
         $('#filesizeLabel').textContent = humanSize(state.file.size);
         rangeInfo();
+        if(AUDIO_MUX_ENABLED)void inspectSourceAudio();
       });
       video.addEventListener('error', () => {
         if (!state.file || !state.url || video.currentSrc !== state.url ||
@@ -1702,7 +1793,8 @@
         $('#audioReverseOption').disabled=!canUseAudio;
         $('#audioNotice').textContent=translate(!AUDIO_MUX_ENABLED?'audioPreparingNotice':
           !state.audioChecked?'audioCheckingLater':
-          state.audioPresent?'audioPresent':'audioAbsent');
+          state.audioPresent?'audioPresent':
+          state.audioInspectionError?'audioUnknown':'audioAbsent');
       }
       function onAudioModeChanged() {
         if($('#audioInput').value!=='none' &&
@@ -1891,6 +1983,10 @@
           !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
           showToast(translate('audioUnavailable'));return;
         }
+        if(AUDIO_MUX_ENABLED && !state.audioChecked){
+          showToast(translate('audioLoading'));return;
+        }
+        const wantsAudio=$('#audioInput').value==='reverse';
         let plan;
         try { plan=planModeFrames(start,end,mode,OUTPUT_FPS); }
         catch (_) { showToast(translate('reverseInvalid'));return; }
@@ -1932,7 +2028,7 @@
           if(!isCurrentJob())return;
           conversionRunner=runner;
 
-          const count=plan.segments.length, stages=count+(count>1?1:0);
+          const count=plan.segments.length, stages=count+(count>1?1:0)+(wantsAudio?2:0);
           function setJobProgress(stage,partial,key,params) {
             if(job!==conversionEpoch)return;
             const pc=Math.max(0,Math.min(100,Math.round(partial*100)));
@@ -2012,6 +2108,48 @@
             bytes=joined.files[0].data;
           }
           allChunks=[];
+          if(wantsAudio){
+            const audioStage=count+(count>1?1:0);
+            const memory=Boolean(state.copiedInput);
+            const inputPath=memory?'/input.mp4':'/workerfs/input.mp4';
+            setJobProgress(audioStage,0,'audioEncoding',{});
+            const audioArgs=[
+              '--audio-segment','--input',inputPath,'--output','/sound.mp4',
+              '--start-time',String(plan.selectedStart),
+              '--duration',String(plan.sourceFrames/OUTPUT_FPS),
+              '--direction',mode==='pingpong'?'pingpong':'reverse',
+              ...(mode==='pingpong'?['--fps',String(OUTPUT_FPS),
+                                    '--frames',String(plan.sourceFrames)]:[])
+            ];
+            const encoded=await runner.run({
+              files:[{name:inputPath,data:state.copiedInput||file,workerfs:!memory}],
+              outputs:['/sound.mp4'],args:audioArgs,signal:controller.signal,
+              onProgress:p=>setJobProgress(audioStage,p,'audioEncoding',{}),
+              onLog:({message})=>{if(logs.length>=40)logs.shift();logs.push(String(message).slice(0,180))}
+            });
+            if(!isCurrentJob())return;
+            const sound=encoded?.files?.[0]?.data;
+            if(encoded.exitCode!==0||!sound||sound.byteLength<500 ||
+               !String.fromCharCode(...sound.slice(4,8)).includes('ftyp'))
+              throw new Error('Audio segment did not produce a valid AAC candidate.');
+            setJobProgress(audioStage+1,0,'audioMuxing',{});
+            const mixed=await runner.run({
+              files:[{name:'/video.mp4',data:bytes},{name:'/sound.mp4',data:sound}],
+              outputs:['/video-with-audio.mp4'],
+              args:['--mux-audio','--video','/video.mp4',
+                '--audio','/sound.mp4','--output','/video-with-audio.mp4',
+                '--expected-frames',String(plan.frameCount),
+                '--expected-duration',String(plan.expectedDuration)],
+              signal:controller.signal,
+              onProgress:p=>setJobProgress(audioStage+1,p,'audioMuxing',{}),
+              onLog:({message})=>{if(logs.length>=40)logs.shift();logs.push(String(message).slice(0,180))}
+            });
+            if(!isCurrentJob())return;
+            if(mixed.exitCode!==0||!mixed.files?.[0]?.data ||
+               mixed.files[0].data.byteLength<500)
+              throw new Error('The video and reversed AAC audio could not be joined.');
+            bytes=mixed.files[0].data;
+          }
           if(!bytes||bytes.byteLength<500||
               String.fromCharCode(...bytes.slice(4,8))!=='ftyp')
             throw new Error('Joined output does not have a valid MP4 header.');
@@ -2050,9 +2188,12 @@
             duration:plan.expectedDuration,estimatedOutputFrames:plan.frameCount,
             chunkCount:count,quality:$('#qualityInput').value,mode,
             sourceFrames:plan.sourceFrames,
-            fps:OUTPUT_FPS,audio:'none',inputTransport:inputMode
+            fps:OUTPUT_FPS,audio:wantsAudio?'reverse':'none',
+            audioCodec:wantsAudio?'aac':null,inputTransport:inputMode
           };
-          $('#resultInfo').textContent=format(mode==='pingpong'?'pingpongResultInfo':'resultInfo',{
+          $('#resultInfo').textContent=format(wantsAudio?
+            (mode==='pingpong'?'pingpongResultAudio':'reverseResultAudio'):
+            (mode==='pingpong'?'pingpongResultInfo':'resultInfo'),{
             duration:duration.toFixed(2),size:humanSize(bytes.byteLength),
             chunks:count,elapsed:elapsed.toFixed(2)
           });
