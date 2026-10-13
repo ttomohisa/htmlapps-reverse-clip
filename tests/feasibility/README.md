@@ -38,9 +38,11 @@ another real, valid MP4. `--runtime both --profile both` expands coverage,
 but may be expensive; run one profile/runtime at a time first.
 
 The JSON records wall-clock duration, approximate **Playwright/Chrome child
-process tree aggregate RSS sampled every 250ms** if the optional `psutil`
-package is present, and Chromium JS heap after each job. These are useful
-desktop trend indicators, but shared pages may be counted multiple times;
+process tree aggregate RSS sampled every 250ms**, and on supported Linux
+systems **proportional/unique set size (PSS/USS) sampled about every second**
+with optional `psutil`, plus Chromium JS heap after each job. RSS can
+heavily double-count shared pages across MT browser processes; PSS apportions
+shared pages but still is not a per-tab peak.
 they are **not accurate per-tab peak RAM, WASM peak memory, or a physical
 Android/iPhone memory measurement**. The fixture is synthetic H.264,
 not representative camera VFR/HEVC/HDR footage. Results from this script
@@ -69,3 +71,20 @@ in [`docs/feasibility/V060_DESKTOP_ST_MEASUREMENTS.md`](../../docs/feasibility/V
 A Playwright/Chromium test is not a physical-phone memory or audio
 quality acceptance test; the local execution container had restricted
 file/http navigation, so the measurement used an in-memory HTML document.
+
+### Running the expensive isolated MT proof on demand
+
+The full-size MT proof successfully ran on [CI #38464029860](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38464029860)
+(one 720p10s AAC Ping-pong and one 1080p5s silent Reverse), with
+numerical results and limitations in
+[`V060_DESKTOP_MT_MEASUREMENTS.md`](../../docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md).
+
+To avoid unnecessary GitHub Actions costs, subsequent PR pushes do **not**
+automatically execute the high-resolution MT job. When the current workflow
+revision is available to the GitHub Actions workflow-dispatch UI (the
+workflow must exist on the default branch), explicitly launch
+`Validate standalone HTML` with **`run_hd_mt: true`** to run it.
+The default is `false`. Normal ST/MT real browser regressions continue to
+run on PRs. For broader 3-repeat, audio or cancel/retry cases run this
+script against a sufficiently provisioned locally hosted, isolated browser,
+and record machine/OS/browser, timings and proper memory methodology.

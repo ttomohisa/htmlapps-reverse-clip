@@ -1,8 +1,8 @@
 # Reverse Clip / 動画逆再生
 
-**開発状況：v0.6.0 メモリ・性能・安定性改善（正式版未公開）。** v0.5.0のデスクトップChrome ST/MTで音声付き逆再生・往復再生MP4を検証済み。720p級10秒・1080p級5秒の分割負荷制御を追加しましたが、実機G2合格ではありません。Android連続動作・音声試聴・GPL恒久配布は未完了、iPhoneは検証延期中です。
+**開発状況：v0.6.0 メモリ・性能・安定性改善（正式版未公開）。** v0.5.0のデスクトップChrome ST/MTで音声付き逆再生・往復再生MP4を検証済み。720p級10秒・1080p級5秒の分割負荷制御を追加し、デスクトップSTおよび一部のMT実変換で成功しましたが、実機G2合格ではありません。Android連続動作・音声試聴・GPL恒久配布は未完了、iPhoneは検証延期中です。
 
-[製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [検証記録](docs/feasibility/G1.md) · [English README](README.md)
+[製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [G2受入状況](docs/feasibility/G2.md) · [MTの実測](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md) · [English README](README.md)
 
 ## 目的
 

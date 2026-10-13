@@ -28,13 +28,17 @@ except ImportError:
 
 
 class MemorySampler:
-    """Best-effort Chrome/Playwright subprocess RSS; NOT phone peak RAM.
+    """Best-effort desktop Playwright/Chrome process-tree RSS and Linux PSS.
 
-    The aggregate may double-count shared pages and includes Playwright
-    subprocesses. Use only for relative desktop regression investigations.
+    Summed RSS can heavily double-count shared pages, particularly for MT.
+    PSS apportions shared pages per process and is useful for comparisons,
+    but neither is an Android peak-RAM measurement or a per-tab guarantee.
     """
     def __init__(self):
-        self.peak = None
+        self.peak = None  # Legacy RSS field for existing measurement reports.
+        self.peak_pss = None
+        self.peak_uss = None
+        self.peak_process_count = None
         self.stop_flag = threading.Event()
         self.worker = None
 
@@ -46,21 +50,43 @@ class MemorySampler:
 
     def _sample(self):
         parent = psutil.Process(os.getpid())
+        tick = 0
         while not self.stop_flag.is_set():
-            total = 0
+            total_rss = total_pss = total_uss = 0
+            processes = 0
+            # smaps_rollup/PSS collection is more expensive than RSS: read
+            # it once per second, not on every 250ms sampler tick.
+            collect_full = tick % 4 == 0
+            full_available = collect_full
             for proc in parent.children(recursive=True):
                 try:
-                    total += proc.memory_info().rss
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
+                    total_rss += proc.memory_info().rss
+                    processes += 1
+                    if collect_full:
+                        full = proc.memory_full_info()
+                        pss = getattr(full, "pss", None)
+                        uss = getattr(full, "uss", None)
+                        if pss is None or uss is None:
+                            full_available = False
+                        else:
+                            total_pss += pss
+                            total_uss += uss
+                except (psutil.NoSuchProcess, psutil.ZombieProcess,
+                        psutil.AccessDenied, OSError):
                     continue
-            self.peak = max(self.peak or 0, total)
+            if self.peak is None or total_rss > self.peak:
+                self.peak = total_rss
+                self.peak_process_count = processes
+            if full_available and processes:
+                self.peak_pss = max(self.peak_pss or 0, total_pss)
+                self.peak_uss = max(self.peak_uss or 0, total_uss)
+            tick += 1
             self.stop_flag.wait(.25)
 
     def stop(self):
         self.stop_flag.set()
         if self.worker:
             self.worker.join(timeout=2)
-
 
 ROOT = Path(__file__).resolve().parents[2]
 DIST = ROOT / "dist"
@@ -255,7 +281,11 @@ def run_profile(browser, base: str, directory: Path, runtime: str,
                     "audio": audio, "iteration": iteration,
                     "elapsedSeconds": round(elapsed, 2),
                     "jsHeapAfterBytes": heap["usedJSHeapSize"],
-                    "sampledProcessTreePeakRssBytes": sampler.peak, **probe}
+                    "sampledProcessTreePeakRssBytes": sampler.peak,
+                    "sampledProcessTreePeakPssBytes": sampler.peak_pss,
+                    "sampledProcessTreePeakUssBytes": sampler.peak_uss,
+                    "subprocessesAtPeakRss": sampler.peak_process_count,
+                    **probe}
                 results.append(item)
                 print("[PASS]", json.dumps(item, ensure_ascii=False), flush=True)
             if cancel_retry:
@@ -351,7 +381,9 @@ def main() -> None:
         "profiles": profiles, "runtimes": runtimes, "modes": modes,
         "repeatCount": args.runs, "aacAudio": args.audio,
         "peakDeviceRamMeasured": False,
-        "estimatedProcessRssMethod": "psutil subtree RSS sampled every 250ms, may double-count shared pages"
+        "estimatedProcessRssMethod":
+            "subprocess tree RSS every 250ms, Linux PSS and USS every ~1s (psutil);"
+            " PSS apportions shared pages but none are a per-tab/device peak"
             if psutil is not None else "not measured (psutil unavailable)",
         "results": measurements}
     if args.report:

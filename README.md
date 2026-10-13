@@ -1,8 +1,8 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.6.0 memory/performance/reliability candidate (not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The new 720p/10s and 1080p/5s bounds have **not** passed full-resolution, physical-device G2. Android repeated-use, audio listening and permanent GPL source bundle are outstanding; iPhone tests are deferred.
+**Development status: v0.6.0 memory/performance/reliability candidate (not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The 720p/10s and 1080p/5s bounds have passed selected **desktop ST and isolated MT** full-size scenarios, but **not physical-device G2**. Android repeated-use, three-repeat MT stress, reliable memory measurements, audio listening and a permanent GPL source bundle are outstanding; iPhone tests are deferred.
 
-[日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
+[日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
 ## Goal
 

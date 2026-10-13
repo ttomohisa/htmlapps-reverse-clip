@@ -108,3 +108,12 @@ test('v0.6 720p and 1080p limits have independent explicit settings',()=>{
     'shortEdge=edge===1280?720:edge===1920?1080:edge'])
     assert.ok(html.includes(marker),marker);
 });
+
+test('v0.6 releases the final WASM output bytes once the preview Blob owns them',()=>{
+  assert.ok(html.includes('const outputSize=bytes.byteLength;'));
+  assert.ok(html.includes("resultUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));"));
+  assert.ok(html.includes("bytes=null;\n          const resultVideo"));
+  assert.ok(html.includes('outputBytes:outputSize'));
+  assert.ok(html.includes('size:humanSize(outputSize)'));
+  assert.ok(!html.includes('outputBytes:bytes.byteLength'));
+});

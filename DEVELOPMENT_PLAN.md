@@ -1,9 +1,17 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.6.0 development (Memory / Performance / Reliability): 720p-class 10s / 1080p-class 5s adaptive frame budgets staged; full-size ST/MT conversion, device repetition, actual peak RAM, G2 and permanent GPL release still PENDING. iPhone tests deferred.
+> **Status:** v0.6.0 development (Memory / Performance / Reliability): real ST full-size synthetic exports and two exact isolated MT full-size cases PASS on desktop; three-repeat MT, physical Android, G2, audio listening and permanent GPL distribution remain PENDING. iPhone testing deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-14 — v0.6.0 分離されたMTの高解像度実行
+
+- GitHub Actions [#38464029860](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38464029860) でCOOP/COEP有効のChrome実MTが成功。720p級10秒・AAC付きPing-pongは298フレーム／約19.867秒を11.20秒で出力。1080p級5秒・無音Reverseは75フレーム／5.000秒を5.87秒で出力。双方ともMP4の保存・デコード・全出力フレームの元フレーム照合が成功。
+- 参考RSSはChrome関連プロセスの合計で約3,203MiB／2,846MiB。ただし**共有ページの二重計上があり、実機メモリ使用量やSTとの速度比較に使用しない**。次回の試験ツールではLinux PSS/USSも収集できる構成に変更。
+- 今回は2シナリオ各1回のみ。高解像度MTの連続3回／キャンセル復帰、実Androidのメモリ・速度、音質試聴、元動画コピー排除は未実施。iPhone検証は延期中。**Gate G2は未合格。**
+- 詳細: `docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md`。高負荷MTジョブはGitHub Actionsの消費を抑えるため、手動実行時の明示フラグがある場合だけ起動するよう戻した。
+- 出力Blob作成後の元WASM出力ArrayBufferを早期に解放する小改善も実装（実ピーク低下は別途測定）。
 
 ## 2026-10-13 — v0.6.0 デスクトップ ST 高解像度測定
 

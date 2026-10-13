@@ -1,6 +1,10 @@
 # Changelog
 
 ## [0.6.0] — Adaptive quality guard / memory and reliability (development, 2026-10-13)
+- **2026-10-14 isolated MT full-resolution:** [App CI #38464029860](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38464029860) PASSED cross-origin-isolated MT 720p10s Ping-pong with AAC (298 frames/19.867s, 11.20s processing) and 1080p5s silent Reverse (75 frames/5.000s, 5.87s processing). Real MP4s were saved, decoded and validated frame-by-frame. One run of each scenario only. Summed Chrome-related RSS (~3,203 / 2,846 MiB) may double-count shared pages and does NOT represent Android RAM. Full evidence: `docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md`.
+- Expensive MT HD job now requires explicit `workflow_dispatch` input `run_hd_mt=true` instead of running on every pull-request push. Routine ST/MT regression remains.
+- Opt-in desktop performance harness can also collect Linux process-tree PSS/USS where supported; these are not device/tab RAM measurements. Release finished MP4 Uint8Array once its preview Blob takes ownership, shortening redundant buffering during metadata waits. Actual peak reduction needs separate proof.
+
 - Tested the pinned real ST standalone in Linux Chromium at full 1280×720/10s and 1920×1080/5s: **11 real downloaded/decoded MP4 successes**, including three consecutive silent Ping-pong conversions per quality, two high-resolution AAC exports and 720p in-progress cancellation followed by successful retry. Frame identity and stream duration verified; precise observations and limitations in `docs/feasibility/V060_DESKTOP_ST_MEASUREMENTS.md`. This is not real-device/MT G2 approval.
 - Strengthened the opt-in high-resolution stress harness to validate **every decoded frame against its expected original source position**, check optional AAC duration and cancel after real conversion progress rather than only at startup. Default CI still syntax-checks this potentially expensive test without running it.
 

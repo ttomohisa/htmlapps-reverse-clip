@@ -2188,7 +2188,12 @@
               String.fromCharCode(...bytes.slice(4,8))!=='ftyp')
             throw new Error('Joined output does not have a valid MP4 header.');
           currentStage='preview';
+          // Blob construction creates its own immutable backing bytes.
+          // Drop the returned WASM output buffer before media metadata awaits;
+          // retaining both increases transient memory on constrained phones.
+          const outputSize=bytes.byteLength;
           resultUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));
+          bytes=null;
           const resultVideo=$('#resultVideo');
           await new Promise((resolve,reject)=>{
             let timer;
@@ -2217,7 +2222,7 @@
           const elapsed=(performance.now()-started)/1000;
           state.conversion={
             ok:true,elapsedSeconds:Number(elapsed.toFixed(2)),
-            outputBytes:bytes.byteLength,outputDuration:duration,
+            outputBytes:outputSize,outputDuration:duration,
             outputWidth:resultVideo.videoWidth,outputHeight:resultVideo.videoHeight,
             selectedStart:plan.selectedStart,selectedEnd:plan.selectedEnd,
             duration:plan.expectedDuration,estimatedOutputFrames:plan.frameCount,
@@ -2229,7 +2234,7 @@
           $('#resultInfo').textContent=format(wantsAudio?
             (mode==='pingpong'?'pingpongResultAudio':'reverseResultAudio'):
             (mode==='pingpong'?'pingpongResultInfo':'resultInfo'),{
-            duration:duration.toFixed(2),size:humanSize(bytes.byteLength),
+            duration:duration.toFixed(2),size:humanSize(outputSize),
             chunks:count,elapsed:elapsed.toFixed(2)
           });
           $('#resultArea').hidden=false;

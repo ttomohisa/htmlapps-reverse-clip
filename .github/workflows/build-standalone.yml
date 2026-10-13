@@ -2,6 +2,12 @@ name: Validate standalone HTML
 
 on:
   workflow_dispatch:
+    inputs:
+      run_hd_mt:
+        description: 'Opt-in full-resolution MT proof (costly; default off)'
+        required: false
+        type: boolean
+        default: false
   pull_request:
     branches:
       - main
@@ -152,13 +158,12 @@ jobs:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/file-standalone-browser-smoke.py
 
-  # TEMPORARY v0.6 G2 evidence run. The full-resolution harness is normally
-  # opt-in to protect the owner's GitHub Actions quota. Remove/disable this
-  # automatic job after its explicit MT performance investigation.
+  # v0.6 experimental full-resolution workload runs only on explicit manual
+  # dispatch (run_hd_mt=true). Never burn minutes on ordinary PR updates.
   experimental-mt-hd:
     name: One-time isolated MT 720p/1080p video proof
     needs: build
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'workflow_dispatch' && inputs.run_hd_mt == true
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
