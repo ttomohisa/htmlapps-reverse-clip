@@ -61,3 +61,19 @@ test('both variants require the same Builder commit but distinct binaries',()=>{
   assert.notEqual(lock.variants['single-thread'].assets['ffmpeg.wasm'],
     lock.variants['multi-thread'].assets['ffmpeg.wasm']);
 });
+
+test('future immutable Builder Release import is fail-closed and current lock stays experimental',()=>{
+  const importer=read('scripts/prepare-video-reverse-runtime.ps1');
+  assert.equal(lock.kind,'experimental-dual-github-actions-artifact');
+  assert.ok(importer.includes("'github-release-st-mt'"));
+  for(const token of [
+    'releaseArchiveSha256','correspondingSourceSha256',
+    'Get-Hash $zip','Assert-Manifest $manifest',
+    "Assert-File 'browser-ffmpeg.js' $variantDir",
+    'LICENSES/FFmpeg-COPYING.GPLv2',
+    'LICENSES/x264-COPYING',
+    'LICENSES/Emscripten-LICENSE'
+  ]) assert.ok(importer.includes(token),'Release import guard missing '+token);
+  assert.ok(importer.includes('if (-not $isRelease) {'));
+  assert.ok(importer.includes('Builder Release archive SHA-256 mismatch.'));
+});

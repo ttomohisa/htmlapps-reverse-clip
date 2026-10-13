@@ -38,3 +38,11 @@ The original Android ST-mode user reports (10-second clip, 84.73s) are not proof
 4. Owner merges every PR. Do not treat successful static packaging as proof of end-to-end physical-device MT or as final release approval.
 
 **Limitation:** The Pages MT worker is a functional fallback on browsers allowing same-origin service workers and isolation; private browsing or restrictive service-worker settings may prevent activation. Browser Kitty MT uses direct HTTP response headers instead.
+
+## Future immutable release migration — not active yet
+
+The current `reverse-runtime.lock.json` still uses `kind: experimental-dual-github-actions-artifact` with an expiring Actions artifact ID. An additional code path now supports `kind: github-release-st-mt` **after** a reviewed, permanent Builder Release is published. Do not switch the active lock to a nonexistent or unreviewed version.
+
+The reviewed lock will need the exact `builderTag` equal to `v<builderVersion>`, `correspondingSourceAsset` and `correspondingSourceSha256`, plus each variant's exact `releaseAsset` and `releaseArchiveSha256`. The importer accepts only the expected `ffmpeg-wasm-video-reverse-<single-thread|multi-thread>-v<version>.zip` names, checks the downloaded ZIP SHA-256, verifies its own profile/threading/isolation manifest, verifies SHA-256 for FFmpeg JS/WASM and loader, and requires FFmpeg/x264/Emscripten notices and BUILDINFO inside the ZIP. It does **not** need GITHUB_TOKEN for a public immutable Release.
+
+Both variant hashes and the public corresponding-source archive must be reviewed against the actual Builder Release and source tree before updating the lock. Merely writing SHA-256 fields in JSON does not establish license compliance. The `video-reverse` source-bundle packaging workflow in Builder is **manual/review-only** and does not publish the release. No Browser Kitty PR is to be opened while the app is unfinished.

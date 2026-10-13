@@ -7,6 +7,7 @@
 - Expand actual ST/MT Chrome smoke to cancel during delayed WASM initialization, change input mid-load and then successfully export H.264 MP4 again.
 - Bring the existing frame-indexed 10-second/fractional-boundary regression into the hosted ST/MT Chrome CI, with repeat-run output validation, MP4 frame-order checks and simulated mobile file transport.
 - Keep the experimental input/output/10s limits and temporary pinned GPL Builder artifacts unchanged; this is not a claim of Android device MT or release readiness.
+- Stage a future immutable Builder Release asset importer that validates the exact ZIP digest, ST/MT core hashes and included GPL/BUILDINFO notices; current runtime lock still selects the temporary Actions artifact.
 - Per owner direction, **Browser Kitty integration is postponed until Reverse Clip is complete**; mistakenly opened Browser Kitty Draft PR #41 was closed unmerged. Do not open a replacement now.
 
 

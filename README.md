@@ -103,3 +103,7 @@ The product is **still experimental**. These automated desktop tests do not esta
 ### Long-clip regression in CI
 
 `tests/feasibility/browser-video-smoke.py` now serves the real generated ST and MT HTML over localhost, with COOP/COEP only on MT. It checks 10-second export and repeat export, non-frame-aligned selections, full decoded frame order, cancellation with no exposed partial result, and a **simulated** Android UA to exercise the in-memory source path. These are automated **desktop Chrome** tests, not real Android benchmarks or evidence for native 720p/1080p output.
+
+### Future non-expiring WASM distribution
+
+The experimental `video-reverse` runtime is still fetched from a pinned **expiring GitHub Actions artifact at build time**. The build now also understands immutable public Builder Release ZIPs, with independently pinned ST/MT archive and embedded-byte SHA-256 values and the appropriate FFmpeg/x264/Emscripten notices. This path is **not activated** until the Builder's source-complete candidate is reviewed, a fixed public Release is authorized and the lock is updated. See `docs/THREADING_DISTRIBUTION.md`. There is no change to the app's zero-runtime-upload policy or Browser Kitty postponement.

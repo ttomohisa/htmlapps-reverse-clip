@@ -99,3 +99,7 @@ WASMの初期化中にキャンセルや動画の差し替えが行われても�
 ### 長い区間の回帰テスト
 
 `tests/feasibility/browser-video-smoke.py` はSTとMTの生成済みHTMLをHTTPで配信し、MTのみに分離ヘッダーを付けてChromeで10秒の逆再生・反復・端数区間・全フレームの反転順序を確認します。中止後に不完全な出力が残らないことや、擬似Android UAでの端末内ファイルコピー経路も対象です。**デスクトップChromeの自動テスト**であり、Android実機の性能・メモリや標準720p/1080p出力の実証ではありません。
+
+### 将来の恒久版WASM取り込み
+
+現時点で使っているWASMは、引き続きSHA-256で固定した**期限付きGitHub Actions成果物**です。Builderでライセンス表示・対応ソースを確認した恒久的な公開Releaseを用意できた後、ST／MT個別のZIPハッシュと内包JS／WASMのハッシュを検証して取り込む仕組みを追加しました。正式な公開Releaseがまだないため、**現在のロックは変更していません**。詳細は `docs/THREADING_DISTRIBUTION.md` を参照してください。Browser Kittyへの取り込みは完成後まで行いません。
