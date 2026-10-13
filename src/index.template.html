@@ -575,7 +575,7 @@
       <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
       <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
       <label><span data-i18n="modeLabel">作成モード</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option id="pingpongOption" value="pingpong" data-i18n="modePingpong" disabled>往復再生</option></select></label>
-      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option><option value="1280" data-i18n="qualityHdPilot">HD 720p級（試験）</option></select></label>
+      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option><option value="1280" data-i18n="qualityHdPilot">標準720p級（試験）</option><option value="1920" data-i18n="qualityFullHdPilot">高画質1080p級（試験）</option></select></label>
       <label><span data-i18n="audioModeLabel">音声</span><select id="audioInput" disabled><option value="none" data-i18n="audioNone">音声なし（既定）</option><option id="audioReverseOption" value="reverse" data-i18n="audioReverseOption" disabled>音声も逆再生（準備中）</option></select></label>
     </div>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
@@ -874,9 +874,12 @@
     "qualityLabel": "実験版の画質",
     "qualityStandard": "長辺360px",
     "qualityHigh": "長辺720px",
-    "qualityHdPilot": "HD 720p級（試験）",
-    "rangeHdPilotWarning": "最大長辺1280px（横1280×720／縦720×1280相当）の試験設定です。最大5秒。実機での安定性は未確認です。",
-    "rangeHdPilotTooLong": "HD 720p級の試験設定は最大5秒です。範囲を短くするか長辺360／720pxを選んでください。",
+    "qualityHdPilot": "標準720p級（最大10秒・試験）",
+    "qualityFullHdPilot": "高画質1080p級（最大5秒・試験）",
+    "rangeHdPilotWarning": "720p級（短辺最大720px・長辺最大1280px、最大10秒）の試験設定です。実機の安定性は未確認です。",
+    "rangeFullHdPilotWarning": "1080p級（短辺最大1080px・長辺最大1920px、最大5秒）の試験設定です。実機メモリ負荷は未検証です。",
+    "rangeHdPilotTooLong": "720p級は最大10秒です。",
+    "rangeFullHdPilotTooLong": "1080p級は最大5秒です。範囲を短くするか720p級を選んでください。自動変更はしません。",
     "rangeValid": "この範囲は実験版で処理できます。",
     "rangeInvalid": "開始・終了を確認してください（0.5〜10秒）。",
     "rangeTooLong": "この実験版は最大10秒です。自動で範囲を短くすることはありません。",
@@ -926,7 +929,7 @@
     "confirmAction": "実行する",
     "cancel": "キャンセル",
     "undo": "元に戻す",
-    "rangeMemoryHigh": "推定フレーム保持量が実験版の上限96MiBを超えています。範囲か画質を下げてください。",
+    "rangeMemoryHigh": "推定フレーム保持量が実験版の上限48 MiBを超えています。範囲か画質を下げてください。",
     "reverseTitle": "短い動画を逆再生（実験版）",
     "reverseDescription": "映像のみ・最大10秒・15fps。2秒以内の区間で処理し、1本のMP4へ結合します。5秒超は実験的な機能です。",
     "reverseButton": "逆再生MP4を作成",
@@ -1028,9 +1031,12 @@
     "qualityLabel": "Experimental quality",
     "qualityStandard": "Long edge 360px",
     "qualityHigh": "Long edge 720px",
-    "qualityHdPilot": "HD 720p-class (pilot)",
-    "rangeHdPilotWarning": "Experimental long-edge 1280px (1280×720 landscape / 720×1280 portrait) output, up to 5 seconds, not yet validated on physical phones.",
-    "rangeHdPilotTooLong": "HD 720p-class pilot is limited to 5 seconds. Shorten the selection or use a 360/720px long-edge preset.",
+    "qualityHdPilot": "Standard 720p-class (up to 10s; pilot)",
+    "qualityFullHdPilot": "High 1080p-class (up to 5s; pilot)",
+    "rangeHdPilotWarning": "Experimental 720p-class (short edge max 720px, long edge max 1280px), up to 10 seconds; phone reliability unverified.",
+    "rangeFullHdPilotWarning": "Experimental 1080p-class (short edge max 1080px, long edge max 1920px), up to 5 seconds; phone RAM use unverified.",
+    "rangeHdPilotTooLong": "720p-class is limited to 10 seconds.",
+    "rangeFullHdPilotTooLong": "1080p-class is limited to 5 seconds. Shorten the range or select 720p; no automatic changes.",
     "rangeValid": "This segment is within the experimental limits.",
     "rangeInvalid": "Check start and end (0.5–10 seconds).",
     "rangeTooLong": "This experimental build supports up to 10 seconds and will not silently shorten the selection.",
@@ -1080,7 +1086,7 @@
     "confirmAction": "Continue",
     "cancel": "Cancel",
     "undo": "Undo",
-    "rangeMemoryHigh": "Estimated frame cache exceeds the experimental 96 MiB limit. Reduce time or quality.",
+    "rangeMemoryHigh": "Estimated frame cache exceeds the experimental 48 MiB limit. Reduce time or quality.",
     "reverseTitle": "Reverse a short clip (experimental)",
     "reverseDescription": "Silent video · up to 10 seconds · 15fps. Reverse chunks no longer than 2 seconds, then join one MP4. Beyond 5 seconds remains experimental.",
     "reverseButton": "Create reversed MP4",
@@ -1352,26 +1358,35 @@
            typeof SharedArrayBuffer === 'function');
       }
       const OUTPUT_FPS = 15;
+      // Estimate a <=48MiB YUV420 frame cache per chunk. This does not bound
+      // decoder/FFmpeg graphs, WASM heap, or JS memory: G2 requires measurements.
+      function chunkFrameLimit(width,height,fps=15) {
+        const bytesPerFrame=width*height*1.5;
+        if(!(bytesPerFrame>0)||!Number.isFinite(bytesPerFrame))
+          throw new RangeError('Invalid output dimensions');
+        return Math.min(2*fps,Math.max(3,Math.floor(48*1048576/bytesPerFrame)));
+      }
       const MAX_CLIP_SECONDS = 10; // Experimental: 10s needs Android/PC real-device verification.
       // Pure and testable: split at the output's 15fps cadence. Evenly sized
       // chunks prevent a trailing <0.1s segment that the WASM refuses.
-      function planReverseFrames(start, end, fps = 15) {
+      function planReverseFrames(start, end, fps = 15, maxChunkFrames = fps*2) {
         if (!Number.isFinite(start) || !Number.isFinite(end) ||
             !Number.isInteger(fps) || fps < 1 || fps > 60 ||
+            !Number.isInteger(maxChunkFrames) || maxChunkFrames < 3 || maxChunkFrames > fps*2 ||
             start < 0 || end - start < .5 - 1e-8 || end - start > 10 + 1e-8)
           throw new RangeError('Select 0.5–10 seconds for experimental reverse output.');
         const first = Math.round(start * fps), last = Math.round(end * fps);
         const frameCount = last - first;
-        const chunkCount = Math.ceil(frameCount / (fps * 2));
+        const chunkCount = Math.ceil(frameCount / maxChunkFrames);
         if (frameCount < 2 || chunkCount < 1 || chunkCount > 8)
           throw new RangeError('Invalid number of output frames.');
         let cursor = first, remaining = frameCount;
         const chronological = [];
         for (let i = 0; i < chunkCount; i++) {
-          let frames = Math.min(fps * 2, remaining);
+          let frames = Math.min(maxChunkFrames, remaining);
           // Use near-integer-second boundaries; avoid a 1-frame final fragment.
           if (remaining - frames === 1) frames -= 1;
-          if (frames < 2 || frames > fps * 2)
+          if (frames < 2 || frames > maxChunkFrames)
             throw new RangeError('Unsafe reverse chunk duration.');
           remaining -= frames;
           chronological.push({
@@ -1395,21 +1410,21 @@
       // prevents a doubled turning frame AND a doubled loop-boundary frame.
       // Short chunks are balanced so subtracting endpoint frames never
       // produces a 1-frame reverse chunk rejected by the WASM runner.
-      function planModeFrames(start, end, mode = 'reverse', fps = 15) {
-        const ordinary = planReverseFrames(start,end,fps);
+      function planModeFrames(start, end, mode = 'reverse', fps = 15, maxChunkFrames = fps*2) {
+        const ordinary = planReverseFrames(start,end,fps,maxChunkFrames);
         if (mode === 'reverse') {
           return {...ordinary, mode, sourceFrames:ordinary.frameCount};
         }
         if (mode !== 'pingpong') throw new RangeError('Unknown conversion mode.');
         const total=ordinary.frameCount;
         if (total < 4) throw new RangeError('Too few frames for ping-pong.');
-        const nChunks=Math.ceil(total/(fps*2));
+        const nChunks=Math.ceil(total/maxChunkFrames);
         if (nChunks<1 || nChunks*2>16) throw new RangeError('Unsafe ping-pong chunk count.');
         const chronological=[];
         let left=total, cursor=Math.round(start*fps);
         for(let i=0;i<nChunks;i++){
           const frames=Math.ceil(left/(nChunks-i));
-          if(frames<3 || frames>fps*2)
+          if(frames<3 || frames>maxChunkFrames)
             throw new RangeError('Unsafe ping-pong segment frame count.');
           chronological.push({
             start:Number((cursor/fps).toFixed(6)),
@@ -1446,10 +1461,12 @@
         };
       }
       function outputDimensions() {
-        const width = video.videoWidth, height = video.videoHeight;
-        // 360/720 cap the long edge; the distinct 1280 preset enables native 720p-class dimensions, without upscaling.
-        const edge = Number($('#qualityInput').value);
-        const scale = Math.min(1, edge / Math.max(1, width, height));
+        const width=video.videoWidth,height=video.videoHeight;
+        const edge=Number($('#qualityInput').value);
+        // 720p/1080p cap BOTH edges, even for portrait or square footage.
+        const shortEdge=edge===1280?720:edge===1920?1080:edge;
+        const scale=Math.min(1,edge/Math.max(1,width,height),
+                             shortEdge/Math.max(1,Math.min(width,height)));
         return {width:Math.max(16,Math.floor(width*scale/2)*2),
                 height:Math.max(16,Math.floor(height*scale/2)*2)};
       }
@@ -1485,7 +1502,7 @@
       }
       function moveTrimHandle(which) {
         if (!state.ready) return;
-        const maxTime=sliderMaxTime(), maxSpan=$('#qualityInput').value==='1280'?5:MAX_CLIP_SECONDS;
+        const maxTime=sliderMaxTime(), maxSpan=$('#qualityInput').value==='1920'?5:MAX_CLIP_SECONDS;
         const oldStart=Number($('#rangeStart').value), oldEnd=Number($('#rangeEnd').value);
         let start=Number.isFinite(oldStart)?roundTrim(oldStart):Number($('#trimStartSlider').value);
         let end=Number.isFinite(oldEnd)?roundTrim(oldEnd):Number($('#trimEndSlider').value);
@@ -1545,20 +1562,20 @@
         if (rawStart && rawEnd && Number.isFinite(start) && Number.isFinite(end) &&
             start >= 0 && end <= video.duration+.001 &&
             duration >= .5 && duration <= MAX_CLIP_SECONDS && modeAvailable) {
-          try { plan = planModeFrames(start,end,mode,OUTPUT_FPS); } catch (_) {}
+          try { plan = planModeFrames(start,end,mode,OUTPUT_FPS,
+                                      chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)); } catch (_) {}
         }
         const largestFrames = plan ? Math.max(...plan.segments.map(s=>s.frames)) : 0;
         const mib = dims.width * dims.height * 1.5 * largestFrames / 1048576;
-        // Full-HD 720p-class resolution is a separate, cautious pilot:
-        // retain no-upscaling and the per-chunk 96MiB lower-bound guard,
-        // and allow <=5s until physical Android MT repeat tests exist.
-        const hdPilot = Number($('#qualityInput').value) === 1280;
-        const hdTooLong = hdPilot && duration > 5 + 1e-8;
+        // No automatic time trimming or quality downgrade.
+        const quality=Number($('#qualityInput').value);
+        const standardHd=quality===1280, fullHd=quality===1920;
+        const highTooLong=fullHd && duration>5+1e-8;
         const audioRequested=$('#audioInput').value==='reverse';
         const audioAvailable=!audioRequested ||
           (AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent);
-        const safe = Boolean(plan && mib <= 96 && dims.width <= 2048 &&
-                             dims.height <= 2048 && !hdTooLong &&
+        const safe = Boolean(plan && mib <= 48 && dims.width <= 2048 &&
+                             dims.height <= 2048 && !highTooLong &&
                              modeAvailable && audioAvailable);
         state.validRange = safe;
         syncTrimControls();
@@ -1569,10 +1586,12 @@
           }) + ((Math.abs(plan.selectedStart-start)>.001 || Math.abs(plan.selectedEnd-end)>.001)
                ? ' '+translate('rangeSnapNote') : '') +
                (plan.expectedDuration>5 ? ' '+translate('rangeTenSecondWarning') : '') +
-               (hdPilot ? ' '+translate('rangeHdPilotWarning') : '');
+               (standardHd ? ' '+translate('rangeHdPilotWarning') : '') +
+               (fullHd ? ' '+translate('rangeFullHdPilotWarning') : '');
         } else {
-          const notice = !plan ? duration > MAX_CLIP_SECONDS ? 'rangeTooLong' : 'rangeInvalid'
-                               : hdTooLong ? 'rangeHdPilotTooLong' : 'rangeMemoryHigh';
+          const notice = highTooLong ? 'rangeFullHdPilotTooLong' :
+                         !plan ? duration > MAX_CLIP_SECONDS ? 'rangeTooLong' : 'rangeInvalid'
+                               : 'rangeMemoryHigh';
           $('#rangeNotice').textContent = translate(notice);
         }
         $('#memoryEstimate').textContent = format('memoryNotice',{mib:mib.toFixed(0)});
@@ -1938,6 +1957,16 @@
         field.value=name.slice(0,120);
         return field.value+'.mp4';
       }
+      function stopInFlightAudioInspection() {
+        if(state.audioInspectController){
+          state.audioInspectController.abort();
+          state.audioInspectController=null;
+        }
+        if(state.audioInspectRunner){
+          try{state.audioInspectRunner.dispose();}catch(_){}
+          state.audioInspectRunner=null;
+        }
+      }
       function resetConversion() {
         conversionEpoch+=1;
         if(conversionController) conversionController.abort();
@@ -1958,6 +1987,7 @@
         $('#reverseButton').disabled=!state.validRange||!state.ready;
       }
       async function reverseShortClip() {
+        if(conversionController)return; // never overlap two encoder jobs
         previewSelectionActive=false;
         video.pause();
         if (!state.ready || !state.file || !state.validRange) {
@@ -1986,9 +2016,11 @@
         }
         const wantsAudio=$('#audioInput').value==='reverse';
         let plan;
-        try { plan=planModeFrames(start,end,mode,OUTPUT_FPS); }
+        try { plan=planModeFrames(start,end,mode,OUTPUT_FPS,
+                                  chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)); }
         catch (_) { showToast(translate('reverseInvalid'));return; }
 
+        stopInFlightAudioInspection(); // optional probe uses a separate WASM heap
         resetConversion();
         const generation=state.generation, job=++conversionEpoch, file=state.file;
         const controller=new AbortController();
@@ -2207,6 +2239,10 @@
         }catch(error){
           if(job!==conversionEpoch)return;
           if(resultUrl){URL.revokeObjectURL(resultUrl);resultUrl=null;}
+          $('#resultVideo').pause();
+          $('#resultVideo').removeAttribute('src');
+          $('#resultVideo').load();
+          $('#resultArea').hidden=true;
           allChunks=[];
           state.conversion={
             ok:false,error:String(error?.message||error),stage:currentStage,
@@ -2240,6 +2276,8 @@
             $('#cancelReverseButton').hidden=true;
             $('#reverseProgress').hidden=true;
             rangeInfo();
+            if(AUDIO_MUX_ENABLED && state.ready && !state.audioChecked &&
+               !state.audioInspectController)void inspectSourceAudio();
           }
         }
       }
@@ -2357,7 +2395,8 @@
         const rect=helpDialog.getBoundingClientRect();
         if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)closeHelpDialog();
       });
-      window.addEventListener('pagehide',()=>{clearSourceTimeout();resetConversion();if(state.url)URL.revokeObjectURL(state.url);});
+      // bfcache restoration must not point to a revoked source URL.
+      window.addEventListener('pagehide',()=>releaseSource());
       outputFilename.value='reverse-clip-check';
       $('#reverseFilename').value='reverse-clip-reversed';
       $('#versionBadge').textContent='v'+APP_CONFIG.version;

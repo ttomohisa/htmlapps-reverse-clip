@@ -98,11 +98,13 @@ test('a late WASM runner belongs to its original conversion and is always dispos
   assert.ok(html.includes("controller.signal.addEventListener('abort',onAbort,{once:true})"));
 });
 
-test('HD 720p class is distinct from the long-edge 720px setting and guarded',()=>{
-  assert.ok(html.includes('value="720" data-i18n="qualityHigh"'));
-  assert.ok(html.includes('value="1280" data-i18n="qualityHdPilot"'));
-  assert.ok(html.includes('const hdPilot = Number($(\'#qualityInput\').value) === 1280;'));
-  assert.ok(html.includes('const hdTooLong = hdPilot && duration > 5'));
-  assert.ok(html.includes('rangeHdPilotTooLong'));
-  assert.ok(html.includes('rangeHdPilotWarning'));
+test('v0.6 720p and 1080p limits have independent explicit settings',()=>{
+  for(const marker of ['value="1280" data-i18n="qualityHdPilot"',
+    'value="1920" data-i18n="qualityFullHdPilot"',
+    'const highTooLong=fullHd && duration>5',
+    'rangeFullHdPilotTooLong',
+    'chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)',
+    'mib <= 48',
+    'shortEdge=edge===1280?720:edge===1920?1080:edge'])
+    assert.ok(html.includes(marker),marker);
 });

@@ -1,9 +1,17 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.5.0 development: desktop Chrome ST/MT real AAC audio + reverse/ping-pong MP4 passed (0.5s, 1s, 5s stereo, 10s stereo ping-pong 298 frames; CI #38358181120, 2026-10-13). Android hardware/listening acceptance, permanent GPL release and G1/G2 remain PENDING; iPhone deferred  
+> **Status:** v0.6.0 development (Memory / Performance / Reliability): 720p-class 10s / 1080p-class 5s adaptive frame budgets staged; full-size ST/MT conversion, device repetition, actual peak RAM, G2 and permanent GPL release still PENDING. iPhone tests deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-13 — v0.6.0 分割メモリ制御と復帰動作の実装開始
+
+- 720p級（短辺720px・長辺1280px・最大10秒）と1080p級（短辺1080px・長辺1920px・最大5秒）を追加。15fps、元動画の拡大なし。区間超過時は自動短縮・自動画質変更をしない。
+- 既存FFmpeg ST/MTバイナリの契約を変えず、分割プランの推定YUV420フレーム保持目標を48MiB/区間に抑える。実メモリ上限ではないため、別途実機のRSSやWASMの計測を必須とする。
+- 音声トラックの検査WASMを映像エンコード開始前に停止し、必要な場合は変換終了後に再検査。重複起動、失敗プレビューと戻る操作後の古いURL・Worker再利用を防止する。
+- 0.5〜10秒/0.5〜5秒の分割計画について、逆再生・往復再生のフレーム数・折返し境界のNode試験を追加。
+- 実720p10秒/1080p5秒、各3回連続、音声クリック試聴、Android実機、iPhone（延期）、1GiB入力経路、恒久GPL対応ソース付き配布が未受入。G2判定はINVESTIGATEのまま。詳細は docs/feasibility/G2.md。
 
 ## 2026-10-13 — v0.5.0 音声付きST/MT MP4検証結果
 

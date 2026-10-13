@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.4.0 experimental Ping-pong development (Android/Windows-first; device acceptance and stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
+**Development status: v0.6.0 memory/performance/reliability candidate (not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The new 720p/10s and 1080p/5s bounds have **not** passed full-resolution, physical-device G2. Android repeated-use, audio listening and permanent GPL source bundle are outstanding; iPhone tests are deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -15,7 +15,7 @@ Select a short portion of a video and export a reversed or forward-then-reverse 
 - Includes reproducible **native FFmpeg algorithm tests** for frame-accurate middle-clip reversal and ping-pong without a duplicated turnaround frame.
 - Preserves the `htmlapps-template` single-HTML, offline-first, CSP, bilingual, Windows build and GitHub Actions conventions.
 
-**Experimentally available:** a 0.5–10s reversed H.264 MP4 without audio; long edge 360px and 720px at 15fps (no upscaling). **Not available:** ping-pong, reverse audio, longer clip stitching, reliably supported HEVC/MOV, and verified phone performance. G1 remains open.
+**Experimentally available:** 0.5–10s Reverse/Ping-pong H.264 MP4, optional reversed AAC after source-track inspection, silent by default. Quality presets include compact long-edge 360/720px, 720p-class up to 10s and 1080p-class up to 5s, 15fps with no upscaling. Higher-resolution stability remains unverified: [G2 acceptance](docs/feasibility/G2.md).
 
 ## Development
 
@@ -50,7 +50,7 @@ Normal build on Windows: set `GITHUB_TOKEN` or `GH_TOKEN` with permission to rea
 ### Experiment steps
 
 1. Choose an MP4/MOV and let the browser display metadata and a preview.
-2. Choose 0.5–5 seconds, output long edge 360px or 720px; mode is reverse-only.
+2. Choose a 0.5–10s interval, Reverse or Ping-pong, and quality. Experimental 1080p-class is limited to 5s; reversed audio is available only after a supported source track is detected.
 3. Press **Create reversed MP4** and optionally cancel during conversion. If an error appears, expand the technical details.
 4. Play the *generated* output, check frame order and orientation, edit the MP4 filename, and press **Save MP4**.
 5. Use the separate diagnostic button if requested. The JSON optionally includes an output-success/error summary, but never raw video data or the input filename.

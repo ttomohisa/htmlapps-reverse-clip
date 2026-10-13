@@ -114,3 +114,28 @@ test('mode-dependent UI handlers only reference actual markup ids',()=>{
   assert.ok(ids.includes('reverseDescription'));
   assert.ok(ids.includes('resultTitle'));
 });
+
+test('v0.6 at HD 720p10s and 1080p5s preserves full ping-pong frame order',()=>{
+  const from=html.indexOf('function chunkFrameLimit(');
+  const to=html.indexOf('function outputDimensions(',from);
+  const chunkFrameLimit=runInNewContext(html.slice(from,to)+'\nchunkFrameLimit',{},{timeout:1000});
+  for(const [seconds,w,h,chunkCap] of [[10,1280,720,30],[5,1920,1080,16]]){
+    const budget=chunkFrameLimit(w,h,15);
+    assert.equal(budget,chunkCap);
+    const rev=planModeFrames(0,seconds,'reverse',15,budget);
+    const pong=planModeFrames(0,seconds,'pingpong',15,budget);
+    const n=seconds*15;
+    assert.equal(rev.frameCount,n);
+    assert.equal(pong.frameCount,2*n-2);
+    assert.ok(pong.segments.length<=16);
+    assert.ok([...rev.segments,...pong.segments].every(c=>c.frames<=budget));
+    const sequence=[];
+    for(const part of pong.segments){
+      const begin=Math.round(part.start*15);
+      for(let j=0;j<part.frames;j++)
+        sequence.push(begin+(part.direction==='forward'?j:part.frames-1-j));
+    }
+    assert.deepEqual(sequence,[...Array.from({length:n},(_,i)=>i),
+      ...Array.from({length:n-2},(_,i)=>n-2-i)]);
+  }
+});

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.0] — Adaptive quality guard / memory and reliability (development, 2026-10-13)
+
+- Introduce separate 720p-class (short edge <=720px / long edge <=1280px, 0.5–10s) and 1080p-class (short edge <=1080px / long edge <=1920px, 0.5–5s) experimental output settings, retaining compact 360/720px long-edge presets and no upscaling.
+- Plan each Reverse/Ping-pong segment with an estimated YUV420 frame-buffer target <=48MiB instead of always up to 2 seconds. 1920x1080 at 15fps uses up to 16 frames per segment; 1280x720 uses up to 30. Frame-boundary and expected-frame-count safeguards stay enabled.
+- Do not silently shorten user ranges or lower quality. On source replacement, cancellation or pagehide, discard old URLs/Worker; preempt separate audio-inspector WASM before exporting, restart after when necessary; reject repeated Create clicks and clean failed result previews.
+- Synthetic timeline planning checks added. Real 720p10s/1080p5s files, repeated conversions on physical phones, actual memory peaks, human listening and GPL source-complete permanent distribution remain **PENDING**. See docs/feasibility/G2.md. No v0.6 acceptance claim, merge or Browser Kitty integration.
+
+
 ### v0.5.0 — Verified ST/MT AAC MP4 regression (2026-10-13)
 - App [CI 38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120) **passed** real ST/MT reverse audio and ping-pong MP4 exports: mono 0.5s/1s, independent stereo L/R 440/660Hz reverse at 5s, 10s stereo ping-pong 298 frames/19.867s, and silent input fallback. AAC was decoded to PCM and stream count/duration checked with FFmpeg/ffprobe.
 - Builder [CI 38357268611](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38357268611) passed ST/MT after fixing an accidental 120-frame-per-segment validation limit applied to full 298-frame A/V MP4 output. Individual chunk guard stays 120 frames; joined-output guard stays 960 with exact expected count.
