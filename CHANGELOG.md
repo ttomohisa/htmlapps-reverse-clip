@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.0] - 2026-10-13 (App Foundation / development milestone)
+- Advance beyond the v0.1.x technical-spike series to the v0.2.0 app-foundation milestone. This is a working development build, **not** a completed G1/G2/G3 or stable public release.
+- Introduce an explicit generation-aware source state machine: `empty / inspecting / ready / error`; preserve validation and decoder errors across JA/EN switching, including empty videos.
+- Keep source replacement and rejected input fail-closed: clear previous results, disable stale edit/save controls, and reject late async input reads. Continue using object URLs for source preview without uploading media.
+- Preserve the proven ST/MT separate FFmpeg assets, local-first single HTML, `file://` ST build and 10s video-only reverse experiments; newer features remain experimental.
+- Expand Chrome ST/MT regression to cover invalid type, zero-byte MP4, unplayable MP4, language switching after an error, and recovery when a valid video is selected again.
+- **Pending v0.2.0 completion evidence:** Android physical-device intake/replacement/error-path tests. Do not claim this milestone fully accepted until those checks are recorded.
+- Browser Kitty PR #41 remains closed unmerged. No further portal PR until Reverse Clip is finished.
+
+
 ## [0.1.7] - 2026-10-13 (experimental HD 720p-class output)
 - Keep the existing long-edge 360px / 720px presets and add a **separate** long-edge 1280px pilot for true 1280×720 landscape or 720×1280 portrait source without upscaling.
 - Hard-cap the HD 720p-class pilot at 5 seconds, preserve up-to-2-second FFmpeg chunks and the existing 96 MiB estimated frame-buffer limit. No automatic shortening or quality downgrade.

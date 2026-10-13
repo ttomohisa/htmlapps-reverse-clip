@@ -519,7 +519,7 @@
     <input class="sr-only" id="sourceInput" type="file" accept="video/mp4,video/quicktime,.mp4,.mov">
     <input class="sr-only" id="captureInput" type="file" accept="video/*" capture="environment">
   </div>
-  <p class="rc-status" id="loadStatus" role="status" aria-live="polite" data-i18n="nothingSelected">動画がまだ選択されていません。</p>
+  <p class="rc-status" id="loadStatus" role="status" aria-live="polite" data-phase="empty" data-i18n="nothingSelected">動画がまだ選択されていません。</p>
   <div id="videoArea" hidden>
     <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" aria-label="Source video"></video>
     <div class="rc-facts" aria-live="polite">
@@ -768,7 +768,7 @@
 
       const translations = {
   "ja": {
-    "brandMeta": "動画逆再生 · v0.1.5 ST/MT実験版",
+    "brandMeta": "動画逆再生 · ST/MT開発版",
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
     "introTitle": "動画逆再生 — 最大10秒の実験版",
@@ -785,6 +785,7 @@
     "loaded": "動画を読み込みました。",
     "invalidType": "MP4またはMOVを選んでください。",
     "tooLarge": "ファイルは1GiB以下にしてください。",
+    "emptyInput": "動画ファイルが空です。別のMP4またはMOVを選んでください。",
     "cantRead": "動画をプレビューできません。対応していない形式か破損している可能性があります。",
     "fileName": "ファイル名",
     "sourceDuration": "長さ",
@@ -883,7 +884,7 @@
     "mtHelpOffline": "マルチスレッド版はWebサーバーの安全な設定が必要です。HTML単体をfile://で開く場合は標準（ST）版を使用してください。動画は外部に送信しません。"
   },
   "en": {
-    "brandMeta": "Reverse Clip · v0.1.5 ST/MT experiment",
+    "brandMeta": "Reverse Clip · ST/MT development",
     "helpTitle": "How to use & limitations",
     "close": "Close",
     "introTitle": "Reverse Clip — up to 10 seconds (experimental)",
@@ -900,6 +901,7 @@
     "loaded": "Video loaded.",
     "invalidType": "Choose an MP4 or MOV file.",
     "tooLarge": "Choose a file smaller than 1 GiB.",
+    "emptyInput": "This video file is empty. Choose another MP4 or MOV.",
     "cantRead": "This video cannot be previewed. The format may be unsupported or the file damaged.",
     "fileName": "File name",
     "sourceDuration": "Duration",
@@ -1100,7 +1102,8 @@
       window.AppToast = AppToast;
       function showToast(message, options = {}) { AppToast.show({ message, ...options }); }
       const video = $('#sourceVideo');
-      const state = { generation: 0, file: null, url: null, ready: false, probe: null, seek: null, note: null, validRange: false, conversion: null,
+      const state = { generation: 0, file: null, url: null, ready: false, sourcePhase: 'empty', sourceErrorKey: null,
+        probe: null, seek: null, note: null, validRange: false, conversion: null,
         copiedInput: null, inputPreparePromise: null, inputTransport: 'workerfs', inputPrepareError: null };
       // On mobile, materialize only small selected files before their picker/provider
       // grants become inaccessible in WORKERFS/FileReaderSync. Avoid OOM for large files.
@@ -1113,11 +1116,27 @@
       function setStatus(key) {
         $('#loadStatus').textContent = translate(key);
       }
+      // v0.2.0 App Foundation: one explicit source lifecycle. Every transition
+      // is tied to a file generation so an old async provider read, seek or
+      // metadata event cannot revive a previously selected video.
+      const SOURCE_PHASES = Object.freeze(['empty', 'inspecting', 'ready', 'error']);
+      function setSourcePhase(phase, generation = state.generation, errorKey = null) {
+        if (generation !== state.generation) return false;
+        if (!SOURCE_PHASES.includes(phase)) throw new RangeError('Invalid source phase: ' + phase);
+        state.sourcePhase = phase;
+        state.ready = phase === 'ready';
+        state.sourceErrorKey = phase === 'error' ? (errorKey || 'cantRead') : null;
+        $('#loadStatus').dataset.phase = phase;
+        setStatus(phase === 'empty' ? 'nothingSelected' :
+                  phase === 'inspecting' ? 'loading' :
+                  phase === 'ready' ? 'loaded' : state.sourceErrorKey);
+        return true;
+      }
       function releaseSource() {
         resetConversion();
         state.generation += 1;
         state.file = null;
-        state.ready = false;
+        setSourcePhase('empty');
         state.seek = null;
         state.copiedInput = null;
         state.inputPreparePromise = null;
@@ -1274,7 +1293,7 @@
           if (!sourceIsCurrent(file, generation)) return;
           state.inputPrepareError = String(error?.message || error);
           state.inputTransport = 'unreadable';
-          setStatus('reverseSourceUnreadable');
+          setSourcePhase('error', generation, 'reverseSourceUnreadable');
         });
         return true;
       }
@@ -1287,20 +1306,23 @@
         if (!file) return;
         releaseSource();
         const isVideo = /\.(mp4|m4v|mov)$/i.test(file.name) || /^(video\/mp4|video\/quicktime)$/i.test(file.type);
-        if (!isVideo) { setStatus('invalidType'); return; }
-        if (file.size > 1073741824) { setStatus('tooLarge'); return; }
+        if (!isVideo) { setSourcePhase('error', state.generation, 'invalidType'); return; }
+        if (file.size === 0) { setSourcePhase('error', state.generation, 'emptyInput'); return; }
+        if (file.size > 1073741824) { setSourcePhase('error', state.generation, 'tooLarge'); return; }
         state.file = file;
-        setStatus('loading');
+        setSourcePhase('inspecting');
         if (!prepareMobileInput(file)) attachSourcePreview(file);
       }
       video.addEventListener('loadedmetadata', () => {
         if (!state.file || !state.url || video.currentSrc !== state.url) return;
         if (!Number.isFinite(video.duration) || video.duration < .5 || !video.videoWidth || !video.videoHeight) {
           $('#videoArea').hidden = true;
-          setStatus('cantRead');
+          $('#reversePanel').hidden = true;
+          state.validRange = false;
+          setSourcePhase('error', state.generation, 'cantRead');
           return;
         }
-        state.ready = true;
+        setSourcePhase('ready');
         $('#videoArea').hidden = false;
         $('#rangeStart').value = '0';
         $('#rangeEnd').value = String(Math.min(1,video.duration).toFixed(1));
@@ -1310,10 +1332,22 @@
         $('#durationLabel').textContent = video.duration.toFixed(1) + ' s';
         $('#dimensionsLabel').textContent = video.videoWidth + ' × ' + video.videoHeight;
         $('#filesizeLabel').textContent = humanSize(state.file.size);
-        setStatus('loaded');
         rangeInfo();
       });
-      video.addEventListener('error', () => { if (state.file) { state.ready = false; setStatus('cantRead'); }});
+      video.addEventListener('error', () => {
+        if (!state.file || !state.url || video.currentSrc !== state.url) return;
+        // A video that cannot be decoded must invalidate even the previous
+        // output and editable controls; it must never appear "ready".
+        state.validRange = false;
+        $('#videoArea').hidden = true;
+        $('#reversePanel').hidden = true;
+        $('#rangeStart').disabled = true;
+        $('#rangeEnd').disabled = true;
+        $('#qualityInput').disabled = true;
+        $('#seekButton').disabled = true;
+        resetConversion();
+        setSourcePhase('error', state.generation, 'cantRead');
+      });
       function applyLanguage() {
         document.documentElement.lang = language;
         $('#runtimeModeLabel').textContent = translate(RUNTIME_VARIANT === 'multi-thread' ? 'mtVariant' : 'stVariant');
@@ -1328,7 +1362,11 @@
         document.title = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
         $('#brandName').textContent = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
         $('#footerName').textContent = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
-        setStatus(state.inputTransport === 'unreadable' ? 'reverseSourceUnreadable' : state.ready ? 'loaded' : state.file ? 'loading' : 'nothingSelected');
+        // Preserve the specific validation/decoder failure across JA/EN
+        // switching. A previously failed source must not look empty or ready.
+        setStatus(state.sourcePhase === 'error' ? (state.sourceErrorKey || 'cantRead') :
+                  state.sourcePhase === 'ready' ? 'loaded' :
+                  state.sourcePhase === 'inspecting' ? 'loading' : 'nothingSelected');
         $('#probeReport').textContent = (state.probe || state.seek) ? JSON.stringify({capabilities:state.probe,seek:state.seek},null,2) : translate('notRun');
         rangeInfo();
         if (state.conversion?.ok) $('#reverseStatus').textContent = translate('reverseSuccess');

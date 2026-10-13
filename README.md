@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.1.6 ST/MT experimental builds (cancel/retry hardened; Android/Windows-first; stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
+**Development status: v0.2.0 App Foundation development (Android/Windows-first; device acceptance and stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -111,3 +111,7 @@ The experimental `video-reverse` runtime is still fetched from a pinned **expiri
 ## v0.1.7 — guarded HD 720p-class pilot (2026-10-13)
 
 The prior 360/720px presets still mean *maximum long-edge pixels*, not native 360p/720p. A separate **HD 720p-class (pilot)** option now caps the long edge at **1280px**, producing 1280×720 from a suitable landscape source or 720×1280 portrait, never upscaling smaller inputs. It is limited to **0.5–5 seconds** with at most 2-second chunks; longer selections show an error rather than silently downgrading quality. This mode is not yet qualified on physical Android, and video-only/15fps and the frame-memory ceiling still apply.
+
+## v0.2.0 — App Foundation (2026-10-13)
+
+The v0.1.x technical spike has produced enough implementation evidence to advance versioning. v0.2.0 explicitly models source import as `empty → inspecting → ready / error`, with file-generation guards, safe source replacement and localized failures for invalid, empty or non-decodable media. These states are reflected in the source status UI, and negative paths are covered by ST/MT real-Chrome regression tests. The existing source preview, media details, ST `file://`, bilingual responsive UI and offline-embedded FFmpeg are retained. **Milestone development has started; device acceptance is not yet complete.** Android physical-device verification of input replacement and error handling remains pending. Separate later milestones cover clip editing, ping-pong, audio and release readiness. No Browser Kitty integration until the app is complete.

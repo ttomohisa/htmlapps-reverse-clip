@@ -229,6 +229,46 @@ def main():
                         print(f"[PASS] {mode} 1-second native 1280x720 HD pilot export",
                               flush=True)
 
+                        # v0.2.0 Foundation: replacing a *successful* source
+                        # must clear the previous result and never leave an old
+                        # download enabled. Every error path can recover.
+                        page.locator("#sourceInput").set_input_files({
+                            "name": "not-a-video.txt", "mimeType": "text/plain",
+                            "buffer": b"this is not a video"
+                        })
+                        assert page.locator("#loadStatus").get_attribute("data-phase") == "error"
+                        assert "MP4" in page.locator("#loadStatus").inner_text()
+                        assert page.locator("#resultArea").is_hidden(), mode
+                        assert page.locator("#reversePanel").is_hidden(), mode
+
+                        # Switching languages must preserve the *error*, not
+                        # misdescribe it as an empty or ready source.
+                        page.locator("#languageButton").click()
+                        assert page.locator("#loadStatus").get_attribute("data-phase") == "error"
+                        assert "MP4" in page.locator("#loadStatus").inner_text()
+                        page.locator("#languageButton").click()
+
+                        page.locator("#sourceInput").set_input_files({
+                            "name": "empty.mp4", "mimeType": "video/mp4",
+                            "buffer": b""
+                        })
+                        assert page.locator("#loadStatus").get_attribute("data-phase") == "error"
+                        assert page.locator("#resultArea").is_hidden(), mode
+
+                        page.locator("#sourceInput").set_input_files({
+                            "name": "broken.mp4", "mimeType": "video/mp4",
+                            "buffer": b"not a real mp4 container"
+                        })
+                        page.locator("#loadStatus[data-phase='error']").wait_for(timeout=10000)
+                        assert page.locator("#resultArea").is_hidden(), mode
+
+                        page.locator("#sourceInput").set_input_files(str(source))
+                        page.locator("#loadStatus[data-phase='ready']").wait_for(timeout=10000)
+                        assert page.locator("#reversePanel").is_visible(), mode
+                        assert page.locator("#reverseButton").is_enabled(), mode
+                        print(f"[PASS] {mode} Foundation lifecycle rejects/replaces invalid media",
+                              flush=True)
+
                         assert not errors, (mode, errors)
                         assert not external, (mode, external)
                         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), mode

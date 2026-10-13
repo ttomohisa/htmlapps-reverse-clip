@@ -1,8 +1,10 @@
-Reverse Clip v0.1.5 - single-thread (ST) + multi-thread (MT) experimental builds.
-GitHub Pages root / = portable ST; GitHub Pages /mt/ = MT with pinned COI worker.
-Browser Kitty imports MT once the separate app/site Draft PRs are merged.
-ST standalone supports direct file://; MT requires HTTP(S) cross-origin isolation.
-Actual Android 5s/10s tests were for ST; MT speed has not yet been demonstrated.
-The code is browser-only (no video upload or runtime CDN).
-The Builder Actions artifact is temporary; source-complete GPL release remains required.
-Read README.ja.md, README.md and docs/THREADING_DISTRIBUTION.md before release.
+Reverse Clip v0.2.0 — App Foundation / development build (NOT stable).
+The v0.1.x feasibility work is closed for feature-versioning purposes, but G1 is not formally passed.
+App foundation: explicit empty/inspecting/ready/error source lifecycle, generation guards,
+MP4/MOV import, safe replacement, local metadata preview, bilingual single HTML, file:// ST.
+GitHub Pages root / = ST; GitHub Pages /mt/ = MT with pinned COI worker.
+Android/Windows prioritized; iPhone tests deferred. Mobile device verification still pending.
+Builder WASM is temporarily imported at build time from an expiring Actions artifact.
+No Browser Kitty integration until the app is finished. Browser Kitty PR #41 was closed unmerged.
+Reverse/ping-pong audio, 1080p, Android MT reliability and stable GPL release remain unfinished.
+Read README.ja.md, README.md, APP_SPEC.md and DEVELOPMENT_PLAN.md before release.
