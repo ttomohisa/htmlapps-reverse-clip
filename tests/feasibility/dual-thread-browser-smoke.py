@@ -488,8 +488,10 @@ def main():
                         assert abs(after_y-before_y)<=2,(mode,before_y,after_y)
                         page.locator("#helpButton").click()
                         page.keyboard.press("Escape")
-                        page.wait_for_function("() => !document.querySelector('#helpDialog').open")
-                        assert not page.evaluate("document.body.classList.contains('help-modal-open')")
+                        page.wait_for_function("""() =>
+                          !document.querySelector('#helpDialog').open &&
+                          !document.body.classList.contains('help-modal-open')""",
+                          timeout=5000)
                         print(f"[PASS] {mode} JA/EN, supplied icon and help scroll locking",flush=True)
 
                         assert not errors, (mode, errors)
