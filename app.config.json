@@ -4,8 +4,8 @@
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
   "version": "0.5.0",
-  "description": "Reverse Clip v0.5.0 audio-mode development; proven ST/MT reverse and ping-pong MP4 remain silent until actual AAC mux and playback pass.",
-  "descriptionJa": "Reverse Clip v0.5.0 音声対応の開発段階。ST/MTの逆再生・往復再生は動作しますが、AAC音声の結合検証が終わるまで音声なしを維持します。",
+  "description": "Reverse Clip v0.5.0 development: browser-local ST/MT silent or AAC-audio Reverse/Ping-pong MP4. Desktop Chrome tested; physical Android and stable GPL release pending.",
+  "descriptionJa": "Reverse Clip v0.5.0開発版。ブラウザ内で逆再生・往復再生MP4を生成し、検証済みST/MTではAAC音声も選択可能。Android実機と正式GPL配布は未完了。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",

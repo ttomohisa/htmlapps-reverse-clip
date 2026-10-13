@@ -24,7 +24,7 @@
       }
     }
   },
-  "notes": "v0.5 experimental AAC reverse/pingpong. ST and MT genuine H.264+AAC browser smoke passed in Builder CI 38357268611. Fix: chunk verifier keeps 120-frame cap while complete A/V mux accepts <=960 and requires exact expected frames; previous 10-second 298-frame ping-pong was incorrectly rejected. App ST/MT 10-second stereo audio acceptance pending. Temporary Actions artifact expires 2026-10-20; permanent source-complete GPL release remains required.",
+  "notes": "v0.5 AAC reverse/ping-pong with ST+MT Builder CI 38357268611 and final ST+MT downloaded MP4/decoded PCM app CI 38358181120 PASS, including mono 0.5s/1s, 5s stereo reverse and 10s stereo ping-pong 298 frames. Fixed chunk 120-frame cap vs finished MP4 960-frame cap, exact frame counts required. Physical Android, audible seams and permanent GPL Release not accepted. EXPIRING Builder Actions artifact 11794061552 expires 2026-10-20.",
   "features": [
     "pingpong",
     "audio-mux"

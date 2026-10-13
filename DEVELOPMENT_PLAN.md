@@ -1,9 +1,17 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.4.0 experimental Reverse + Ping-pong ST/MT; desktop Chrome CI verified real 15→28, 31→60 and 150→298-frame ping-pong MP4, plus genuine VFR, black-source and portrait input (2026-10-13). Android hardware acceptance, permanent GPL binary distribution, G1/G2 remain pending; iPhone deferred  
+> **Status:** v0.5.0 development: desktop Chrome ST/MT real AAC audio + reverse/ping-pong MP4 passed (0.5s, 1s, 5s stereo, 10s stereo ping-pong 298 frames; CI #38358181120, 2026-10-13). Android hardware/listening acceptance, permanent GPL release and G1/G2 remain PENDING; iPhone deferred  
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-13 — v0.5.0 音声付きST/MT MP4検証結果
+
+- [App CI 38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120) がST/MT両方で成功。音声あり/なしのH.264 MP4、0.5秒・1秒のモノラルAAC、5秒ステレオ逆再生、10秒ステレオ往復（出力298フレーム・約19.867秒）を保存・ffprobe/PCMデコードで検査。左右独立440Hz/660Hzの順序も保持。
+- [Builder CI 38357268611](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38357268611)も両スレッド版のブラウザA/Vテスト合格。短いチャンクの120フレーム制約を完成MP4へ誤適用していた不具合を修正し、出力は最大960フレームかつ予定数完全一致で検査。
+- ソース音声検査、AAC正逆変換、H.264へのAAC結合まで実装。実験版では初期値「音声なし」を維持する。
+- **未受入**：Android実機・リスニングによるクリック音/無音区間、44.1kHz等のサンプルレート、回転/HDR実撮影、720p10秒/1080p5秒の負荷、GPL対応ソース付き恒久Release。現WASM Actions成果物は2026-10-20に失効。
+- 機能としてのデスクトップ成功と製品Gate G1/G2/G3の合格は区別する。詳細は `docs/feasibility/V050_AUDIO_ACCEPTANCE.md`。Browser Kittyへの取込は完成後。
 
 ## 2026-10-13 — v0.5.0 AAC検査・結合フローの試験
 

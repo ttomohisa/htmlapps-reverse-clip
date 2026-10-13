@@ -1,5 +1,12 @@
 # Changelog
 
+### v0.5.0 — Verified ST/MT AAC MP4 regression (2026-10-13)
+- App [CI 38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120) **passed** real ST/MT reverse audio and ping-pong MP4 exports: mono 0.5s/1s, independent stereo L/R 440/660Hz reverse at 5s, 10s stereo ping-pong 298 frames/19.867s, and silent input fallback. AAC was decoded to PCM and stream count/duration checked with FFmpeg/ffprobe.
+- Builder [CI 38357268611](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38357268611) passed ST/MT after fixing an accidental 120-frame-per-segment validation limit applied to full 298-frame A/V MP4 output. Individual chunk guard stays 120 frames; joined-output guard stays 960 with exact expected count.
+- Audio defaults to No audio; the optional reverse-audio choice activates only after local supported source audio is verified. Runtime ST/MT hashes remain pinned to the temporary Actions artifact expiring October 20, 2026.
+- Physical Android audio quality and repeated memory use, true HD target durations, 44.1kHz sources and camera display-rotation, and permanent corresponding-source GPL Release are still pending. No portal integration or merges.
+
+
 ### v0.5.0 — Audio A/V proof path and acceptance tests
 - Implement source-scoped lightweight FFmpeg audio stream inspection (generation-aware, cancelable, no whole-file copy). Select audio only if a supported AAC/MP3/Opus/FLAC mono/stereo stream is positively identified.
 - When the future pinned ST/MT core advertises `audio-mux`, render the original selected audio range in reverse or as a forward/return ping-pong track, then remux only the AAC into the already finished exact-frame H.264 MP4. All failures discard the pending result; existing no-audio exports stay unchanged.
