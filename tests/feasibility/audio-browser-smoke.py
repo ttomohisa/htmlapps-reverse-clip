@@ -103,7 +103,10 @@ def crossings(samples,t0,t1):
     begin=round(t0*SAMPLE_RATE)
     end=round(t1*SAMPLE_RATE)
     section=samples[begin:end]
-    assert len(section)>5000,(len(section),len(samples))
+    # A short 100 ms interior window has exactly 4,800 samples at 48kHz.
+    # Keep a >=90 ms guard so short-clip tests retain actual signal evidence
+    # rather than failing due to a longer-than-window arbitrary constant.
+    assert len(section)>=round(.09*SAMPLE_RATE),(len(section),len(samples))
     assert max(section)-min(section)>200,"unexpected silence in audio"
     return sum(1 for a,b in zip(section,section[1:]) if (a<0)!=(b<0))
 
