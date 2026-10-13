@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.2.0",
-  "description": "Reverse Clip v0.2.0 App Foundation: safe local source selection/inspection, generation-aware lifecycle, ST/MT FFmpeg WASM builds, experimental reversed MP4 export.",
-  "descriptionJa": "Reverse Clip v0.2.0 アプリ基盤。動画の安全な選択・検査と世代管理による状態遷移、ST/MT専用WASMを備えた逆再生MP4の実験開発版です。",
+  "version": "0.3.0",
+  "description": "Reverse Clip v0.3.0 Trim & Reverse: touch/keyboard range handles and selected-source playback; experimental browser-local ST/MT MP4 reversal.",
+  "descriptionJa": "Reverse Clip v0.3.0「区間指定と逆再生」。開始・終了ハンドルと区間プレビュー、ST/MTのローカル逆再生MP4生成を開発中。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",
