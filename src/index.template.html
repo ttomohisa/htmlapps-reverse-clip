@@ -463,6 +463,25 @@
     .rc-export h4{font-size:15px;margin:18px 0 7px}
     .rc-actions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
     .rc-save{display:flex;align-items:end;flex-wrap:wrap;gap:9px;padding:10px 0}
+    .rc-trim{background:var(--surface-muted);border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0 14px;min-width:0}
+    .rc-trim-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
+    .rc-trim-head strong{font-size:14px}
+    .rc-trim-head output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:650}
+    .rc-trim-labels{display:flex;justify-content:space-between;gap:14px;font-size:12px;color:var(--muted)}
+    .rc-trim-labels label{cursor:pointer}
+    .rc-trim-sliders{position:relative;height:52px;margin:4px 0 5px}
+    .rc-trim-track{position:absolute;top:20px;left:12px;right:12px;height:12px;border-radius:99px;background:var(--line-strong);pointer-events:none}
+    .rc-trim-selection{position:absolute;top:0;bottom:0;left:0;width:100%;border-radius:99px;background:var(--accent)}
+    .rc-trim-sliders input[type=range]{-webkit-appearance:none;appearance:none;position:absolute;top:4px;left:0;width:100%;height:44px;margin:0;background:transparent;border:0;pointer-events:none}
+    #trimStartSlider{z-index:3}
+    #trimEndSlider{z-index:2}
+    .rc-trim-sliders input[type=range]:focus{z-index:4}
+    .rc-trim-sliders input[type=range]::-webkit-slider-runnable-track{height:44px;background:transparent}
+    .rc-trim-sliders input[type=range]::-moz-range-track{height:44px;background:transparent}
+    .rc-trim-sliders input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:none;width:24px;height:36px;margin-top:4px;border:3px solid #fff;border-radius:10px;background:var(--accent);box-shadow:0 0 0 1px var(--line-strong),var(--shadow-sm);cursor:ew-resize}
+    .rc-trim-sliders input[type=range]::-moz-range-thumb{pointer-events:auto;touch-action:none;width:24px;height:36px;border:3px solid #fff;border-radius:10px;background:var(--accent);box-shadow:0 0 0 1px var(--line-strong),var(--shadow-sm);cursor:ew-resize}
+    .rc-trim .button{min-height:44px}
+    .rc-trim-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:7px}
     .rc-source-status{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
     .rc-source-status .rc-status{flex:1 1 180px}
     .rc-source-status .button{flex:0 0 auto}
@@ -530,6 +549,22 @@
   </div>
   <div id="videoArea" hidden>
     <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" aria-label="Source video"></video>
+    <div class="rc-trim" id="trimControls" aria-labelledby="trimTitle">
+      <div class="rc-trim-head">
+        <strong id="trimTitle" data-i18n="trimTitle">逆再生する区間</strong>
+        <output id="trimSummary" aria-live="off">0.0–1.0 秒</output>
+      </div>
+      <div class="rc-trim-sliders">
+        <div class="rc-trim-track" aria-hidden="true"><div class="rc-trim-selection" id="trimSelectedTrack"></div></div>
+        <input id="trimStartSlider" type="range" min="0" max="1" step="0.1" value="0" disabled aria-label="開始ハンドル" data-i18n-aria-label="trimStartLabel" aria-describedby="rangeNotice">
+        <input id="trimEndSlider" type="range" min="0" max="1" step="0.1" value="1" disabled aria-label="終了ハンドル" data-i18n-aria-label="trimEndLabel" aria-describedby="rangeNotice">
+      </div>
+      <div class="rc-trim-labels"><label for="trimStartSlider" data-i18n="trimStartLabel">開始ハンドル</label><label for="trimEndSlider" data-i18n="trimEndLabel">終了ハンドル</label></div>
+      <div class="rc-trim-actions">
+        <button class="button" id="previewSelectionButton" type="button" disabled data-i18n="previewSelectionButton">選択範囲を再生</button>
+        <span class="rc-hint" id="trimPreviewNotice" role="status" aria-live="polite"></span>
+      </div>
+    </div>
     <div class="rc-facts" aria-live="polite">
       <div><span data-i18n="fileName">ファイル名</span><strong id="sourceName">—</strong></div>
       <div><span data-i18n="sourceDuration">長さ</span><strong id="durationLabel">—</strong></div>
@@ -805,6 +840,14 @@
     "sourceDuration": "長さ",
     "dimensions": "画面サイズ",
     "fileSize": "容量",
+    "trimTitle": "逆再生する区間",
+    "trimStartLabel": "開始ハンドル",
+    "trimEndLabel": "終了ハンドル",
+    "trimSummary": "{start}～{end} 秒（{duration} 秒）",
+    "trimInvalidSummary": "開始・終了の時刻を確認してください",
+    "previewSelectionButton": "選択範囲を再生",
+    "trimPreviewPlaying": "元動画の選択区間を再生中",
+    "previewSelectionFailed": "元動画の選択区間を再生できませんでした。",
     "rangeStartLabel": "開始（秒）",
     "rangeEndLabel": "終了（秒）",
     "modeLabel": "モード（往復は準備中）",
@@ -927,6 +970,14 @@
     "sourceDuration": "Duration",
     "dimensions": "Dimensions",
     "fileSize": "File size",
+    "trimTitle": "Choose a section to reverse",
+    "trimStartLabel": "Start handle",
+    "trimEndLabel": "End handle",
+    "trimSummary": "{start}–{end}s ({duration}s)",
+    "trimInvalidSummary": "Check the start and end times",
+    "previewSelectionButton": "Play selected section",
+    "trimPreviewPlaying": "Playing the selected source interval",
+    "previewSelectionFailed": "Could not play the selected part of the source video.",
     "rangeStartLabel": "Start (seconds)",
     "rangeEndLabel": "End (seconds)",
     "modeLabel": "Mode (ping-pong not ready)",
@@ -1140,6 +1191,7 @@
         if (sourceTimeout) clearTimeout(sourceTimeout);
         sourceTimeout = 0;
       }
+      let previewSelectionActive = false;
       const memoryRate = 1.5; // YUV420p approximation; it is not a memory budget.
       const format = (key, vars = {}) => translate(key).replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ''));
       function setStatus(key) {
@@ -1164,6 +1216,7 @@
         return true;
       }
       function releaseSource() {
+        previewSelectionActive=false;
         resetConversion();
         state.generation += 1;
         state.file = null;
@@ -1181,6 +1234,10 @@
         $('#videoArea').hidden = true;
         $('#rangeStart').disabled = true;
         $('#rangeEnd').disabled = true;
+        $('#trimStartSlider').disabled = true;
+        $('#trimEndSlider').disabled = true;
+        $('#previewSelectionButton').disabled = true;
+        $('#trimPreviewNotice').textContent = '';
         $('#modeInput').disabled = true;
         $('#qualityInput').disabled = true;
         $('#seekButton').disabled = true;
@@ -1203,8 +1260,9 @@
         video.load();
         $('#videoArea').hidden = true;
         $('#reversePanel').hidden = true;
-        for(const id of ['rangeStart','rangeEnd','modeInput','qualityInput','seekButton'])
+        for(const id of ['rangeStart','rangeEnd','modeInput','qualityInput','seekButton','trimStartSlider','trimEndSlider','previewSelectionButton'])
           $('#' + id).disabled = true;
+        previewSelectionActive = false;
         resetConversion();
         setSourcePhase('error', generation, errorKey);
       }
@@ -1269,6 +1327,87 @@
         return {width:Math.max(16,Math.floor(width*scale/2)*2),
                 height:Math.max(16,Math.floor(height*scale/2)*2)};
       }
+      // Two real native range thumbs share one highlighted track. Both are
+      // usable via touch/pointer or keyboard, synchronized with the numeric
+      // fields. Slider moves preserve 0.5s minimum and maximum 10s (5s HD),
+      // while *manual numeric edits* are only validated, never silently fixed.
+      function roundTrim(value) { return Math.round(value * 10) / 10; }
+      function sliderMaxTime() { return Math.max(.5, Math.floor(video.duration * 10 + 1e-7) / 10); }
+      function syncTrimControls() {
+        if (!state.ready) return;
+        const maxTime = sliderMaxTime();
+        const a=$('#trimStartSlider'), b=$('#trimEndSlider');
+        for (const control of [a,b]) { control.min='0'; control.max=String(maxTime); control.disabled=false; }
+        const rawStart=$('#rangeStart').value.trim(), rawEnd=$('#rangeEnd').value.trim();
+        const start=Number(rawStart), end=Number(rawEnd);
+        const valid=Boolean(rawStart && rawEnd && Number.isFinite(start) && Number.isFinite(end) &&
+          start>=0 && end<=video.duration+.001 && end-start>=.5-1e-8);
+        if (valid) {
+          a.value=String(Math.max(0,Math.min(maxTime,roundTrim(start))));
+          b.value=String(Math.max(0,Math.min(maxTime,roundTrim(end))));
+          const begin=Number(a.value) / maxTime * 100, finish=Number(b.value) / maxTime * 100;
+          $('#trimSelectedTrack').style.left=begin+'%';
+          $('#trimSelectedTrack').style.width=Math.max(0,finish-begin)+'%';
+          a.setAttribute('aria-valuetext',start.toFixed(1)+' s');
+          b.setAttribute('aria-valuetext',end.toFixed(1)+' s');
+          $('#trimSummary').textContent=format('trimSummary',{
+            start:start.toFixed(1),end:end.toFixed(1),duration:(end-start).toFixed(1)
+          });
+        } else {
+          $('#trimSummary').textContent=translate('trimInvalidSummary');
+        }
+      }
+      function moveTrimHandle(which) {
+        if (!state.ready) return;
+        const maxTime=sliderMaxTime(), maxSpan=$('#qualityInput').value==='1280'?5:MAX_CLIP_SECONDS;
+        const oldStart=Number($('#rangeStart').value), oldEnd=Number($('#rangeEnd').value);
+        let start=Number.isFinite(oldStart)?roundTrim(oldStart):Number($('#trimStartSlider').value);
+        let end=Number.isFinite(oldEnd)?roundTrim(oldEnd):Number($('#trimEndSlider').value);
+        if (which==='start') {
+          end=Math.max(.5,Math.min(maxTime,end));
+          const requested=roundTrim(Number($('#trimStartSlider').value));
+          start=Math.min(end-.5,Math.max(Math.max(0,end-maxSpan),requested));
+        } else {
+          start=Math.max(0,Math.min(maxTime-.5,start));
+          const requested=roundTrim(Number($('#trimEndSlider').value));
+          end=Math.max(start+.5,Math.min(Math.min(maxTime,start+maxSpan),requested));
+        }
+        start=roundTrim(start); end=roundTrim(end);
+        if (!(start>=0 && end-start>=.5-1e-8 && end<=video.duration+.001)) return;
+        previewSelectionActive=false;
+        video.pause();
+        $('#trimPreviewNotice').textContent='';
+        $('#rangeStart').value=start.toFixed(1);
+        $('#rangeEnd').value=end.toFixed(1);
+        resetConversion();
+        rangeInfo();
+      }
+      function previewSelectedSource() {
+        if (!state.ready || !state.validRange) return;
+        const start=Number($('#rangeStart').value);
+        previewSelectionActive=true;
+        video.pause();
+        video.currentTime=start;
+        $('#trimPreviewNotice').textContent=translate('trimPreviewPlaying');
+        const played=video.play();
+        if (played?.catch) played.catch(()=>{
+          previewSelectionActive=false;
+          $('#trimPreviewNotice').textContent=translate('previewSelectionFailed');
+        });
+      }
+      video.addEventListener('timeupdate',()=>{
+        if (!previewSelectionActive) return;
+        const end=Number($('#rangeEnd').value);
+        if (Number.isFinite(end) && video.currentTime>=end-.025) {
+          video.pause();
+          previewSelectionActive=false;
+          $('#trimPreviewNotice').textContent='';
+        }
+      });
+      video.addEventListener('ended',()=>{
+        previewSelectionActive=false;
+        $('#trimPreviewNotice').textContent='';
+      });
       function rangeInfo() {
         if (!state.ready) return;
         const rawStart = $('#rangeStart').value.trim(), rawEnd = $('#rangeEnd').value.trim();
@@ -1291,6 +1430,8 @@
                              dims.height <= 2048 && !hdTooLong &&
                              $('#modeInput').value === 'reverse');
         state.validRange = safe;
+        syncTrimControls();
+        $('#previewSelectionButton').disabled=!safe || Boolean(conversionController);
         if (safe) {
           $('#rangeNotice').textContent = format('rangePlan',{
             count:plan.segments.length,duration:plan.expectedDuration.toFixed(2)
@@ -1418,7 +1559,7 @@
         setSourcePhase('ready');
         $('#videoArea').hidden = false;
         $('#rangeStart').value = '0';
-        $('#rangeEnd').value = String(Math.min(1,video.duration).toFixed(1));
+        $('#rangeEnd').value = String(Math.max(.5,Math.floor(Math.min(5,video.duration)*10)/10).toFixed(1));
         for (const id of ['rangeStart','rangeEnd','qualityInput','seekButton']) $('#' + id).disabled = false;
         $('#reversePanel').hidden = false;
         $('#sourceName').textContent = state.file.name;
@@ -1566,6 +1707,8 @@
         $('#reverseButton').disabled=!state.validRange||!state.ready;
       }
       async function reverseShortClip() {
+        previewSelectionActive=false;
+        video.pause();
         if (!state.ready || !state.file || !state.validRange) {
           showToast(translate('reverseInvalid')); return;
         }
@@ -1829,7 +1972,13 @@
         }
         chooseFile(files[0]);
       });
-      for(const id of ['rangeStart','rangeEnd','qualityInput']) $('#'+id).addEventListener('change',()=>{resetConversion();rangeInfo();});
+      for(const id of ['rangeStart','rangeEnd','qualityInput']) $('#'+id).addEventListener('change',()=>{
+        previewSelectionActive=false;video.pause();$('#trimPreviewNotice').textContent='';
+        resetConversion();rangeInfo();
+      });
+      for(const [id,which] of [['trimStartSlider','start'],['trimEndSlider','end']])
+        $('#'+id).addEventListener('input',()=>moveTrimHandle(which));
+      $('#previewSelectionButton').addEventListener('click',previewSelectedSource);
       $('#reverseButton').addEventListener('click',reverseShortClip);
       $('#cancelReverseButton').addEventListener('click',()=>{resetConversion();rangeInfo();$('#reverseStatus').textContent=translate('reverseCancelled');});
       $('#saveReverseButton').addEventListener('click',saveReverseResult);
@@ -1840,8 +1989,32 @@
       outputFilename.addEventListener('blur',()=>outputFilename.value=reportFilename());
       $('#languageButton').addEventListener('click',()=>{language=language==='ja'?'en':'ja';writeStorage(storageKeys.language,language);applyLanguage();});
       const helpDialog = $('#helpDialog');
-      $('#helpButton').addEventListener('click',()=>helpDialog.showModal());
+      let helpBackgroundScroll=null;
+      function lockHelpBackground(){
+        if(helpBackgroundScroll!==null)return;
+        helpBackgroundScroll=window.scrollY;
+        document.body.style.top='-'+helpBackgroundScroll+'px';
+        document.documentElement.classList.add('help-modal-open');
+        document.body.classList.add('help-modal-open');
+      }
+      function unlockHelpBackground(){
+        if(helpBackgroundScroll===null)return;
+        const restoreY=helpBackgroundScroll;
+        helpBackgroundScroll=null;
+        document.body.classList.remove('help-modal-open');
+        document.body.style.top='';
+        document.documentElement.classList.remove('help-modal-open');
+        const originalBehavior=document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior='auto';
+        window.scrollTo(0,restoreY);
+        document.documentElement.style.scrollBehavior=originalBehavior;
+      }
+      $('#helpButton').addEventListener('click',()=>{
+        lockHelpBackground();
+        try{helpDialog.showModal();}catch(error){unlockHelpBackground();throw error;}
+      });
       $('#closeHelpButton').addEventListener('click',()=>helpDialog.close());
+      helpDialog.addEventListener('close',unlockHelpBackground);
       helpDialog.addEventListener('click',event=>{
         const rect=helpDialog.getBoundingClientRect();
         if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)helpDialog.close();
