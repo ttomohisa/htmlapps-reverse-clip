@@ -121,7 +121,13 @@ def export(page,directory:Path,mode:str,with_audio:bool):
     page.locator("#rangeEnd").fill("1")
     page.locator("#rangeEnd").dispatch_event("change")
     page.locator("#modeInput").select_option(mode)
-    page.locator("#audioInput").select_option("reverse" if with_audio else "none")
+    if with_audio:
+        page.locator("#audioInput").select_option("reverse")
+    else:
+        # A source without audio intentionally disables this select. The
+        # correct fallback is already selected: do not ask Playwright to
+        # interact with an inaccessible control.
+        assert page.locator("#audioInput").input_value()=="none"
     assert page.locator("#reverseButton").is_enabled(),page.locator("#rangeNotice").inner_text()
     page.locator("#reverseButton").click()
     page.wait_for_function("""()=>
