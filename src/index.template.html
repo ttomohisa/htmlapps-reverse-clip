@@ -461,6 +461,9 @@
     .rc-export h4{font-size:15px;margin:18px 0 7px}
     .rc-actions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
     .rc-save{display:flex;align-items:end;flex-wrap:wrap;gap:9px;padding:10px 0}
+    .rc-source-status{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+    .rc-source-status .rc-status{flex:1 1 180px}
+    .rc-source-status .button{flex:0 0 auto}
     .rc-save .export-field{flex:1 1 200px;min-width:0}
     .rc-save button{flex:0 0 auto}
     #reverseProgress{width:100%;height:13px;accent-color:var(--accent);margin:8px 0}
@@ -509,7 +512,7 @@
     <div><h2 id="workspaceTitle" data-i18n="workspaceTitle">動画を読み込む</h2>
       <p data-i18n="workspaceBody">端末内だけで動画の情報とブラウザーの動作を調べます。</p></div>
   </div>
-  <div class="rc-drop" id="dropZone" tabindex="0" role="group" aria-labelledby="fileActionHeading">
+  <div class="rc-drop" id="dropZone" role="group" aria-labelledby="fileActionHeading">
     <h3 id="fileActionHeading" data-i18n="dropTitle">動画を選ぶか撮影する</h3>
     <p data-i18n="dropHint">MP4 / MOV · 上限1GiB · ファイルは送信しません</p>
     <div class="button-row rc-center">
@@ -519,7 +522,10 @@
     <input class="sr-only" id="sourceInput" type="file" accept="video/mp4,video/quicktime,.mp4,.m4v,.mov">
     <input class="sr-only" id="captureInput" type="file" accept="video/*" capture="environment">
   </div>
-  <p class="rc-status" id="loadStatus" role="status" aria-live="polite" data-phase="empty" data-i18n="nothingSelected">動画がまだ選択されていません。</p>
+  <div class="rc-source-status">
+    <p class="rc-status" id="loadStatus" role="status" aria-live="polite" data-phase="empty" data-i18n="nothingSelected">動画がまだ選択されていません。</p>
+    <button class="button" id="cancelLoadButton" type="button" hidden data-i18n="cancelLoadButton">読み込みを中止</button>
+  </div>
   <div id="videoArea" hidden>
     <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" aria-label="Source video"></video>
     <div class="rc-facts" aria-live="polite">
@@ -788,6 +794,9 @@
     "emptyInput": "動画ファイルが空です。別のMP4またはMOVを選んでください。",
     "invalidContainer": "MP4/MOVの動画データを確認できません。拡張子だけを変えたファイルは利用できません。",
     "sourceTimedOut": "動画の読み込みが完了しませんでした。端末に保存した動画を選び直してください。",
+    "cancelLoadButton": "読み込みを中止",
+    "sourceLoadCancelled": "読み込みを中止しました。別の動画を選択できます。",
+    "multipleFiles": "動画は1つずつ選んでください。複数ファイルは同時に処理できません。",
     "cantRead": "動画をプレビューできません。対応していない形式か破損している可能性があります。",
     "fileName": "ファイル名",
     "sourceDuration": "長さ",
@@ -906,6 +915,9 @@
     "emptyInput": "This video file is empty. Choose another MP4 or MOV.",
     "invalidContainer": "This does not have a recognizable MP4/MOV container header. Renaming a file is not a video conversion.",
     "sourceTimedOut": "Video loading timed out. Save a local copy on your device and choose it again.",
+    "cancelLoadButton": "Cancel loading",
+    "sourceLoadCancelled": "Video loading was cancelled. You can select another video.",
+    "multipleFiles": "Choose one video at a time. Multiple dropped files cannot be processed together.",
     "cantRead": "This video cannot be previewed. The format may be unsupported or the file damaged.",
     "fileName": "File name",
     "sourceDuration": "Duration",
@@ -1140,6 +1152,7 @@
         state.ready = phase === 'ready';
         state.sourceErrorKey = phase === 'error' ? (errorKey || 'cantRead') : null;
         $('#loadStatus').dataset.phase = phase;
+        $('#cancelLoadButton').hidden = phase !== 'inspecting';
         setStatus(phase === 'empty' ? 'nothingSelected' :
                   phase === 'inspecting' ? 'loading' :
                   phase === 'ready' ? 'loaded' : state.sourceErrorKey);
@@ -1788,13 +1801,29 @@
         showToast(translate('reportSaved'));
       }
       $('#pickButton').addEventListener('click',()=>$('#sourceInput').click());
+      $('#cancelLoadButton').addEventListener('click', () => {
+        if (state.sourcePhase !== 'inspecting') return;
+        releaseSource();
+        setStatus('sourceLoadCancelled');
+      });
       $('#captureButton').addEventListener('click',()=>$('#captureInput').click());
       $('#sourceInput').addEventListener('change',e=>{chooseFile(e.target.files?.[0]);e.target.value='';});
       $('#captureInput').addEventListener('change',e=>{chooseFile(e.target.files?.[0]);e.target.value='';});
       const drop=$('#dropZone');
       drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('is-dragover');});
       drop.addEventListener('dragleave',()=>drop.classList.remove('is-dragover'));
-      drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('is-dragover');chooseFile(e.dataTransfer?.files?.[0]);});
+      drop.addEventListener('drop',e=>{
+        e.preventDefault();
+        drop.classList.remove('is-dragover');
+        const files=e.dataTransfer?.files;
+        if(!files?.length)return;
+        if(files.length!==1){
+          releaseSource();
+          setSourcePhase('error',state.generation,'multipleFiles');
+          return;
+        }
+        chooseFile(files[0]);
+      });
       for(const id of ['rangeStart','rangeEnd','qualityInput']) $('#'+id).addEventListener('change',()=>{resetConversion();rangeInfo();});
       $('#reverseButton').addEventListener('click',reverseShortClip);
       $('#cancelReverseButton').addEventListener('click',()=>{resetConversion();rangeInfo();$('#reverseStatus').textContent=translate('reverseCancelled');});
