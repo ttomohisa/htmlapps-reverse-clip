@@ -367,9 +367,15 @@ def main():
                         print(f"[PASS] {mode} Foundation lifecycle rejects/replaces invalid media",
                               flush=True)
 
+                        # Foundation layout accepts narrow portrait phones
+                        # as well as the default 390px viewport and desktop.
+                        for viewport_width in (320, 360, 390, 1024):
+                            page.set_viewport_size({"width": viewport_width, "height": 780})
+                            assert page.evaluate(
+                                "document.documentElement.scrollWidth <= innerWidth"
+                            ), (mode, viewport_width)
                         assert not errors, (mode, errors)
                         assert not external, (mode, external)
-                        assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), mode
                         print(f"[PASS] {mode} real standalone browser video reverse+download; "
                               f"isolated={isolated}, SAB={shared}", flush=True)
                         page.close()
