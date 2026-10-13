@@ -1,5 +1,13 @@
 # Changelog
 
+### v0.2.0 — 2026-10-13 App Foundation follow-up (safe import and recovery)
+- Validate only the first 32 bytes of an MP4/MOV's ISO-BMFF/QuickTime atom structure before handing it to browser playback. Reject obvious renamed text/RIFF/EBML without reading or copying a 1GiB video; full codec compatibility still depends on native browser/FFmpeg decoding.
+- Bound stuck photo-provider reads or stalled media metadata to 30 seconds, show a localized recovery message, revoke stale Blob URLs, and reject any late async result from the old source.
+- Generate a safe default MP4 filename from the selected source; include v0.2.0 source phase/error code (not media name/data) in the opt-in diagnostic JSON.
+- Extend real Chrome ST/MT tests for corrupt container headers, invalid codec-like media, stalled and stale provider reads, source switching and automatic save names. Add targeted Node unit tests.
+- Physical Android device intake/error and repeated MT performance acceptance remain **PENDING**. Browser Kitty PR #41 remains closed unmerged.
+
+
 ## [0.2.0] - 2026-10-13 (App Foundation / development milestone)
 - Advance beyond the v0.1.x technical-spike series to the v0.2.0 app-foundation milestone. This is a working development build, **not** a completed G1/G2/G3 or stable public release.
 - Introduce an explicit generation-aware source state machine: `empty / inspecting / ready / error`; preserve validation and decoder errors across JA/EN switching, including empty videos.

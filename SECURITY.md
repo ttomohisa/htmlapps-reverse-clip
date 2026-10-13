@@ -64,3 +64,9 @@ Video inputs may be untrusted or provider-backed on Android. Files up to 64MiB m
 ## v0.1.4 frame count / long-running conversion guard
 
 The experimental 10s mode executes no more than 2 seconds per independent WASM reversal segment, then remuxes the completed H.264 chunks. The Builder checks **encoded video packet counts** against the caller's expected frame total for each segment and the final MP4, refusing partial or mismatched results. The original input is still copied into MEMFS on Android only up to 64 MiB; that temporary copy plus the WASM heap and the accumulated compressed MP4 chunks consumes additional memory. Do not interpret a per-chunk YUV420 estimate as a hard peak-memory ceiling. Memory and cancellation/retry on physical Android require validation before stable distribution.
+
+## v0.2.0 local video intake hardening
+
+Untrusted MP4/MOV selection now runs a **bounded 32-byte prefix inspection** before browser preview. This recognizes common ISO-BMFF and QuickTime atoms, but is **not** a substitute for decoder validation: it does not fully parse arbitrary codecs, DRM, corrupt structure or metadata. Original input files up to 1GiB must not be copied wholesale. Android files up to 64MiB may still be intentionally staged once in MEMFS when necessary for provider compatibility; the prefix check reads from that detached Blob, not a second original-provider stream.
+
+A 30-second, generation-scoped timeout prevents indefinitely pending source reads/metadata. Error/source-change paths invalidate previous results, revoke Blob URLs, clear references, and do not permit an old source's delayed promise to alter the newly selected video. Diagnostic JSON records only source phase and error identifiers, never filenames or video bytes. Real-device Android acceptance remains pending.
