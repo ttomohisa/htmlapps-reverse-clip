@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0] - 2026-10-13 (Audio modes — implementation in progress)
+- Start the real AAC audio pipeline in the dedicated FFmpeg WASM Builder while preserving the working video-only Reverse and Ping-pong modes.
+- Add a bilingual audio choice UI (default no audio), state generation resets, capability checks and a strict fail-closed output gate. **The audio option stays disabled** until actual ST+MT A/V multiplexing, stream inspection and playback pass; availability of an AAC encoder alone is not sufficient.
+- Record audio support explicitly in the embedded runtime manifest, without changing the pinned v0.4 video-only binary. Never claim old reverse-only assets contain AAC or a synced mux.
+- In Builder Draft PR #16, develop a bounded AAC source-audio encoder with selectable forward/reverse filters, requiring a genuine audio stream; actual A/V mux, click-free joins, physical Android acceptance, permanent GPL Release and audio waveform verification remain future acceptance conditions.
+
+
 ## [0.4.0] - 2026-10-13 (experimental silent ping-pong implementation)
 
 - Stage a real `pingpong` video mode (forward H.264 chunks followed by reverse return), next to existing reverse mode. The dedicated Builder `video-reverse` profile now supports a bounded `--direction forward` chunk, using the same x264 encoder and scale/fps settings, and extends the public-libav MP4 remux join to at most **16** chunks.

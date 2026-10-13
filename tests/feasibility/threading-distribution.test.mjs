@@ -36,6 +36,9 @@ for(const [threading,path] of [['single-thread','dist/index.html'],['multi-threa
     assert.equal(manifest.runtime.profile,'video-reverse');
     const enabled=Array.isArray(lock.features)&&lock.features.includes('pingpong');
     assert.equal(manifest.runtime.pingpongEnabled,enabled);
+    const audioEnabled=Array.isArray(lock.features)&&lock.features.includes('audio-mux');
+    assert.equal(manifest.runtime.audioMuxEnabled,audioEnabled);
+    assert.ok(html.includes('const AUDIO_MUX_ENABLED = '+String(audioEnabled)+';'));
     assert.ok(html.includes('const PINGPONG_ENABLED = '+String(enabled)+';'));
     assert.equal(manifest.runtime.requiresCrossOriginIsolation,threading==='multi-thread');
     const embedded=extractJson(html,'assetBundle');

@@ -353,6 +353,9 @@ if ($reverseLock.PSObject.Properties.Name -contains 'features') {
   $reverseFeatures = @($reverseLock.features)
 }
 $pingpongEnabled = $reverseFeatures -contains 'pingpong'
+# A build may contain an AAC encoder without being capable of a correct
+# synchronized A/V export. This gate is set only after verified ST/MT mux.
+$audioMuxEnabled = $reverseFeatures -contains 'audio-mux'
 $reverseVariant = $reverseLock.variants.PSObject.Properties[$Variant].Value
 if (-not $reverseVariant) { throw "Reverse runtime lock has no $Variant entry." }
 $reverseCache = Join-Path $CacheRoot "reverse-runtime/$Variant"
@@ -421,6 +424,7 @@ $manifest = [ordered]@{
     requiresCrossOriginIsolation = ($Variant -eq 'multi-thread')
     requiresSharedArrayBuffer = ($Variant -eq 'multi-thread')
     pingpongEnabled = $pingpongEnabled
+    audioMuxEnabled = $audioMuxEnabled
   }
   dependencies = $manifestDependencies
 }
@@ -435,6 +439,7 @@ $replacements = [ordered]@{
   "__APP_ICON_DATA_URI__" = $appIconDataUri
   "__RUNTIME_VARIANT__" = $Variant
   "__PINGPONG_ENABLED__" = $(if ($pingpongEnabled) { 'true' } else { 'false' })
+  "__AUDIO_MUX_ENABLED__" = $(if ($audioMuxEnabled) { 'true' } else { 'false' })
 }
 $replacementExpectedCounts = @{
   "__APP_CONFIG_JSON__" = 1
@@ -443,6 +448,7 @@ $replacementExpectedCounts = @{
   "__APP_ICON_DATA_URI__" = 2
   "__RUNTIME_VARIANT__" = 1
   "__PINGPONG_ENABLED__" = 1
+  "__AUDIO_MUX_ENABLED__" = 1
 }
 
 foreach ($entry in $replacements.GetEnumerator()) {

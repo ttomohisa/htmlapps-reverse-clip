@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.4.0",
-  "description": "Reverse Clip v0.4.0: experimental silent MP4 reverse and frame-exact forward/return ping-pong composition with separately pinned ST/MT FFmpeg WASM runtimes.",
-  "descriptionJa": "Reverse Clip v0.4.0：逆再生と往復再生（通常再生→逆再生）の映像のみMP4を分割処理。折り返しとループ端のフレーム重複を除外する実験版。",
+  "version": "0.5.0",
+  "description": "Reverse Clip v0.5.0 audio-mode development; proven ST/MT reverse and ping-pong MP4 remain silent until actual AAC mux and playback pass.",
+  "descriptionJa": "Reverse Clip v0.5.0 音声対応の開発段階。ST/MTの逆再生・往復再生は動作しますが、AAC音声の結合検証が終わるまで音声なしを維持します。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",

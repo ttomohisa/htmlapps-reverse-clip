@@ -576,9 +576,11 @@
       <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
       <label><span data-i18n="modeLabel">作成モード</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option id="pingpongOption" value="pingpong" data-i18n="modePingpong" disabled>往復再生</option></select></label>
       <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option><option value="1280" data-i18n="qualityHdPilot">HD 720p級（試験）</option></select></label>
+      <label><span data-i18n="audioModeLabel">音声</span><select id="audioInput" disabled><option value="none" data-i18n="audioNone">音声なし（既定）</option><option id="audioReverseOption" value="reverse" data-i18n="audioReverseOption" disabled>音声も逆再生（準備中）</option></select></label>
     </div>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
     <p id="memoryEstimate" class="rc-hint"></p>
+    <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声付き出力は開発中です。現在のMP4は音声なしで保存されます。</p>
   </div>
 
   <section class="rc-export" id="reversePanel" hidden aria-labelledby="reverseTitle">
@@ -708,6 +710,7 @@
       const APP_CONFIG = __APP_CONFIG_JSON__;
       const RUNTIME_VARIANT = "__RUNTIME_VARIANT__";
       const PINGPONG_ENABLED = __PINGPONG_ENABLED__;  // Verifiable Builder binary lock, not app version.
+      const AUDIO_MUX_ENABLED = __AUDIO_MUX_ENABLED__; // Separate audio+A/V acceptance gate.
       const BUILD_MANIFEST = __BUILD_MANIFEST_JSON__;
       // Asset payloads are Base64 exactly once. The JSON bundle itself is embedded directly.
       const assetBundle = __EMBEDDED_ASSET_BUNDLE_JSON__;
@@ -851,6 +854,14 @@
     "previewSelectionFailed": "元動画の選択区間を再生できませんでした。",
     "rangeStartLabel": "開始（秒）",
     "rangeEndLabel": "終了（秒）",
+    "audioModeLabel": "音声",
+    "audioNone": "音声なし（既定）",
+    "audioReverseOption": "音声も逆再生",
+    "audioPreparingNotice": "音声付き出力は開発中です。現在のMP4は音声なしで保存されます。",
+    "audioCheckingLater": "選択動画の音声トラックを確認しています。",
+    "audioPresent": "元動画に音声トラックがあります。音声付き出力の検証中です。",
+    "audioAbsent": "この動画に音声はありません。音声なしのMP4を作成します。",
+    "audioUnavailable": "音声付き出力は、この動画と実行環境でまだ利用できません。",
     "modeLabel": "作成モード",
     "modeReverse": "逆再生",
     "modePingpong": "往復再生",
@@ -991,6 +1002,14 @@
     "previewSelectionFailed": "Could not play the selected part of the source video.",
     "rangeStartLabel": "Start (seconds)",
     "rangeEndLabel": "End (seconds)",
+    "audioModeLabel": "Audio",
+    "audioNone": "No audio (default)",
+    "audioReverseOption": "Reverse audio too",
+    "audioPreparingNotice": "Audio export is under development. Current MP4 exports contain no audio.",
+    "audioCheckingLater": "Checking this video's audio track.",
+    "audioPresent": "This video has an audio track. Audio export is under validation.",
+    "audioAbsent": "This video has no audio; export will be silent.",
+    "audioUnavailable": "Audio export is not yet available for this source and runtime.",
     "modeLabel": "Conversion mode",
     "modeReverse": "Reverse",
     "modePingpong": "Ping-pong",
@@ -1196,7 +1215,7 @@
       function showToast(message, options = {}) { AppToast.show({ message, ...options }); }
       const video = $('#sourceVideo');
       const state = { generation: 0, file: null, url: null, ready: false, sourcePhase: 'empty', sourceErrorKey: null,
-        lastSelectedMode: 'reverse',
+        lastSelectedMode: 'reverse', audioPresent: null, audioChecked: false,
         probe: null, seek: null, note: null, validRange: false, conversion: null,
         copiedInput: null, inputPreparePromise: null, inputTransport: 'workerfs', inputPrepareError: null };
       // On mobile, materialize only small selected files before their picker/provider
@@ -1240,6 +1259,11 @@
       function releaseSource() {
         previewSelectionActive=false;
         resetConversion();
+        state.audioPresent=null;
+        state.audioChecked=false;
+        $('#audioInput').value='none';
+        $('#audioInput').disabled=true;
+        $('#audioReverseOption').disabled=true;
         state.generation += 1;
         state.file = null;
         setSourcePhase('empty');
@@ -1261,6 +1285,8 @@
         $('#previewSelectionButton').disabled = true;
         $('#trimPreviewNotice').textContent = '';
         $('#modeInput').disabled = true;
+        $('#audioInput').disabled = true;
+        $('#audioReverseOption').disabled = true;
         $('#qualityInput').disabled = true;
         $('#seekButton').disabled = true;
         $('#reversePanel').hidden = true;
@@ -1282,7 +1308,7 @@
         video.load();
         $('#videoArea').hidden = true;
         $('#reversePanel').hidden = true;
-        for(const id of ['rangeStart','rangeEnd','modeInput','qualityInput','seekButton','trimStartSlider','trimEndSlider','previewSelectionButton'])
+        for(const id of ['rangeStart','rangeEnd','modeInput','audioInput','audioReverseOption','qualityInput','seekButton','trimStartSlider','trimEndSlider','previewSelectionButton'])
           $('#' + id).disabled = true;
         previewSelectionActive = false;
         resetConversion();
@@ -1506,9 +1532,12 @@
         // and allow <=5s until physical Android MT repeat tests exist.
         const hdPilot = Number($('#qualityInput').value) === 1280;
         const hdTooLong = hdPilot && duration > 5 + 1e-8;
+        const audioRequested=$('#audioInput').value==='reverse';
+        const audioAvailable=!audioRequested ||
+          (AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent);
         const safe = Boolean(plan && mib <= 96 && dims.width <= 2048 &&
                              dims.height <= 2048 && !hdTooLong &&
-                             modeAvailable);
+                             modeAvailable && audioAvailable);
         state.validRange = safe;
         syncTrimControls();
         $('#previewSelectionButton').disabled=!safe || Boolean(conversionController);
@@ -1643,6 +1672,10 @@
         for (const id of ['rangeStart','rangeEnd','qualityInput','seekButton']) $('#' + id).disabled = false;
         $('#modeInput').disabled = !PINGPONG_ENABLED;
         $('#pingpongOption').disabled = !PINGPONG_ENABLED;
+        // v0.5: defer audio until we have positively identified a source
+        // audio track AND the embedded core supports frame-aligned A/V mux.
+        $('#audioInput').disabled = !AUDIO_MUX_ENABLED || state.audioPresent!==true;
+        $('#audioReverseOption').disabled = !AUDIO_MUX_ENABLED || state.audioPresent!==true;
         $('#reversePanel').hidden = false;
         $('#sourceName').textContent = state.file.name;
         $('#durationLabel').textContent = video.duration.toFixed(1) + ' s';
@@ -1664,6 +1697,22 @@
         $('#reverseDescription').textContent=translate(isPingpong?'pingpongDescription':'reverseDescription');
         $('#resultTitle').textContent=translate(isPingpong?'pingpongResultTitle':'resultTitle');
         $('#modeInput').setAttribute('aria-label',translate('modeLabel'));
+        const canUseAudio=Boolean(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent);
+        $('#audioInput').disabled=!state.ready || !canUseAudio;
+        $('#audioReverseOption').disabled=!canUseAudio;
+        $('#audioNotice').textContent=translate(!AUDIO_MUX_ENABLED?'audioPreparingNotice':
+          !state.audioChecked?'audioCheckingLater':
+          state.audioPresent?'audioPresent':'audioAbsent');
+      }
+      function onAudioModeChanged() {
+        if($('#audioInput').value!=='none' &&
+          !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
+          $('#audioInput').value='none';
+          return;
+        }
+        resetConversion();
+        updateModeUi();
+        rangeInfo();
       }
       function applyLanguage() {
         document.documentElement.lang = language;
@@ -1837,6 +1886,10 @@
         const mode=$('#modeInput').value;
         if(mode==='pingpong' && !PINGPONG_ENABLED){
           showToast(translate('reverseUnsupported'));return;
+        }
+        if($('#audioInput').value==='reverse' &&
+          !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
+          showToast(translate('audioUnavailable'));return;
         }
         let plan;
         try { plan=planModeFrames(start,end,mode,OUTPUT_FPS); }
@@ -2094,6 +2147,7 @@
         chooseFile(files[0]);
       });
       $('#modeInput').addEventListener('change',onConversionModeChanged);
+      $('#audioInput').addEventListener('change',onAudioModeChanged);
       for(const id of ['rangeStart','rangeEnd','qualityInput']) $('#'+id).addEventListener('change',()=>{
         previewSelectionActive=false;video.pause();$('#trimPreviewNotice').textContent='';
         resetConversion();rangeInfo();
