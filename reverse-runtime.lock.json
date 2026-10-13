@@ -3,9 +3,9 @@
   "kind": "experimental-dual-github-actions-artifact",
   "status": "temporary-not-release",
   "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-  "builderCommit": "076fe727801295ba30b2db1e0565d832e094c524",
-  "workflowRunId": 38345618409,
-  "artifactId": 11788728409,
+  "builderCommit": "fa52f86b27675f5c7b6c7fba52a73d38ac766687",
+  "workflowRunId": 38346351559,
+  "artifactId": 11789347043,
   "profile": "video-reverse",
   "builderVersion": "1.10.4",
   "wasmLicense": "GPL-2.0-or-later",
@@ -24,7 +24,7 @@
       }
     }
   },
-  "notes": "Distinct experimentally built ST/MT cores for video-reverse and forward-then-reverse ping-pong; SHA-256 verified at build. The Builder Actions artifact expires 2026-10-20. No runtime downloads. Permanent corresponding-source GPL Release and Android physical-device testing are pending.",
+  "notes": "Both ST/MT cores and real browser forward+return 6-frame ping-pong smoke passed on Builder CI 38346351559. SHA-256 verified by build. Temporary Actions artifact expires 2026-10-20; stable publication requires matching GPL corresponding sources. No runtime media upload.",
   "features": [
     "pingpong"
   ]
