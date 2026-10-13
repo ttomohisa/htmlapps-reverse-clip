@@ -129,3 +129,9 @@ jobs:
         env:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/browser-video-smoke.py
+
+      - name: Verify true offline file-protocol ST and self-extract MP4
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/file-standalone-browser-smoke.py
