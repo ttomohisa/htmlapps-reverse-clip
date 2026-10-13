@@ -103,3 +103,14 @@ test('UI gate and directional CLI are only enabled by the verified binary lock',
   assert.ok(html.includes('modeAvailable'));
   assert.ok(html.includes("if(mode==='pingpong' && !PINGPONG_ENABLED)"));
 });
+
+test('mode-dependent UI handlers only reference actual markup ids',()=>{
+  const start=html.indexOf('function updateModeUi()');
+  const stop=html.indexOf('function applyLanguage()',start);
+  assert.ok(start>0&&stop>start);
+  const ui=html.slice(start,stop);
+  const ids=[...ui.matchAll(/\$\('#([\w-]+)'\)/g)].map(match=>match[1]);
+  for(const id of ids)assert.ok(html.includes('id="'+id+'"'),'missing mode UI element '+id);
+  assert.ok(ids.includes('reverseDescription'));
+  assert.ok(ids.includes('resultTitle'));
+});
