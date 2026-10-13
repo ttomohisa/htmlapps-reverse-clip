@@ -1,9 +1,16 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.1.4 experimental up-to-10s reverse; Android user-confirmed 1s / 5s (12.7s at long-edge720px); desktop 10s frame-exact; Android 10s not yet measured; iPhone deferred; original G1 pending  
+> **Status:** v0.4.0 experimental Reverse + Ping-pong ST/MT; desktop Chrome CI verified real 15→28, 31→60 and 150→298-frame ping-pong MP4, plus genuine VFR, black-source and portrait input (2026-10-13). Android hardware acceptance, permanent GPL binary distribution, G1/G2 remain pending; iPhone deferred  
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-13 — v0.4.0 Ping-pongの実装・Chrome回帰検証
+
+- 専用Builderコミット `fa52f86b...` はST/MT両方を作成し、正方向→逆方向の実WASM H.264 MP4をブラウザで生成。対応するバイナリとJSのSHA-256を `reverse-runtime.lock.json` に固定して往復モードを有効化済み。
+- [Reverse Clip CI 38347758127](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38347758127) でST/MT両方の15→28、31→60、150→298、最短0.5秒、VFR、意図的な黒フレーム、縦長90×160の実MP4生成・保存・デコードを確認。表示・英日切替、10秒逆再生とオフラインSTも回帰確認。
+- テスト結果と未検証項目を [v0.4.0受入記録](docs/feasibility/V040_PINGPONG_ACCEPTANCE.md) に分離した。これはデスクトップChromeの結果で、物理Android実機の証拠ではない。
+- 注意：今のWASMは2026年10月20日に期限切れのActions成果物。GPL対応ソースを含む恒久Release、Android実機のMT・メモリと高解像度、回転メタデータは別の受入ゲートとして残す。Browser Kittyへの取り込みPRは作らず、ユーザーが手動マージするまでDraft継続。
 
 ## 2026-10-13 — v0.4.0 Ping-pongの実装を開始
 
