@@ -177,8 +177,14 @@ def export(page,directory:Path,mode:str,with_audio:bool,
       !document.querySelector('#resultArea').hidden ||
       !document.querySelector('#reverseErrorDetails').hidden""",timeout=150000)
     if page.locator("#reverseErrorDetails").is_visible():
-        raise AssertionError("A/V encode failed: "+
-          page.locator("#reverseErrorDetail").inner_text())
+        # <pre> is inside a CLOSED native <details>: .inner_text()
+        # returns an empty string even when textContent has the actual
+        # converter error. Preserve this diagnostic to avoid blind reruns.
+        detail=page.locator("#reverseErrorDetail").text_content() or "(empty error detail)"
+        status=page.locator("#reverseStatus").text_content() or "(empty status)"
+        raise AssertionError(
+            f"A/V encode failed: mode={mode}, audio={with_audio}, "
+            f"range={start}-{end}, status={status}, detail={detail}")
     with page.expect_download(timeout=15000) as d:
         page.locator("#saveReverseButton").click()
     target=directory/f"{mode}-{'aac' if with_audio else 'silent'}{filename_suffix}.mp4"
