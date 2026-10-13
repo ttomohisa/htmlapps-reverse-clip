@@ -116,6 +116,71 @@ def main():
                         target = Path(temp) / f"{mode}-result.mp4"
                         download.value.save_as(target)
                         validate_mp4(target)
+
+                        # A real cancellation can land while loadEmbedded() is
+                        # awaiting WASM initialization. A runner that resolves
+                        # after the abort must be disposed without ever running.
+                        page.evaluate("""() => {
+                          window.__originalFFmpeg = window.BrowserFFmpeg;
+                          window.__lateLoads = 0;
+                          window.__lateDisposals = 0;
+                          window.__lateRuns = 0;
+                          window.BrowserFFmpeg = {
+                            loadEmbedded: async () => {
+                              window.__lateLoads++;
+                              await new Promise(resolve => setTimeout(resolve, 900));
+                              return {
+                                dispose() { window.__lateDisposals++; },
+                                run() { window.__lateRuns++; throw new Error('stale runner executed'); }
+                              };
+                            }
+                          };
+                        }""")
+                        page.locator("#reverseButton").click()
+                        page.wait_for_function("window.__lateLoads === 1", timeout=15000)
+                        page.locator("#cancelReverseButton").click()
+                        page.wait_for_function("window.__lateDisposals === 1", timeout=15000)
+                        assert page.evaluate("window.__lateRuns === 0"), mode
+                        assert page.locator("#resultArea").is_hidden(), mode
+                        assert page.locator("#reverseButton").is_enabled(), mode
+                        print(f"[PASS] {mode} cancel during delayed runtime initialization disposes stale runner",
+                              flush=True)
+
+                        # Changing the source during an await must likewise
+                        # invalidate the job and dispose *its own* late runner.
+                        page.locator("#reverseButton").click()
+                        page.wait_for_function("window.__lateLoads === 2", timeout=15000)
+                        page.locator("#sourceInput").set_input_files(str(source))
+                        page.wait_for_function("window.__lateDisposals === 2", timeout=15000)
+                        page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
+                        assert page.evaluate("window.__lateRuns === 0"), mode
+                        assert page.locator("#resultArea").is_hidden(), mode
+                        page.evaluate("window.BrowserFFmpeg = window.__originalFFmpeg")
+                        print(f"[PASS] {mode} source change disposes late runner without stale output",
+                              flush=True)
+
+                        # Re-run an actual MP4 export after the two cancellations.
+                        page.locator("#rangeStart").fill("0")
+                        page.locator("#rangeStart").dispatch_event("change")
+                        page.locator("#rangeEnd").fill("1")
+                        page.locator("#rangeEnd").dispatch_event("change")
+                        assert page.locator("#reverseButton").is_enabled(), mode
+                        page.locator("#reverseButton").click()
+                        page.wait_for_function("""() =>
+                          !document.querySelector('#resultArea').hidden ||
+                          !document.querySelector('#reverseErrorDetails').hidden""",
+                          timeout=90000)
+                        if page.locator("#reverseErrorDetails").is_visible():
+                            raise AssertionError(f"{mode} retry error: " +
+                                page.locator("#reverseErrorDetail").inner_text())
+                        with page.expect_download(timeout=10000) as download2:
+                            page.locator("#saveReverseButton").click()
+                        retry_target = Path(temp) / f"{mode}-after-cancel.mp4"
+                        download2.value.save_as(retry_target)
+                        validate_mp4(retry_target)
+                        print(f"[PASS] {mode} real MP4 conversion recovers after cancel/source switch",
+                              flush=True)
+
                         assert not errors, (mode, errors)
                         assert not external, (mode, external)
                         assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), mode
