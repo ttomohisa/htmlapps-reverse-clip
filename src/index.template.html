@@ -1578,9 +1578,10 @@
         $('#memoryEstimate').textContent = format('memoryNotice',{mib:mib.toFixed(0)});
         const preparing = state.inputTransport === 'preparing';
         const unreadable = state.inputTransport === 'unreadable';
+        // Silent rendering must remain usable while the separate, optional
+        // audio-track probe runs. Only choosing audio requires a known codec.
         $('#reverseButton').disabled = !safe || Boolean(conversionController) ||
-                                       preparing || unreadable || !threadingReady() ||
-                                       (AUDIO_MUX_ENABLED && !state.audioChecked);
+                                       preparing || unreadable || !threadingReady();
         if (!conversionController && !state.conversion)
           $('#reverseStatus').textContent =
             translate(!threadingReady()?'mtUnavailable':unreadable?'reverseSourceUnreadable':preparing?'reverseSourcePreparing':
@@ -1982,9 +1983,6 @@
         if($('#audioInput').value==='reverse' &&
           !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
           showToast(translate('audioUnavailable'));return;
-        }
-        if(AUDIO_MUX_ENABLED && !state.audioChecked){
-          showToast(translate('audioLoading'));return;
         }
         const wantsAudio=$('#audioInput').value==='reverse';
         let plan;
