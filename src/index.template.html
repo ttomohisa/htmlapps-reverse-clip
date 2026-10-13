@@ -1770,6 +1770,22 @@
         if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(stem)) stem += '-file';
         return stem.slice(0,112) + (mode==='pingpong'?'-pingpong':'-reverse');
       }
+      function onConversionModeChanged() {
+        const selected=$('#modeInput').value;
+        const previous=state.lastSelectedMode;
+        const oldName=suggestOutputFilename(state.file?.name,previous);
+        const newName=suggestOutputFilename(state.file?.name,selected);
+        const field=$('#reverseFilename');
+        // Only replace the machine-suggested filename; keep user edits.
+        if(field.value===oldName) field.value=newName;
+        state.lastSelectedMode=selected;
+        previewSelectionActive=false;
+        video.pause();
+        $('#trimPreviewNotice').textContent='';
+        resetConversion();
+        updateModeUi();
+        rangeInfo();
+      }
       function normalizeMP4Filename() {
         const field=$('#reverseFilename');
         let name=field.value.trim().replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-')
@@ -1816,8 +1832,12 @@
           $('#reverseStatus').textContent=translate('mtUnavailable');
           return;
         }
+        const mode=$('#modeInput').value;
+        if(mode==='pingpong' && !PINGPONG_ENABLED){
+          showToast(translate('reverseUnsupported'));return;
+        }
         let plan;
-        try { plan=planReverseFrames(start,end,OUTPUT_FPS); }
+        try { plan=planModeFrames(start,end,mode,OUTPUT_FPS); }
         catch (_) { showToast(translate('reverseInvalid'));return; }
 
         resetConversion();
@@ -1873,9 +1893,12 @@
                 args:['--input',inputPath,'--output','/reverse.mp4',
                   '--start-time',String(chunk.start),'--duration',String(chunk.duration),
                   '--width',String(dims.width),'--height',String(dims.height),
-                  '--fps',String(OUTPUT_FPS),'--frames',String(chunk.frames),'--crf','28'],
+                  '--fps',String(OUTPUT_FPS),'--frames',String(chunk.frames),'--crf','28',
+                  ...(mode==='pingpong'?['--direction',chunk.direction]:[])],
                 signal:controller.signal,
-                onProgress:p=>setJobProgress(i,p,'reverseChunk',{current:i+1,total:count}),
+                onProgress:p=>setJobProgress(i,p,
+                  mode==='pingpong'?(chunk.direction==='forward'?'pingpongForwardChunk':'pingpongReturnChunk'):'reverseChunk',
+                  {current:i+1,total:count}),
                 onLog:({message})=>{if(logs.length>=40)logs.shift();logs.push(String(message).slice(0,180));}
               });
             };
@@ -1899,17 +1922,20 @@
             }
           }
 
-          // Output segments are already in reverse chronological order.
-          // The public-libav concat runner remuxes these chunks in that order;
-          // a partial MP4 is never exposed to the Save button.
+          // plan.segments already lists the presentation order. Reverse
+          // uses reverse-chronological parts; ping-pong uses forward chunks
+          // followed by return chunks with both endpoints omitted. The join
+          // remuxes complete chunks and refuses a wrong total frame count.
           for(let i=0;i<count;i++){
-            setJobProgress(i,0,'reverseChunk',{current:i+1,total:count});
+            const partKey=mode==='pingpong'?
+              (plan.segments[i].direction==='forward'?'pingpongForwardChunk':'pingpongReturnChunk'):'reverseChunk';
+            setJobProgress(i,0,partKey,{current:i+1,total:count});
             const part=await runSegment(plan.segments[i],i);
             if(job!==conversionEpoch||generation!==state.generation)return;
             const bytes=part?.files?.[0]?.data;
             if(!part||part.exitCode!==0||!bytes||bytes.byteLength<500||
                 String.fromCharCode(...bytes.slice(4,8))!=='ftyp')
-              throw new Error('Reversed MP4 chunk failed validation ('+(i+1)+'/'+count+').');
+              throw new Error('MP4 segment failed validation ('+(i+1)+'/'+count+').');
             allChunks.push(bytes);
           }
 
@@ -1927,7 +1953,7 @@
             });
             if(job!==conversionEpoch||generation!==state.generation)return;
             if(joined.exitCode!==0||!joined.files?.length)
-              throw new Error('Reverse MP4 join did not complete.');
+              throw new Error('MP4 join did not complete.');
             bytes=joined.files[0].data;
           }
           allChunks=[];
@@ -1967,16 +1993,18 @@
             outputWidth:resultVideo.videoWidth,outputHeight:resultVideo.videoHeight,
             selectedStart:plan.selectedStart,selectedEnd:plan.selectedEnd,
             duration:plan.expectedDuration,estimatedOutputFrames:plan.frameCount,
-            chunkCount:count,quality:$('#qualityInput').value,
+            chunkCount:count,quality:$('#qualityInput').value,mode,
+            sourceFrames:plan.sourceFrames,
             fps:OUTPUT_FPS,audio:'none',inputTransport:inputMode
           };
-          $('#resultInfo').textContent=format('resultInfo',{
+          $('#resultInfo').textContent=format(mode==='pingpong'?'pingpongResultInfo':'resultInfo',{
             duration:duration.toFixed(2),size:humanSize(bytes.byteLength),
             chunks:count,elapsed:elapsed.toFixed(2)
           });
           $('#resultArea').hidden=false;
-          $('#reverseStatus').textContent=translate('reverseSuccess');
-          showToast(translate('reverseSuccess'),{tone:'success'});
+          const successText=translate(mode==='pingpong'?'pingpongSuccess':'reverseSuccess');
+          $('#reverseStatus').textContent=successText;
+          showToast(successText,{tone:'success'});
         }catch(error){
           if(job!==conversionEpoch)return;
           if(resultUrl){URL.revokeObjectURL(resultUrl);resultUrl=null;}
@@ -1984,7 +2012,7 @@
           state.conversion={
             ok:false,error:String(error?.message||error),
             elapsedSeconds:Number(((performance.now()-started)/1000).toFixed(2)),
-            chunkCount:plan.segments.length,inputTransport:inputMode
+            chunkCount:plan.segments.length,mode,inputTransport:inputMode
           };
           $('#reverseErrorDetails').hidden=false;
           $('#reverseErrorDetail').textContent=(String(error?.message||error)+'\n'+logs.slice(-8).join('\n')).slice(0,1400);
@@ -2063,6 +2091,7 @@
         }
         chooseFile(files[0]);
       });
+      $('#modeInput').addEventListener('change',onConversionModeChanged);
       for(const id of ['rangeStart','rangeEnd','qualityInput']) $('#'+id).addEventListener('change',()=>{
         previewSelectionActive=false;video.pause();$('#trimPreviewNotice').textContent='';
         resetConversion();rangeInfo();
