@@ -46,3 +46,26 @@ Android/iPhone memory measurement**. The fixture is synthetic H.264,
 not representative camera VFR/HEVC/HDR footage. Results from this script
 must be explicitly copied into `docs/feasibility/G2.md` and distinguished
 from physical-phone acceptance.
+
+### v0.6 full-resolution frame identity checks and measured desktop evidence
+
+The opt-in harness now decodes every generated output at 96×54 grayscale,
+compares its source-frame identity against both adjacent input frames,
+and rejects duplicated/shifted/reordered output even if the total H.264
+frame count and MP4 duration happen to match. This checks both Reverse and
+Ping-pong's return and segment boundaries. It also compares AAC stream
+duration with the expected video duration if the stream reports it.
+
+When `--cancel-retry` is selected, it clicks Create twice, waits until
+**actual segment processing has reported progress**, cancels, verifies
+that there is no stale downloadable MP4, and demands a new real decoded
+MP4 after retry. This is an opt-in, CPU/RAM-intensive suite and remains
+excluded from default PR Actions.
+
+One separately measured Linux desktop ST run set with **11/11 PASS**
+(including 720p10s, 1080p5s, three repeated silent Ping-pong exports
+per quality and high-resolution AAC) is documented with all limitations
+in [`docs/feasibility/V060_DESKTOP_ST_MEASUREMENTS.md`](../../docs/feasibility/V060_DESKTOP_ST_MEASUREMENTS.md).
+A Playwright/Chromium test is not a physical-phone memory or audio
+quality acceptance test; the local execution container had restricted
+file/http navigation, so the measurement used an in-memory HTML document.

@@ -103,11 +103,58 @@ def make_input(directory: Path, profile: str, audio: bool) -> Path:
     return path
 
 
-def probe_output(path: Path, profile: str, mode: str, audio: bool) -> dict:
+def decode_scaled_luma(path: Path) -> list[memoryview]:
+    """Decode *all* frames into tiny grayscale markers for identity matching.
+
+    The 96x54 image makes this independent of a large RGB-frame cache.
+    The generated testsrc2 fixture has a distinct time-varying pattern
+    at each 15fps frame. Compare all output frames against their intended
+    source identity and adjacent source frames after lossy H.264 encoding.
+    """
+    width, height = 96, 54
+    raw = subprocess.check_output([
+        "ffmpeg", "-v", "error", "-i", str(path), "-map", "0:v:0",
+        "-vf", f"scale={width}:{height}:flags=area,format=gray",
+        "-vsync", "0", "-f", "rawvideo", "-pix_fmt", "gray", "pipe:1"])
+    stride = width * height
+    assert len(raw) > 0 and len(raw) % stride == 0, (
+        "Incomplete grayscale frame decode", path, len(raw))
+    view = memoryview(raw)
+    return [view[i:i + stride] for i in range(0, len(raw), stride)]
+
+
+def assert_exact_source_timeline(source: Path, output: Path,
+                                 mode: str, expected_frames: int) -> None:
+    original = decode_scaled_luma(source)
+    actual = decode_scaled_luma(output)
+    n = len(original)
+    expected = (list(reversed(range(n))) if mode == "reverse" else
+                list(range(n)) + list(range(n - 2, 0, -1)))
+    assert len(expected) == expected_frames == len(actual), (
+        "Unexpected decoded frames", n, expected_frames, len(actual))
+
+    def square_error(left: memoryview, right: memoryview) -> int:
+        return sum((int(x) - int(y)) ** 2 for x, y in zip(left, right))
+
+    for frame_index, source_index in enumerate(expected):
+        got = actual[frame_index]
+        expected_error = square_error(got, original[source_index])
+        for nearby in (source_index - 1, source_index + 1):
+            if not 0 <= nearby < n:
+                continue
+            wrong_error = square_error(got, original[nearby])
+            assert expected_error < wrong_error, (
+                "HD output frame duplicated, dropped, shifted or reversed"
+                " at wrong position", frame_index, source_index, nearby,
+                expected_error, wrong_error)
+
+
+def probe_output(path: Path, profile: str, mode: str, audio: bool,
+                 source: Path) -> dict:
     info = json.loads(subprocess.check_output([
         "ffprobe", "-v", "error", "-count_frames",
         "-show_entries",
-        "stream=codec_type,codec_name,width,height,nb_read_frames:format=duration",
+        "stream=codec_type,codec_name,width,height,nb_read_frames,duration:format=duration",
         "-of", "json", str(path)], text=True))
     video = [s for s in info["streams"] if s["codec_type"] == "video"]
     sound = [s for s in info["streams"] if s["codec_type"] == "audio"]
@@ -121,12 +168,16 @@ def probe_output(path: Path, profile: str, mode: str, audio: bool) -> dict:
     assert len(sound) == int(audio), info
     if audio:
         assert sound[0]["codec_name"] == "aac", info
+        if sound[0].get("duration"):
+            assert abs(float(sound[0]["duration"]) - expected / FPS) < .16, (
+                "AAC/video desynchronization", info)
     duration = float(info["format"]["duration"])
     assert abs(duration - expected / FPS) < .16, info
     # Force decoder to visit all frames, rather than trusting MP4 metadata.
     subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error",
         "-xerror", "-i", str(path), "-map", "0:v:0", "-f", "null", "-"],
         check=True, stdout=subprocess.DEVNULL)
+    assert_exact_source_timeline(source, path, mode, expected)
     return {"bytes": path.stat().st_size, "frames": expected,
             "width": w, "height": h, "duration": duration}
 
@@ -194,7 +245,7 @@ def run_profile(browser, base: str, directory: Path, runtime: str,
                     f"{runtime}-{profile}-{mode}-{'audio' if audio else 'silent'}"
                     f"-run{iteration}.mp4")
                 download.value.save_as(str(saved))
-                probe = probe_output(saved, profile, mode, audio)
+                probe = probe_output(saved, profile, mode, audio, source)
                 # Chrome-specific end-of-job JS heap only; NOT process peak RAM.
                 heap = page.evaluate("""() => ({
                   available: !!performance.memory,
@@ -211,9 +262,18 @@ def run_profile(browser, base: str, directory: Path, runtime: str,
                 # Synchronous DOM clicks avoid Playwright's stability delay
                 # hiding a cancellation race in short/fast conversions.
                 page.evaluate("""() => {
-                  document.querySelector('#reverseButton').click();
-                  document.querySelector('#cancelReverseButton').click();
+                  const create = document.querySelector('#reverseButton');
+                  create.click();
+                  create.click(); // simultaneous second Create must be ignored
                 }""")
+                # This is a full-HD workload: cancel while a real reverse
+                # segment is running, not just before WASM initialization.
+                page.wait_for_function("""() => {
+                  const progress = document.querySelector('#reverseProgress');
+                  return !progress.hidden && progress.value > 0;
+                }""", timeout=timeout_ms)
+                assert page.locator("#cancelReverseButton").is_visible()
+                page.locator("#cancelReverseButton").click()
                 assert page.locator("#resultArea").is_hidden()
                 assert page.locator("#saveReverseButton").is_hidden()
                 assert page.locator("#reverseButton").is_enabled()
@@ -231,7 +291,7 @@ def run_profile(browser, base: str, directory: Path, runtime: str,
                 recovered = directory / (
                     f"{runtime}-{profile}-{mode}-recovery.mp4")
                 dl.value.save_as(str(recovered))
-                probe_output(recovered, profile, mode, audio)
+                probe_output(recovered, profile, mode, audio, source)
                 print("[PASS] cancel then retry produces decodable MP4",
                       runtime, profile, mode, flush=True)
         assert not errors, errors

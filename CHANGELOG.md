@@ -1,6 +1,8 @@
 # Changelog
 
 ## [0.6.0] — Adaptive quality guard / memory and reliability (development, 2026-10-13)
+- Tested the pinned real ST standalone in Linux Chromium at full 1280×720/10s and 1920×1080/5s: **11 real downloaded/decoded MP4 successes**, including three consecutive silent Ping-pong conversions per quality, two high-resolution AAC exports and 720p in-progress cancellation followed by successful retry. Frame identity and stream duration verified; precise observations and limitations in `docs/feasibility/V060_DESKTOP_ST_MEASUREMENTS.md`. This is not real-device/MT G2 approval.
+- Strengthened the opt-in high-resolution stress harness to validate **every decoded frame against its expected original source position**, check optional AAC duration and cancel after real conversion progress rather than only at startup. Default CI still syntax-checks this potentially expensive test without running it.
 
 - Introduce separate 720p-class (short edge <=720px / long edge <=1280px, 0.5–10s) and 1080p-class (short edge <=1080px / long edge <=1920px, 0.5–5s) experimental output settings, retaining compact 360/720px long-edge presets and no upscaling.
 - Plan each Reverse/Ping-pong segment with an estimated YUV420 frame-buffer target <=48MiB instead of always up to 2 seconds. 1920x1080 at 15fps uses up to 16 frames per segment; 1280x720 uses up to 30. Frame-boundary and expected-frame-count safeguards stay enabled.
