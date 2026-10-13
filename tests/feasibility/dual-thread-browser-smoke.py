@@ -247,12 +247,18 @@ def main():
                         # invalidate the job and dispose *its own* late runner.
                         page.locator("#reverseButton").click()
                         page.wait_for_function("() => window.__lateLoads === 2", timeout=15000)
+                        # Restore the actual runtime BEFORE switching sources:
+                        # v0.5 spawns an independent AAC inspection on the
+                        # newly selected file. That is not a stale conversion
+                        # runner and should not be routed into the mock.
+                        # The in-flight mocked conversion's Promise stays
+                        # owned by the old job and must still be disposed.
+                        page.evaluate("window.BrowserFFmpeg = window.__originalFFmpeg")
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.wait_for_function("() => window.__lateDisposals === 2", timeout=15000)
                         page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
                         assert page.evaluate("window.__lateRuns === 0"), mode
                         assert page.locator("#resultArea").is_hidden(), mode
-                        page.evaluate("window.BrowserFFmpeg = window.__originalFFmpeg")
                         print(f"[PASS] {mode} source change disposes late runner without stale output",
                               flush=True)
 

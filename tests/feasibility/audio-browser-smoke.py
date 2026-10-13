@@ -63,7 +63,9 @@ def generate_sources(directory:Path):
     subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
         "-f","lavfi","-i","testsrc2=size=160x90:rate=15:duration=12",
         "-f","lavfi","-i","sine=frequency=440:sample_rate=48000:duration=11",
-        "-map","0:v:0","-map","1:a:0","-c:v","libx264",
+        "-f","lavfi","-i","sine=frequency=660:sample_rate=48000:duration=11",
+        "-filter_complex","[1:a][2:a]amerge=inputs=2[stereo]",
+        "-map","0:v:0","-map","[stereo]","-c:v","libx264",
         "-preset","ultrafast","-crf","25","-pix_fmt","yuv420p",
         "-c:a","aac","-ac","2","-b:a","128k",str(stereo)],check=True)
     return voiced,silent,stereo
@@ -127,6 +129,33 @@ def verify_audio_direction(path:Path, mode:str):
     else:raise ValueError(mode)
 
 
+def verify_stereo_channels(path:Path, duration:float):
+    """Both stereo channels retain distinct pitches through AAC remux.
+
+    Unlike an -ac 2 clone of a mono sine fixture, this source encodes 440 Hz
+    LEFT and 660 Hz RIGHT. Validate each channel near the beginning and
+    near the end of the created reverse/ping-pong MP4.
+    """
+    pcm=[]
+    for channel in (0,1):
+        raw=subprocess.check_output(["ffmpeg","-v","error","-i",str(path),
+            "-map","0:a:0","-af",f"pan=mono|c0=c{channel}",
+            "-ar",str(SAMPLE_RATE),"-f","s16le",
+            "-acodec","pcm_s16le","pipe:1"])
+        samples=array("h")
+        samples.frombytes(raw)
+        if sys.byteorder!="little":samples.byteswap()
+        pcm.append(samples)
+    assert abs(len(pcm[0])-len(pcm[1]))<=1024, \
+        "Decoded L/R channels have different duration"
+    for start,end in ((.25,.45),(duration-.7,duration-.5)):
+        left=crossings(pcm[0],start,end)
+        right=crossings(pcm[1],start,end)
+        ratio=right/max(1,left)
+        assert 1.3<ratio<1.7,("Stereo L/R pitch was merged or swapped",
+                                start,left,right,ratio)
+
+
 def export(page,directory:Path,mode:str,with_audio:bool,
            start=0.0,end=1.0,frames=None,check_tones=True,
            channels=None,filename_suffix=""):
@@ -160,6 +189,8 @@ def export(page,directory:Path,mode:str,with_audio:bool,
     mp4_info(target,expected_frames,with_audio,expected_frames/15,channels)
     if with_audio and check_tones:
         verify_audio_direction(target,mode)
+    if with_audio and channels==2:
+        verify_stereo_channels(target,expected_frames/15)
     if with_audio and not check_tones:
         samples=decoded_pcm(target)
         assert len(samples)>expected_frames/15*SAMPLE_RATE*.9,len(samples)
