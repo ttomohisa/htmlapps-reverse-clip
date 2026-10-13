@@ -516,7 +516,7 @@
       <button class="button primary" type="button" id="pickButton" data-i18n="pick">動画を選ぶ</button>
       <button class="button" type="button" id="captureButton" data-i18n="capture">撮影して取り込む</button>
     </div>
-    <input class="sr-only" id="sourceInput" type="file" accept="video/mp4,video/quicktime,.mp4,.mov">
+    <input class="sr-only" id="sourceInput" type="file" accept="video/mp4,video/quicktime,.mp4,.m4v,.mov">
     <input class="sr-only" id="captureInput" type="file" accept="video/*" capture="environment">
   </div>
   <p class="rc-status" id="loadStatus" role="status" aria-live="polite" data-phase="empty" data-i18n="nothingSelected">動画がまだ選択されていません。</p>
@@ -786,6 +786,8 @@
     "invalidType": "MP4またはMOVを選んでください。",
     "tooLarge": "ファイルは1GiB以下にしてください。",
     "emptyInput": "動画ファイルが空です。別のMP4またはMOVを選んでください。",
+    "invalidContainer": "MP4/MOVの動画データを確認できません。拡張子だけを変えたファイルは利用できません。",
+    "sourceTimedOut": "動画の読み込みが完了しませんでした。端末に保存した動画を選び直してください。",
     "cantRead": "動画をプレビューできません。対応していない形式か破損している可能性があります。",
     "fileName": "ファイル名",
     "sourceDuration": "長さ",
@@ -902,6 +904,8 @@
     "invalidType": "Choose an MP4 or MOV file.",
     "tooLarge": "Choose a file smaller than 1 GiB.",
     "emptyInput": "This video file is empty. Choose another MP4 or MOV.",
+    "invalidContainer": "This does not have a recognizable MP4/MOV container header. Renaming a file is not a video conversion.",
+    "sourceTimedOut": "Video loading timed out. Save a local copy on your device and choose it again.",
     "cantRead": "This video cannot be previewed. The format may be unsupported or the file damaged.",
     "fileName": "File name",
     "sourceDuration": "Duration",
@@ -1111,6 +1115,14 @@
       const MOBILE_INPUT = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
         (navigator.userAgentData?.mobile === true);
       let conversionEpoch = 0, conversionController = null, conversionRunner = null, resultUrl = null;
+      // A slow cloud/photo provider or a media decoder that never returns
+      // metadata must not trap the UI in "inspecting" forever.
+      const SOURCE_LOAD_TIMEOUT_MS = 30000;
+      let sourceTimeout = 0;
+      function clearSourceTimeout() {
+        if (sourceTimeout) clearTimeout(sourceTimeout);
+        sourceTimeout = 0;
+      }
       const memoryRate = 1.5; // YUV420p approximation; it is not a memory budget.
       const format = (key, vars = {}) => translate(key).replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ''));
       function setStatus(key) {
@@ -1123,6 +1135,7 @@
       function setSourcePhase(phase, generation = state.generation, errorKey = null) {
         if (generation !== state.generation) return false;
         if (!SOURCE_PHASES.includes(phase)) throw new RangeError('Invalid source phase: ' + phase);
+        if (phase !== 'inspecting') clearSourceTimeout();
         state.sourcePhase = phase;
         state.ready = phase === 'ready';
         state.sourceErrorKey = phase === 'error' ? (errorKey || 'cantRead') : null;
@@ -1155,6 +1168,34 @@
         $('#seekButton').disabled = true;
         $('#reversePanel').hidden = true;
         state.validRange = false;
+        $('#reverseFilename').value = 'reverse-clip-reversed';
+      }
+      function failSource(errorKey, generation = state.generation) {
+        if (generation !== state.generation || state.sourcePhase !== 'inspecting') return;
+        // Clear the object URL and selected File before any pending async
+        // provider read can resolve. This also invalidates stale decoder events.
+        state.validRange = false;
+        state.file = null;
+        state.copiedInput = null;
+        state.inputPreparePromise = null;
+        if (state.url) URL.revokeObjectURL(state.url);
+        state.url = null;
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        $('#videoArea').hidden = true;
+        $('#reversePanel').hidden = true;
+        for(const id of ['rangeStart','rangeEnd','modeInput','qualityInput','seekButton'])
+          $('#' + id).disabled = true;
+        resetConversion();
+        setSourcePhase('error', generation, errorKey);
+      }
+      function armSourceTimeout(file, generation) {
+        clearSourceTimeout();
+        sourceTimeout = setTimeout(() => {
+          if (sourceIsCurrent(file, generation) && state.sourcePhase === 'inspecting')
+            failSource('sourceTimedOut', generation);
+        }, SOURCE_LOAD_TIMEOUT_MS);
       }
       function humanSize(bytes) {
         return (bytes / 1048576).toFixed(1) + ' MiB';
@@ -1271,6 +1312,40 @@
           throw new Error('The selected file was read incompletely.');
         return new Blob([buffer], {type:file.type || 'application/octet-stream'});
       }
+      function plausibleVideoContainer(bytes) {
+        // Minimum non-destructive ISO-BMFF/QuickTime atom preflight. A 32-byte
+        // prefix is enough to reject obvious renamed WebM/RIFF/text files;
+        // successful decoding still determines true codec support.
+        if (!(bytes instanceof Uint8Array) || bytes.length < 8) return false;
+        const size = bytes[0] * 16777216 + bytes[1] * 65536 + bytes[2] * 256 + bytes[3];
+        const atom = String.fromCharCode(bytes[4], bytes[5], bytes[6], bytes[7]);
+        if (size !== 0 && size !== 1 && size < 8) return false;
+        if (size === 1 && bytes.length < 16) return false;
+        if (atom === 'ftyp') return bytes.length >= 16 && (size === 0 || size === 1 || size >= 16);
+        // Some legacy QuickTime MOV files have no ftyp atom at the start.
+        // Permit normal QuickTime boxes and defer final validation to <video>.
+        return ['moov','mdat','wide','free','skip'].includes(atom);
+      }
+      async function inspectSourceBlob(blob, file, generation) {
+        try {
+          // Never read/copy the entire original file just to check its header.
+          // Mobile <=64MiB has already been copied once for WORKERFS recovery;
+          // sniff the detached Blob rather than racing the photo-provider File.
+          const header = new Uint8Array(await blob.slice(0, 32).arrayBuffer());
+          if (!sourceIsCurrent(file, generation) || state.sourcePhase !== 'inspecting') return;
+          if (!plausibleVideoContainer(header)) {
+            failSource('invalidContainer', generation);
+            return;
+          }
+          attachSourcePreview(blob);
+        } catch (error) {
+          if (sourceIsCurrent(file, generation) && state.sourcePhase === 'inspecting') {
+            state.inputPrepareError = String(error?.message || error);
+            state.inputTransport = 'unreadable';
+            failSource('reverseSourceUnreadable', generation);
+          }
+        }
+      }
       function attachSourcePreview(blob) {
         if (state.url) URL.revokeObjectURL(state.url);
         state.url = URL.createObjectURL(blob);
@@ -1285,15 +1360,15 @@
         // file.arrayBuffer(): concurrent reads can race permissions/locks.
         // Both preview and FFmpeg use the same detached in-memory Blob.
         state.inputPreparePromise = copySelectedFile(file, generation).then(copy => {
-          if (!copy || !sourceIsCurrent(file, generation)) return;
+          if (!copy || !sourceIsCurrent(file, generation) || state.sourcePhase !== 'inspecting') return;
           state.copiedInput = copy;
           state.inputTransport = 'memory';
-          attachSourcePreview(copy);
+          return inspectSourceBlob(copy, file, generation);
         }).catch(error => {
-          if (!sourceIsCurrent(file, generation)) return;
+          if (!sourceIsCurrent(file, generation) || state.sourcePhase !== 'inspecting') return;
           state.inputPrepareError = String(error?.message || error);
           state.inputTransport = 'unreadable';
-          setSourcePhase('error', generation, 'reverseSourceUnreadable');
+          failSource('reverseSourceUnreadable', generation);
         });
         return true;
       }
@@ -1310,16 +1385,16 @@
         if (file.size === 0) { setSourcePhase('error', state.generation, 'emptyInput'); return; }
         if (file.size > 1073741824) { setSourcePhase('error', state.generation, 'tooLarge'); return; }
         state.file = file;
+        $('#reverseFilename').value = suggestOutputFilename(file.name);
         setSourcePhase('inspecting');
-        if (!prepareMobileInput(file)) attachSourcePreview(file);
+        const generation = state.generation;
+        armSourceTimeout(file, generation);
+        if (!prepareMobileInput(file)) void inspectSourceBlob(file, file, generation);
       }
       video.addEventListener('loadedmetadata', () => {
         if (!state.file || !state.url || video.currentSrc !== state.url) return;
         if (!Number.isFinite(video.duration) || video.duration < .5 || !video.videoWidth || !video.videoHeight) {
-          $('#videoArea').hidden = true;
-          $('#reversePanel').hidden = true;
-          state.validRange = false;
-          setSourcePhase('error', state.generation, 'cantRead');
+          failSource('cantRead');
           return;
         }
         setSourcePhase('ready');
@@ -1335,18 +1410,9 @@
         rangeInfo();
       });
       video.addEventListener('error', () => {
-        if (!state.file || !state.url || video.currentSrc !== state.url) return;
-        // A video that cannot be decoded must invalidate even the previous
-        // output and editable controls; it must never appear "ready".
-        state.validRange = false;
-        $('#videoArea').hidden = true;
-        $('#reversePanel').hidden = true;
-        $('#rangeStart').disabled = true;
-        $('#rangeEnd').disabled = true;
-        $('#qualityInput').disabled = true;
-        $('#seekButton').disabled = true;
-        resetConversion();
-        setSourcePhase('error', state.generation, 'cantRead');
+        if (!state.file || !state.url || video.currentSrc !== state.url ||
+            state.sourcePhase !== 'inspecting') return;
+        failSource('cantRead');
       });
       function applyLanguage() {
         document.documentElement.lang = language;
@@ -1447,6 +1513,13 @@
         }
       }
 
+      function suggestOutputFilename(sourceName) {
+        let stem = String(sourceName || '').replace(/\.(mp4|m4v|mov)$/i,'')
+          .replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').replace(/\.+$/g,'').trim();
+        if (!stem || stem === '.' || stem === '..') stem = 'reverse-clip';
+        if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(stem)) stem += '-file';
+        return stem.slice(0,112) + '-reverse';
+      }
       function normalizeMP4Filename() {
         const field=$('#reverseFilename');
         let name=field.value.trim().replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-')
@@ -1699,7 +1772,9 @@
         const details = {createdAt:new Date().toISOString(),application:'Reverse Clip',version:APP_CONFIG.version, runtimeThreading:RUNTIME_VARIANT,
           crossOriginIsolated:globalThis.crossOriginIsolated===true,
           sharedArrayBuffer:typeof SharedArrayBuffer==='function',
-          userAgent:navigator.userAgent,mode:location.protocol,language,capabilities:state.probe,seek:state.seek,reverseConversion:state.conversion,
+          userAgent:navigator.userAgent,mode:location.protocol,language,
+          source:{phase:state.sourcePhase,errorKey:state.sourceErrorKey,transport:state.inputTransport},
+          capabilities:state.probe,seek:state.seek,reverseConversion:state.conversion,
           media:state.ready ? {mime:state.file.type,bytes:state.file.size,duration:video.duration,
             width:video.videoWidth,height:video.videoHeight,start:Number($('#rangeStart').value),
             end:Number($('#rangeEnd').value),quality:$('#qualityInput').value,plannedMode:$('#modeInput').value} : null,
@@ -1737,7 +1812,7 @@
         const rect=helpDialog.getBoundingClientRect();
         if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)helpDialog.close();
       });
-      window.addEventListener('pagehide',()=>{resetConversion();if(state.url)URL.revokeObjectURL(state.url);});
+      window.addEventListener('pagehide',()=>{clearSourceTimeout();resetConversion();if(state.url)URL.revokeObjectURL(state.url);});
       outputFilename.value='reverse-clip-check';
       $('#reverseFilename').value='reverse-clip-reversed';
       $('#versionBadge').textContent='v'+APP_CONFIG.version;
