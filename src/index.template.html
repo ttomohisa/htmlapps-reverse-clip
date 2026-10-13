@@ -1456,6 +1456,12 @@
         const started=performance.now(), logs=[];
         let inputMode=state.copiedInput?'memory':'workerfs';
         let allChunks=[];
+        // An invalidated job must never publish a late-loaded WASM runner.
+        // Keep ownership local as well: a stale finally block must not dispose
+        // a new job's runner after a cancel, file switch or pagehide.
+        let jobRunner=null;
+        const isCurrentJob=()=>job===conversionEpoch &&
+          generation===state.generation && !controller.signal.aborted;
         try {
           if(!window.StandaloneAssets.has('reverse-wasm','coreWasm'))
             throw new Error('Pinned reverse WASM was not embedded.');
@@ -1467,8 +1473,12 @@
             window.StandaloneAssets.textAsync('reverse-wasm','coreJs'),
             window.StandaloneAssets.bytesAsync('reverse-wasm','coreWasm')
           ]);
-          if(job!==conversionEpoch||generation!==state.generation)return;
+          if(!isCurrentJob())return;
           const runner=await window.BrowserFFmpeg.loadEmbedded({coreJsText,wasmBytes,threading:RUNTIME_VARIANT});
+          // loadEmbedded may resolve after the user has cancelled or selected
+          // another file. Dispose that runner even when it was never published.
+          jobRunner=runner;
+          if(!isCurrentJob())return;
           conversionRunner=runner;
 
           const count=plan.segments.length, stages=count+(count>1?1:0);
@@ -1556,12 +1566,16 @@
               clearTimeout(timer);
               resultVideo.removeEventListener('loadedmetadata',ok);
               resultVideo.removeEventListener('error',bad);
+              controller.signal.removeEventListener('abort',onAbort);
             }
             function ok(){clean();resolve();}
             function bad(){clean();reject(new Error('Browser cannot preview the reversed MP4.'));}
-            timer=setTimeout(()=>{clean();reject(new Error('Reverse MP4 preview timed out.'));},15000);
+            function onAbort(){clean();reject(new DOMException('Reverse MP4 preview cancelled.','AbortError'));}
             resultVideo.addEventListener('loadedmetadata',ok);
             resultVideo.addEventListener('error',bad);
+            controller.signal.addEventListener('abort',onAbort,{once:true});
+            if(!isCurrentJob()){onAbort();return;}
+            timer=setTimeout(()=>{clean();reject(new Error('Reverse MP4 preview timed out.'));},15000);
             resultVideo.src=resultUrl;
             resultVideo.load();
           });
@@ -1601,13 +1615,17 @@
           $('#reverseStatus').textContent=translate(controller.signal.aborted?'reverseCancelled':'reverseFailure');
           showToast(translate(controller.signal.aborted?'reverseCancelled':'reverseFailure'));
         }finally{
+          // Dispose only this job's runner. resetConversion() may already have
+          // disposed it, while a newer conversion now owns conversionRunner.
+          if(jobRunner){
+            jobRunner.dispose();
+            if(conversionRunner===jobRunner)conversionRunner=null;
+          }
           if(job===conversionEpoch){
             conversionController=null;
-            if(conversionRunner)conversionRunner.dispose();
-            conversionRunner=null;
             $('#cancelReverseButton').hidden=true;
             $('#reverseProgress').hidden=true;
-            $('#reverseButton').disabled=!state.validRange;
+            rangeInfo();
           }
         }
       }
