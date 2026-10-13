@@ -3,9 +3,9 @@
   "kind": "experimental-dual-github-actions-artifact",
   "status": "temporary-not-release",
   "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-  "builderCommit": "fa52f86b27675f5c7b6c7fba52a73d38ac766687",
-  "workflowRunId": 38346351559,
-  "artifactId": 11789347043,
+  "builderCommit": "8f6b94fff9ff325085f66cec6e1272866f9a76e8",
+  "workflowRunId": 38350055736,
+  "artifactId": 11790867641,
   "profile": "video-reverse",
   "builderVersion": "1.10.4",
   "wasmLicense": "GPL-2.0-or-later",
@@ -14,18 +14,19 @@
     "single-thread": {
       "assets": {
         "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
-        "ffmpeg.wasm": "9d8c9ed2c1fc94bb9b5bed4d6546bc7cd8e0bd7a93e6fb3031f5e9d8215b05bb"
+        "ffmpeg.wasm": "40edd258fe583883202d6707d642e4bd662ff83b9fdc53087fc2c1831daecee3"
       }
     },
     "multi-thread": {
       "assets": {
         "ffmpeg.js": "e88f95f77ee94acc8df3cef559e48e76cbf78a6175e831d712a471a48d614007",
-        "ffmpeg.wasm": "a5c5654d6ad6bf7fa5dcab6e764450d9b9af55b61dfc2cb2126f320ee481091e"
+        "ffmpeg.wasm": "03d04baf193ae27d9c9f8efe28fefd6497b02d040b8acb52cd773f1f85656949"
       }
     }
   },
-  "notes": "Both ST/MT cores and real browser forward+return 6-frame ping-pong smoke passed on Builder CI 38346351559. SHA-256 verified by build. Temporary Actions artifact expires 2026-10-20; stable publication requires matching GPL corresponding sources. No runtime media upload.",
+  "notes": "v0.5 candidate AAC mono/stereo reverse and ping-pong cores. Both Builder ST/MT genuine H264+AAC MP4 browser smoke passed in run 38350055736. App browser waveform and A/V sync acceptance still required. Temporary Builder Actions artifact expires on 2026-10-20. Stable distribution requires a reviewed immutable tag, matching GPL corresponding sources and notices.",
   "features": [
-    "pingpong"
+    "pingpong",
+    "audio-mux"
   ]
 }
