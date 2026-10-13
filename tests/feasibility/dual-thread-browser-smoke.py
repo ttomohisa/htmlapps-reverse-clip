@@ -137,9 +137,9 @@ def main():
                           };
                         }""")
                         page.locator("#reverseButton").click()
-                        page.wait_for_function("window.__lateLoads === 1", timeout=15000)
+                        page.wait_for_function("() => window.__lateLoads === 1", timeout=15000)
                         page.locator("#cancelReverseButton").click()
-                        page.wait_for_function("window.__lateDisposals === 1", timeout=15000)
+                        page.wait_for_function("() => window.__lateDisposals === 1", timeout=15000)
                         assert page.evaluate("window.__lateRuns === 0"), mode
                         assert page.locator("#resultArea").is_hidden(), mode
                         assert page.locator("#reverseButton").is_enabled(), mode
@@ -149,9 +149,9 @@ def main():
                         # Changing the source during an await must likewise
                         # invalidate the job and dispose *its own* late runner.
                         page.locator("#reverseButton").click()
-                        page.wait_for_function("window.__lateLoads === 2", timeout=15000)
+                        page.wait_for_function("() => window.__lateLoads === 2", timeout=15000)
                         page.locator("#sourceInput").set_input_files(str(source))
-                        page.wait_for_function("window.__lateDisposals === 2", timeout=15000)
+                        page.wait_for_function("() => window.__lateDisposals === 2", timeout=15000)
                         page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
                         assert page.evaluate("window.__lateRuns === 0"), mode
                         assert page.locator("#resultArea").is_hidden(), mode

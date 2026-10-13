@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.6] - 2026-10-13 (cancel/retry & source-switch hardening)
+- Prevent a WASM runner that finishes initializing *after* a cancellation or file change from being published or executed. Dispose each conversion's own runner even when stale, without touching a newer conversion.
+- Make output-video metadata loading abortable; cancellation immediately cleans up preview listeners/timers rather than waiting for a timeout.
+- Restore availability of the Convert button through the existing range/input/isolation guards, not just an old range-valid flag.
+- Expand actual ST/MT Chrome smoke to cancel during delayed WASM initialization, change input mid-load and then successfully export H.264 MP4 again.
+- Keep the experimental input/output/10s limits and temporary pinned GPL Builder artifacts unchanged; this is not a claim of Android device MT or release readiness.
+- Per owner direction, **Browser Kitty integration is postponed until Reverse Clip is complete**; mistakenly opened Browser Kitty Draft PR #41 was closed unmerged. Do not open a replacement now.
+
+
 ## [0.1.5] - 2026-10-12 (two real ST/MT WASM distributions)
 - Request dual ST/MT pthread builds in the dedicated Reverse Clip Builder profile.
 - Generate ST + MT readable and self-extract single HTML, with separately pinned JS/WASM hashes.

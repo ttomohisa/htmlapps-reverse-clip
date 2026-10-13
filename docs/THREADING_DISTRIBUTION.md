@@ -1,6 +1,6 @@
 # Reverse Clip — ST / MT distribution
 
-**Development target:** Android Chrome and Windows Chrome/Edge. iPhone testing is deferred. Both runtime builds are experimental until the pinned FFmpeg/x264/Emscripten GPL-corresponding-source release and RC tests are complete.
+**Development target:** Android Chrome and Windows Chrome/Edge. **Browser Kitty integration is postponed until Reverse Clip is finished; Browser Kitty Draft PR #41 has been closed without merge. Do not open another portal PR during app development.** iPhone testing is deferred. Both runtime builds are experimental until the pinned FFmpeg/x264/Emscripten GPL-corresponding-source release and RC tests are complete.
 
 | Distribution | Actual runtime | Delivery / isolation |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ The original Android ST-mode user reports (10-second clip, 84.73s) are not proof
 
 1. Review and merge the **Builder dual-profile Draft PR**, build both outputs with actual Docker + browser smoke, and publish a fixed, GPL source-complete runtime release (not an expiring Actions zip).
 2. Merge the **Reverse Clip dual-output PR** after CI and MT Pages isolation tests. GitHub Pages root and `/mt/` become available from the deployed main branch; direct MT HTML remains a separate artifact.
-3. Import/verify **only MT** into Browser Kitty's `/apps/reverse-clip.html`, with COOP/COEP/CORP route headers. Check the actual downloaded app HTML and runtime manifest, its HTTP headers, output MP4, cancel/retry and user-file privacy. Do not edit the Browser Kitty portal homepage copy.
+3. **After Reverse Clip is feature-complete, device-verified and stable-release-ready, and the owner chooses portal integration:** only then open a Browser Kitty PR to import **MT** at `/apps/reverse-clip.html`, with route-scoped COOP/COEP/CORP. Validate actual deployed HTML, SHA-256, headers, output MP4, cancel/retry and user-file privacy. Until then, do not create or update Browser Kitty integration PRs.
 4. Owner merges every PR. Do not treat successful static packaging as proof of end-to-end physical-device MT or as final release approval.
 
 **Limitation:** The Pages MT worker is a functional fallback on browsers allowing same-origin service workers and isolation; private browsing or restrictive service-worker settings may prevent activation. Browser Kitty MT uses direct HTTP response headers instead.

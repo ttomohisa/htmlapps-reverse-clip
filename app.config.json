@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.1.5",
-  "description": "Browser-local reverse MP4 (0.5–10s experimental) with separately built ST and MT FFmpeg WebAssembly runtimes; GitHub Pages offers both, Android/Windows prioritized.",
-  "descriptionJa": "ブラウザー内で最大10秒の逆再生MP4を作成する実験版です。単一HTMLのST/MT版を個別に配布し、GitHub Pagesでは両方を利用できます。",
+  "version": "0.1.6",
+  "description": "Experimental local Reverse Clip ST/MT FFmpeg WASM builds with bounded reverse MP4 output and cancellation/source-switch safety; Android/Windows prioritized.",
+  "descriptionJa": "逆再生MP4を端末内で生成するST/MT実験版。キャンセル・ファイル差し替え時のWASM解放と再実行を強化しました。Android/Windowsを優先して検証中です。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",

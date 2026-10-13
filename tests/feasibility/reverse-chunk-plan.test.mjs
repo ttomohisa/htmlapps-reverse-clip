@@ -87,3 +87,13 @@ test('invalid bounds are rejected',()=>{
     assert.throws(()=>plan(a,b,15),/Select 0\.5/);
 });
 
+
+// The actual generated UI must not let stale jobs keep a newly initialized
+// runner alive after abort/source switch, or dispose the subsequent job.
+test('a late WASM runner belongs to its original conversion and is always disposed',()=>{
+  assert.ok(html.includes('const isCurrentJob=()=>job===conversionEpoch'));
+  assert.ok(html.includes('jobRunner=runner;'));
+  assert.ok(html.includes('if(!isCurrentJob())return;\n          conversionRunner=runner;'));
+  assert.ok(html.includes('if(conversionRunner===jobRunner)conversionRunner=null;'));
+  assert.ok(html.includes("controller.signal.addEventListener('abort',onAbort,{once:true})"));
+});

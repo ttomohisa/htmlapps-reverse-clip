@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.1.5 ST/MT experimental distributions (Android/Windows-first; stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
+**Development status: v0.1.6 ST/MT experimental builds (cancel/retry hardened; Android/Windows-first; stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -93,3 +93,9 @@ The same Reverse Clip app is built with **two actual FFmpeg WebAssembly binaries
 The MT app checks `crossOriginIsolated` and `SharedArrayBuffer` and **does not silently run the ST core while claiming MT**. Pages ST is the explicit fallback. Neither version uploads selected video or retrieves runtime code on use. The runtime is embedded at build time from pinned, independently SHA-256 verified JS and WASM, after successful Builder Docker/browser smoke. See [threading distribution](docs/THREADING_DISTRIBUTION.md).
 
 **Important:** Existing Android 1s/5s/10s performance results apply to the original ST runtime. MT performance on actual phones has **not yet been measured or promised**. The temporary Builder Actions artifact must be replaced by a permanent GPL source-complete release before stable publication. A successful build/PR alone does not publish these new Pages routes.
+
+## v0.1.6 — cancellation and source-switch safety (2026-10-13)
+
+WASM initialization can finish after a user cancels a conversion or chooses a different video. That late runner is now disposed by its original conversion, never attached to a newer job or allowed to publish an obsolete MP4. The result-preview metadata wait is abortable too. The ST/MT Chrome smoke test now checks cancellation during delayed initialization, file replacement during initialization and a subsequent real MP4 export.
+
+The product is **still experimental**. These automated desktop tests do not establish Android MT performance, full 10-second stability or a stable GPL-corresponding-source release. **Browser Kitty integration is deferred until Reverse Clip is finished**; Browser Kitty PR #41 was closed unmerged and no new portal PR should be opened during ongoing development.

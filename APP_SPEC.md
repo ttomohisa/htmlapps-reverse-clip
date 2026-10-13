@@ -8,6 +8,12 @@
 > **新規リポジトリ候補:** `ttomohisa/htmlapps-reverse-clip`（GitHub上で作成済み、2026-10-11確認）  
 > **関連資料:** [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md)
 
+## 2026-10-13 — 開発順序：Browser Kitty取り込みは完成後
+
+現段階ではReverse Clip本体・専用WASM Builderの開発／検証を先に進める。**Browser Kitty本体の変更や新規PR作成は、アプリの必要機能・実機安定性・恒久的なライセンス対応配布と公開判定がそろうまで行わない。** 誤って作成したBrowser Kitty Draft PR #41は未マージで閉じた。ST／MTの最終配布方針（Pages通常ST、/mt/がMT、将来のBrowser KittyがMT）は維持するが、直ちに取り込む意味ではない。
+
+v0.1.6では、ロード中のキャンセル・元動画の切替後に古いWASM実行インスタンスが結果を公開しないようにし、解放・再試行をST／MTの実ブラウザー試験へ追加する。Android実機のMT性能確認ではないため、G1～G3と正式公開の合格を意味しない。
+
 ## 2026-10-12 — 対応プラットフォームの暫定変更
 
 **現在の開発対象をAndroid Chrome実機およびWindows Chrome/Edgeに絞る。iPhone Safari／iPhone撮影HEVC MOVの検証・対応は当面延期する。** この更新は後段の旧受入条件に優先する。iPhoneは「未検証・将来再検討」であり、サポート済みとは表示しない。iPhone未検証だけを理由にAndroid/PC向けの実験開発を停止しない。ただし、正式リリースのプラットフォーム範囲を確定したことにはならず、旧G1/G2/G3のクロスプラットフォーム基準を合格済みとしない。
