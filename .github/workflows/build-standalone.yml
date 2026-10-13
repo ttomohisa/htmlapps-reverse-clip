@@ -136,6 +136,12 @@ jobs:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/pingpong-browser-smoke.py
 
+      - name: Check real AAC audio reversal, ping-pong and silent-source safety (ST and MT)
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/audio-browser-smoke.py
+
       - name: Verify true offline file-protocol ST and self-extract MP4
         shell: bash
         env:

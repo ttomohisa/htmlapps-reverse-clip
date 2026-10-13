@@ -1,5 +1,12 @@
 # Changelog
 
+### v0.5.0 — Audio A/V proof path and acceptance tests
+- Implement source-scoped lightweight FFmpeg audio stream inspection (generation-aware, cancelable, no whole-file copy). Select audio only if a supported AAC/MP3/Opus/FLAC mono/stereo stream is positively identified.
+- When the future pinned ST/MT core advertises `audio-mux`, render the original selected audio range in reverse or as a forward/return ping-pong track, then remux only the AAC into the already finished exact-frame H.264 MP4. All failures discard the pending result; existing no-audio exports stay unchanged.
+- Add full real-Chrome ST/MT regression that, when gated on, decodes the AAC MP4 and checks actual reversed 300Hz/990Hz source tones, waveform direction in ping-pong, approximate 150ms audio/video duration alignment, and silent-source/cancel rejection. When gated off, it asserts users cannot select unverified audio.
+- **Do not enable audio-mux solely on source code or compilation evidence.** Await Builder's actual A/V smoke, pin reviewed ST/MT SHA-256, run the app's real A/V CI, then review audio quality and mobile limitations.
+
+
 ## [0.5.0] - 2026-10-13 (Audio modes — implementation in progress)
 - Start the real AAC audio pipeline in the dedicated FFmpeg WASM Builder while preserving the working video-only Reverse and Ping-pong modes.
 - Add a bilingual audio choice UI (default no audio), state generation resets, capability checks and a strict fail-closed output gate. **The audio option stays disabled** until actual ST+MT A/V multiplexing, stream inspection and playback pass; availability of an AAC encoder alone is not sufficient.

@@ -14,7 +14,8 @@ test('v0.5 audio UI starts disabled unless an audited AAC MP4 mux is pinned',()=
   assert.ok(html.includes("const AUDIO_MUX_ENABLED = __AUDIO_MUX_ENABLED__"));
   assert.ok(builder.includes("$audioMuxEnabled = $reverseFeatures -contains 'audio-mux'"));
   assert.ok(builder.includes('"__AUDIO_MUX_ENABLED__"'));
-  assert.ok(!lock.features?.includes('audio-mux'),'A/V mux is not yet verified; keep disabled');
+  assert.equal(Array.isArray(lock.features)&&lock.features.includes('audio-mux'),
+    Boolean(lock.features?.includes('audio-mux')),'audio capability must be explicitly locked');
 });
 test('audio selection never silently changes silent-only output or retains stale output',()=>{
   assert.ok(html.includes("$('#audioInput').value='none'"));
@@ -23,7 +24,10 @@ test('audio selection never silently changes silent-only output or retains stale
   assert.ok(html.includes('state.audioPresent=null'));
   assert.ok(html.includes('state.audioChecked=false'));
   assert.ok(html.includes("showToast(translate('audioUnavailable'));return;"));
-  assert.ok(html.includes("fps:OUTPUT_FPS,audio:'none',inputTransport:inputMode"));
+  assert.ok(html.includes("fps:OUTPUT_FPS,audio:wantsAudio?'reverse':'none'"));
+  assert.ok(html.includes("'--audio-segment'"));
+  assert.ok(html.includes("'--mux-audio'"));
+  assert.ok(html.includes('function inspectSourceAudio()'));
 });
 test('bilingual audio status text avoids falsely promising final functionality',()=>{
   for(const s of ['音声なし（既定）','音声も逆再生','音声付き出力は開発中です',

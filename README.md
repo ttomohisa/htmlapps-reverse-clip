@@ -142,3 +142,7 @@ A new dedicated Builder runtime can generate forward chunks using `--direction f
 ## v0.5.0 — Audio Modes (2026-10-13, work in progress)
 
 The audio selector now appears alongside quality and mode settings. **The default and the only enabled choice remains No audio** until the ST/MT FFmpeg cores pass real AAC extraction, complete A/V mux, audio/video sync, turn-point and no-audio-input regression tests. The binary lock now has a dedicated `audio-mux` capability; **it is intentionally not set** for the existing v0.4 binaries. Video-only Reverse and Ping-pong remain operational. The dedicated Builder is prototyping an AAC source-audio section encoder that returns an intermediate MP4, not a finished A/V result. Please do not interpret the new version as a completed audio release. No Browser Kitty changes or merges.
+
+### v0.5 audio verification and release gate
+
+The app now includes a local, generation-scoped source audio inspection path and a complete staged AAC audio creation/MP4 remux branch that executes **only when** an independently tested `audio-mux` feature is present in the pinned runtime lock. Cancel, file replacement and invalid audio source fail closed; no raw media is transmitted. The test `tests/feasibility/audio-browser-smoke.py` synthesizes two-tone audio and checks sound direction, video and audio track counts, durations and silent file behavior. The audio option remains disabled until both ST and MT binary/browser proofs and an updated SHA-256 lock pass. Physical Android and audible seam quality still require separate review.
