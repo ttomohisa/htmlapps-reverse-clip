@@ -61,6 +61,64 @@ def long_fixture(directory:Path)->Path:
     return target
 
 
+def vfr_fixture(directory:Path)->Path:
+    """A truly variable-frame-rate MP4, not a CFR video with changed metadata."""
+    target=directory/"vfr-markers.mp4"
+    source=str(directory/"markers"/"%03d.ppm")
+    subprocess.run(["ffmpeg","-y","-hide_banner","-loglevel","error",
+        "-framerate","15","-i",source,
+        "-vf",r"select=not(eq(mod(n\,7)\,0)+eq(mod(n\,11)\,0))",
+        "-fps_mode","vfr","-c:v","libx264","-preset","ultrafast",
+        "-crf","18","-pix_fmt","yuv420p",str(target)],check=True)
+    report=json.loads(subprocess.check_output(["ffprobe","-v","error",
+        "-select_streams","v:0","-show_entries","frame=best_effort_timestamp_time",
+        "-of","json",str(target)],text=True))
+    times=[float(x["best_effort_timestamp_time"]) for x in report["frames"]]
+    intervals=[round(b-a,2) for a,b in zip(times,times[1:])]
+    assert len(times)<45 and max(intervals)>=.13, (len(times),intervals)
+    return target
+
+
+def black_fixture(directory:Path)->Path:
+    target=directory/"black-source.mp4"
+    subprocess.run(["ffmpeg","-y","-hide_banner","-loglevel","error",
+        "-f","lavfi","-i","color=c=black:s=160x90:r=15",
+        "-t","2","-c:v","libx264","-pix_fmt","yuv420p",
+        "-preset","ultrafast",str(target)],check=True)
+    return target
+
+
+def portrait_fixture(directory:Path)->Path:
+    target=directory/"portrait-source.mp4"
+    subprocess.run(["ffmpeg","-y","-hide_banner","-loglevel","error",
+        "-f","lavfi","-i","testsrc2=size=90x160:rate=15",
+        "-t","2","-c:v","libx264","-pix_fmt","yuv420p",
+        "-preset","ultrafast",str(target)],check=True)
+    return target
+
+
+def decoded_red_pixels(path:Path)->list[int]:
+    raw=subprocess.check_output(["ffmpeg","-v","error","-i",str(path),
+        "-vf","scale=1:1:flags=neighbor,format=rgb24","-fps_mode",
+        "passthrough","-f","rawvideo","-pix_fmt","rgb24","pipe:1"])
+    assert len(raw)%3==0,len(raw)
+    return list(raw[::3])
+
+
+def validate_vfr_seam(path:Path)->None:
+    colors=decoded_red_pixels(path)
+    assert len(colors)==28,len(colors)
+    assert min(colors)>12,("Unexpected black frame in marked VFR output",colors)
+    assert colors[14]-colors[0]>30,("Forward VFR content did not advance",colors)
+    assert colors[15]-colors[-1]>30,("Reverse VFR content did not return",colors)
+    assert all(b>=a-8 for a,b in zip(colors[:14],colors[1:15])), \
+        ("Forward VFR content reversed unexpectedly",colors)
+    assert all(b<=a+8 for a,b in zip(colors[15:-1],colors[16:])), \
+        ("VFR return content moved forward unexpectedly",colors)
+    assert all(abs(b-a)<55 for a,b in zip(colors,colors[1:])), \
+        ("Unexpected gap across VFR concat boundary",colors)
+
+
 def verify_mp4(path:Path, expected_frames:int,ordered_indices=None):
     report=json.loads(subprocess.check_output([
       "ffprobe","-v","error","-show_entries",
@@ -107,6 +165,7 @@ def export(page, directory,mode,start,end,expected_frames,indices=None):
     d.value.save_as(path)
     verify_mp4(path,expected_frames,indices)
     print(f"[PASS] {mode}: real ping-pong {expected_frames} frames, saved and inspected",flush=True)
+    return path
 
 
 def main():
@@ -114,6 +173,9 @@ def main():
         directory=Path(temp)
         short=source_fixture(directory)
         long=long_fixture(directory)
+        vfr=vfr_fixture(directory)
+        black=black_fixture(directory)
+        portrait=portrait_fixture(directory)
         server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
         thread=threading.Thread(target=server.serve_forever,daemon=True)
         thread.start()
@@ -157,6 +219,10 @@ def main():
                         # source range .4..1.4 is exactly frames 6..20.
                         indices=list(range(6,21))+list(range(19,6,-1))
                         export(page,directory,mode,.4,1.4,28,indices)
+                        # The 0.5s shortest possible selection must actually
+                        # render 8 forward and 6 return frames without stutter.
+                        mini=list(range(8))+list(range(6,0,-1))
+                        export(page,directory,mode,0,.5,14,mini)
 
                         # Changing conversion mode discards the old result,
                         # while preserving names intentionally edited by users.
@@ -185,6 +251,40 @@ def main():
                         page.locator("#reversePanel").wait_for(state="visible",timeout=20000)
                         page.locator("#modeInput").select_option("pingpong")
                         export(page,directory,mode,0,10,298)
+
+                        # Real VFR: source timestamps are irregular, so
+                        # 15fps resampling can naturally repeat *source*
+                        # content; do not incorrectly demand a new input
+                        # frame at every output timestamp. Still require
+                        # a decodable, monotonic forward/return movement and
+                        # no unexpectedly inserted black/large seam gap.
+                        page.locator("#sourceInput").set_input_files(str(vfr))
+                        page.locator("#reversePanel").wait_for(state="visible",timeout=20000)
+                        assert page.locator("#modeInput").input_value()=="pingpong"
+                        vfr_result=export(page,directory,mode,.4,1.4,28)
+                        validate_vfr_seam(vfr_result)
+                        print(f"[PASS] {mode}: true VFR input and forward/return join",flush=True)
+
+                        # Legitimately black input must not confuse the frame
+                        # counter or get rejected as a blank output.
+                        page.locator("#sourceInput").set_input_files(str(black))
+                        page.locator("#reversePanel").wait_for(state="visible",timeout=20000)
+                        black_result=export(page,directory,mode,.4,1.4,28)
+                        colors=decoded_red_pixels(black_result)
+                        assert len(colors)==28 and max(colors)<13,("black source changed",colors)
+                        print(f"[PASS] {mode}: intentional black frames survive joined H.264",flush=True)
+
+                        # Portrait phone-style media must retain dimensions
+                        # while making a real native H.264 MP4.
+                        page.locator("#sourceInput").set_input_files(str(portrait))
+                        page.locator("#reversePanel").wait_for(state="visible",timeout=20000)
+                        portrait_result=export(page,directory,mode,.4,1.4,28)
+                        stream=json.loads(subprocess.check_output([
+                            "ffprobe","-v","error","-select_streams","v:0",
+                            "-show_entries","stream=width,height",
+                            "-of","json",str(portrait_result)],text=True))["streams"][0]
+                        assert (stream["width"],stream["height"])==(90,160),stream
+                        print(f"[PASS] {mode}: native portrait 90x160 ping-pong",flush=True)
 
                         # Repeated-run and cancel should never expose a
                         # downloadable partial ping-pong MP4.
