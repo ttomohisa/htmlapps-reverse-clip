@@ -158,8 +158,19 @@ def main():
                             test_conversion(page, temp, f"{name}-5s", 0, 5, 75)
                             # Cancel before starting a new job or shortly after
                             # its first chunk; no previous output may be retained.
-                            page.locator("#reverseButton").click()
-                            page.locator("#cancelReverseButton").click()
+                            # The 160x90 test fixture can finish before
+                            # Playwright's click stability checks complete.
+                            # Dispatch start+cancel in one JS task so the
+                            # cancel is guaranteed to occur while async WASM
+                            # setup is still pending (no artificial sleeps).
+                            page.evaluate("""() => {
+                                const start = document.querySelector('#reverseButton');
+                                const cancel = document.querySelector('#cancelReverseButton');
+                                if (start.disabled) throw new Error('reverse action disabled');
+                                start.click();
+                                if (cancel.hidden) throw new Error('cancel action was not exposed');
+                                cancel.click();
+                            }""")
                             page.wait_for_timeout(250)
                             assert page.locator("#resultArea").is_hidden()
                             assert not page.locator("#saveReverseButton").is_visible()
