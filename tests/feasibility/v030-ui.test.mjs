@@ -9,7 +9,7 @@ const icon=read('assets/favicon.svg');
 const config=JSON.parse(read('app.config.json'));
 
 test('v0.3.0 version and exact supplied 64px favicon/brand icon',()=>{
-  assert.equal(config.version,'0.3.0');
+  assert.match(config.version,/^0\.(3|[4-9]|[1-9][0-9]+)\.[0-9]+$/,'v0.3 foundation must persist in later milestones');
   assert.equal(createHash('sha256').update(icon).digest('hex'),
     'd0ed25d1c017d253aaf48a3d482e6d60b97e6386edff5fa97bbf13e041af0f7e');
   assert.match(icon,/viewBox="0 0 64 64"/);
