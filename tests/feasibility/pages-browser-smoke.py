@@ -113,20 +113,30 @@ def main():
                     while time.monotonic() < deadline and not is_mt_isolated(mt):
                         mt.wait_for_timeout(400)
                     if not is_mt_isolated(mt):
-                        # On a fresh worker installation, coi-serviceworker
-                        # sometimes becomes active after the initial registration
-                        # reload callback. A user can refresh the MT page once.
-                        mt.wait_for_function("""() =>
-                            Boolean(navigator.serviceWorker?.controller)""", timeout=20000)
+                        # SW first registration may complete just after its
+                        # own updatefound callback was attached. A manual
+                        # refresh is the documented recovery; do not wait for
+                        # controller before refreshing (it may first appear
+                        # only on the new navigation).
                         mt.reload(wait_until="domcontentloaded", timeout=30000)
                         deadline = time.monotonic() + 12
                         while time.monotonic() < deadline and not is_mt_isolated(mt):
                             mt.wait_for_timeout(400)
-                        print("[INFO] MT isolation required one explicit page refresh", flush=True)
-                    assert is_mt_isolated(mt), (
-                        "GitHub Pages MT Service Worker failed to isolate /mt/ "
-                        "even after registration and a refresh"
-                    )
+                        print("[INFO] MT first-load isolation used one manual refresh", flush=True)
+                    if not is_mt_isolated(mt):
+                        diagnosis = mt.evaluate("""async () => ({
+                            isolated: globalThis.crossOriginIsolated,
+                            isSecure: globalThis.isSecureContext,
+                            sharedArrayBuffer: typeof SharedArrayBuffer,
+                            serviceWorker: typeof navigator.serviceWorker,
+                            controller: navigator.serviceWorker?.controller?.scriptURL ?? null,
+                            registrations: (await navigator.serviceWorker?.getRegistrations() ?? [])
+                              .map(r => ({scope: r.scope, active: r.active?.state ?? null}))
+                        })""")
+                        raise AssertionError(
+                            "GitHub Pages MT did not isolate after first visit and "
+                            f"one refresh: {diagnosis}; pageErrors={errors}"
+                        )
                     assert "MT" in mt.locator("#runtimeModeLabel").inner_text()
                     registrations = mt.evaluate("""async () =>
                         (await navigator.serviceWorker.getRegistrations())
