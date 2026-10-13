@@ -3,9 +3,9 @@
   "kind": "experimental-dual-github-actions-artifact",
   "status": "temporary-not-release",
   "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-  "builderCommit": "8f6b94fff9ff325085f66cec6e1272866f9a76e8",
-  "workflowRunId": 38350055736,
-  "artifactId": 11790867641,
+  "builderCommit": "d1feee021aae6feb53eab1084664123f602c2085",
+  "workflowRunId": 38357268611,
+  "artifactId": 11794061552,
   "profile": "video-reverse",
   "builderVersion": "1.10.4",
   "wasmLicense": "GPL-2.0-or-later",
@@ -14,17 +14,17 @@
     "single-thread": {
       "assets": {
         "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
-        "ffmpeg.wasm": "40edd258fe583883202d6707d642e4bd662ff83b9fdc53087fc2c1831daecee3"
+        "ffmpeg.wasm": "4b8d462196b50dd7bbe51e1b329df3d53afa01022ebf5eea2ca23a65c3386b51"
       }
     },
     "multi-thread": {
       "assets": {
         "ffmpeg.js": "e88f95f77ee94acc8df3cef559e48e76cbf78a6175e831d712a471a48d614007",
-        "ffmpeg.wasm": "03d04baf193ae27d9c9f8efe28fefd6497b02d040b8acb52cd773f1f85656949"
+        "ffmpeg.wasm": "42ee5317ca6ce2cc139c481bb8de8182f9e1e4315c855718cf307f9d8afb2958"
       }
     }
   },
-  "notes": "v0.5 candidate AAC mono/stereo reverse and ping-pong cores. Both Builder ST/MT genuine H264+AAC MP4 browser smoke passed in run 38350055736. App browser waveform and A/V sync acceptance still required. Temporary Builder Actions artifact expires on 2026-10-20. Stable distribution requires a reviewed immutable tag, matching GPL corresponding sources and notices.",
+  "notes": "v0.5 experimental AAC reverse/pingpong. ST and MT genuine H.264+AAC browser smoke passed in Builder CI 38357268611. Fix: chunk verifier keeps 120-frame cap while complete A/V mux accepts <=960 and requires exact expected frames; previous 10-second 298-frame ping-pong was incorrectly rejected. App ST/MT 10-second stereo audio acceptance pending. Temporary Actions artifact expires 2026-10-20; permanent source-complete GPL release remains required.",
   "features": [
     "pingpong",
     "audio-mux"
