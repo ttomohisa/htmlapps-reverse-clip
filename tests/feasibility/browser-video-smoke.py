@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Opt-in offline Chromium regression for the actual embedded reverse WASM.
+"""Real Chrome long-clip frame-order regression for both standalone ST and MT.
 
-Use both CI-generated HTML variants. This script uses about:blank/page.set_content
-because the test runner may block URL navigation; it is NOT a direct file:// test.
-Needs Python playwright, Chromium, native ffmpeg/ffprobe; no network fixtures.
+Serve the exact CI-built HTML over localhost HTTP, with COOP/COEP only on MT.
+Verify 10s frame order, repeated export, fractional segment boundaries, and
+the Android mobile-file input path (simulated UA only, NOT an Android phone).
+Needs Playwright, Chrome and native ffmpeg/ffprobe. No external media fixtures.
 """
 import hashlib
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+import threading
 import json
 import os
 from pathlib import Path
@@ -78,61 +81,105 @@ def test_conversion(page, workdir, prefix, start, end, frames):
           f"SHA-256={checksum} elapsed={time.monotonic()-began:.2f}s", flush=True)
     return checksum
 
+class IsolationHandler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=str(DIST), **kwargs)
+
+    def end_headers(self):
+        if self.path.split("?")[0] == "/index.mt.html":
+            self.send_header("Cross-Origin-Opener-Policy", "same-origin")
+            self.send_header("Cross-Origin-Embedder-Policy", "require-corp")
+            self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+        super().end_headers()
+
+    def log_message(self, *args):
+        pass
+
+
 def main():
-    with tempfile.TemporaryDirectory(prefix="bk-reverse-10s-") as temp:
-        temp = Path(temp)
+    with tempfile.TemporaryDirectory(prefix="bk-reverse-10s-") as temp_dir:
+        temp = Path(temp_dir)
         source = create_source(temp)
-        with sync_playwright() as pw:
-            options = dict(headless=True, args=["--no-sandbox", "--disable-dev-shm-usage"])
-            if os.environ.get("CHROMIUM_EXE"):
-                options["executable_path"] = os.environ["CHROMIUM_EXE"]
-            browser = pw.chromium.launch(**options)
-            checksums = []
-            try:
-                for variant, user_agent in (
-                    ("index.html", None),
-                    ("index.self-extract.html", ANDROID_UA)):
-                    context = browser.new_context(
-                        viewport={"width":390,"height":800},
-                        accept_downloads=True, user_agent=user_agent)
-                    page = context.new_page()
-                    js_errors = []
-                    network = []
-                    page.on("pageerror", lambda e: js_errors.append(str(e)))
-                    page.on("console", lambda m: js_errors.append(m.text)
-                            if m.type == "error" else None)
-                    page.on("request", lambda r: network.append(r.url))
-                    page.set_content((DIST/variant).read_text(encoding="utf-8"),
-                        wait_until="domcontentloaded", timeout=45000)
-                    page.locator("#sourceInput").wait_for(timeout=15000)
-                    page.locator("#sourceInput").set_input_files(str(source))
-                    page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
-                    stem = variant.replace(".html", "")
-                    checksum = test_conversion(page, temp, stem+"-10s", 0, 10, 150)
-                    checksums.append(checksum)
-                    if variant == "index.html":
-                        # Repeating the same job must not carry stale result bytes.
-                        repeated = test_conversion(page, temp, stem+"-10s-again", 0, 10, 150)
-                        assert repeated == checksum
-                        # Uneven duration and offset, 0.1..9.87 => 146 output frames.
-                        test_conversion(page, temp, stem+"-fractional", 0.1, 9.87, 146)
-                        # The original 5-second path must keep working.
-                        test_conversion(page, temp, stem+"-5s", 0, 5, 75)
-                        # Stop early: no incomplete MP4 may remain downloadable.
-                        page.locator("#reverseButton").click()
-                        page.locator("#cancelReverseButton").click()
-                        page.wait_for_timeout(200)
-                        assert page.locator("#resultArea").is_hidden()
-                        assert not page.locator("#saveReverseButton").is_visible()
-                    assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
-                    assert not js_errors, js_errors
-                    assert not [url for url in network
-                        if url.startswith(("http://", "https://"))], network
-                    print("PASS network/layout/JS", variant, flush=True)
-                    context.close()
-                assert checksums[0] == checksums[1], "HTML variants differ in 10s MP4"
-            finally:
-                browser.close()
+        server = ThreadingHTTPServer(("127.0.0.1", 0), IsolationHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        url_base = f"http://127.0.0.1:{server.server_port}"
+        try:
+            with sync_playwright() as pw:
+                options = {"headless": True, "args": ["--no-sandbox", "--disable-dev-shm-usage"]}
+                if os.environ.get("CHROMIUM_EXE"):
+                    options["executable_path"] = os.environ["CHROMIUM_EXE"]
+                browser = pw.chromium.launch(**options)
+                try:
+                    # The third case exercises the 64 MiB in-memory input
+                    # transport with a simulated Android UA. It is explicitly
+                    # NOT physical-device or Android Chrome evidence.
+                    cases = [
+                        ("single-thread", "index.html", None),
+                        ("multi-thread", "index.mt.html", None),
+                        ("st-mobile-ua", "index.html", ANDROID_UA),
+                    ]
+                    for name, html_name, user_agent in cases:
+                        opts = {"viewport": {"width": 390, "height": 800},
+                                "accept_downloads": True}
+                        if user_agent:
+                            opts["user_agent"] = user_agent
+                        context = browser.new_context(**opts)
+                        page = context.new_page()
+                        errors = []
+                        external = []
+                        page.on("pageerror", lambda e: errors.append(str(e)))
+                        page.on("console", lambda m: errors.append(m.text)
+                                if m.type == "error" else None)
+                        page.on("request", lambda req: external.append(req.url)
+                                if req.url.startswith(("https://", "http://")) and
+                                   not req.url.startswith(url_base) else None)
+                        result = page.goto(f"{url_base}/{html_name}", wait_until="domcontentloaded",
+                                           timeout=45000)
+                        assert result and result.status == 200
+                        is_mt = name == "multi-thread"
+                        assert page.evaluate("globalThis.crossOriginIsolated") == is_mt, name
+                        assert page.evaluate("typeof SharedArrayBuffer === 'function'") == is_mt, name
+                        page.locator("#sourceInput").set_input_files(str(source))
+                        page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
+
+                        first = test_conversion(page, temp, f"{name}-10s", 0, 10, 150)
+                        if name in ("single-thread", "multi-thread"):
+                            # Both runtime variants must successfully decode,
+                            # re-encode and save a second 10s job in the SAME tab.
+                            second = test_conversion(page, temp, f"{name}-10s-repeat", 0, 10, 150)
+                            if not is_mt:
+                                # ST has historically been byte-reproducible;
+                                # do not assume nondeterministic pthread scheduling
+                                # gives MT identical bytes.
+                                assert second == first, "ST repeated 10s MP4 bytes changed"
+                            # Tests the 2s chunk boundaries from a non-zero start.
+                            test_conversion(page, temp, f"{name}-fractional", .1, 9.87, 146)
+                            test_conversion(page, temp, f"{name}-5s", 0, 5, 75)
+                            # Cancel before starting a new job or shortly after
+                            # its first chunk; no previous output may be retained.
+                            page.locator("#reverseButton").click()
+                            page.locator("#cancelReverseButton").click()
+                            page.wait_for_timeout(250)
+                            assert page.locator("#resultArea").is_hidden()
+                            assert not page.locator("#saveReverseButton").is_visible()
+                        else:
+                            # Android-UA is only a transport regression case.
+                            # The real device's memory/performance remains unknown.
+                            assert page.evaluate("""() =>
+                                navigator.userAgent.includes('Android')""")
+
+                        assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
+                        assert not errors, (name, errors)
+                        assert not external, (name, external)
+                        print(f"PASS {name}: isolation={is_mt}, network/layout/JS", flush=True)
+                        context.close()
+                finally:
+                    browser.close()
+        finally:
+            server.shutdown()
+            server.server_close()
+
 
 if __name__ == "__main__":
     main()

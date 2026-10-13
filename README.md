@@ -99,3 +99,7 @@ The MT app checks `crossOriginIsolated` and `SharedArrayBuffer` and **does not s
 WASM initialization can finish after a user cancels a conversion or chooses a different video. That late runner is now disposed by its original conversion, never attached to a newer job or allowed to publish an obsolete MP4. The result-preview metadata wait is abortable too. The ST/MT Chrome smoke test now checks cancellation during delayed initialization, file replacement during initialization and a subsequent real MP4 export.
 
 The product is **still experimental**. These automated desktop tests do not establish Android MT performance, full 10-second stability or a stable GPL-corresponding-source release. **Browser Kitty integration is deferred until Reverse Clip is finished**; Browser Kitty PR #41 was closed unmerged and no new portal PR should be opened during ongoing development.
+
+### Long-clip regression in CI
+
+`tests/feasibility/browser-video-smoke.py` now serves the real generated ST and MT HTML over localhost, with COOP/COEP only on MT. It checks 10-second export and repeat export, non-frame-aligned selections, full decoded frame order, cancellation with no exposed partial result, and a **simulated** Android UA to exercise the in-memory source path. These are automated **desktop Chrome** tests, not real Android benchmarks or evidence for native 720p/1080p output.

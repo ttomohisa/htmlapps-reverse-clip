@@ -123,3 +123,9 @@ jobs:
         env:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/pages-browser-smoke.py
+
+      - name: Validate 10-second frame order, repeat export and cancellation (ST/MT)
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/browser-video-smoke.py

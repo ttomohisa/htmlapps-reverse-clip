@@ -5,6 +5,7 @@
 - Make output-video metadata loading abortable; cancellation immediately cleans up preview listeners/timers rather than waiting for a timeout.
 - Restore availability of the Convert button through the existing range/input/isolation guards, not just an old range-valid flag.
 - Expand actual ST/MT Chrome smoke to cancel during delayed WASM initialization, change input mid-load and then successfully export H.264 MP4 again.
+- Bring the existing frame-indexed 10-second/fractional-boundary regression into the hosted ST/MT Chrome CI, with repeat-run output validation, MP4 frame-order checks and simulated mobile file transport.
 - Keep the experimental input/output/10s limits and temporary pinned GPL Builder artifacts unchanged; this is not a claim of Android device MT or release readiness.
 - Per owner direction, **Browser Kitty integration is postponed until Reverse Clip is complete**; mistakenly opened Browser Kitty Draft PR #41 was closed unmerged. Do not open a replacement now.
 
