@@ -2000,7 +2000,7 @@
         $('#reverseStatus').textContent=translate('reverseLoading');
         const started=performance.now(), logs=[];
         let inputMode=state.copiedInput?'memory':'workerfs';
-        let allChunks=[];
+        let allChunks=[],currentStage='wasm-load';
         // An invalidated job must never publish a late-loaded WASM runner.
         // Keep ownership local as well: a stale finally block must not dispose
         // a new job's runner after a cancel, file switch or pagehide.
@@ -2071,6 +2071,7 @@
             }
           }
 
+          currentStage='video-segments';
           // plan.segments already lists the presentation order. Reverse
           // uses reverse-chronological parts; ping-pong uses forward chunks
           // followed by return chunks with both endpoints omitted. The join
@@ -2090,6 +2091,7 @@
 
           let bytes=allChunks[0];
           if(count>1){
+            currentStage='video-join';
             setJobProgress(count,0,'reverseJoin',{});
             const files=allChunks.map((data,i)=>({name:'/parts/chunk-'+i+'.mp4',data}));
             const args=['--concat'];
@@ -2110,6 +2112,7 @@
             const audioStage=count+(count>1?1:0);
             const memory=Boolean(state.copiedInput);
             const inputPath=memory?'/input.mp4':'/workerfs/input.mp4';
+            currentStage='audio-encode';
             setJobProgress(audioStage,0,'audioEncoding',{});
             const audioArgs=[
               '--audio-segment','--input',inputPath,'--output','/sound.mp4',
@@ -2130,6 +2133,7 @@
             if(encoded.exitCode!==0||!sound||sound.byteLength<500 ||
                !String.fromCharCode(...sound.slice(4,8)).includes('ftyp'))
               throw new Error('Audio segment did not produce a valid AAC candidate.');
+            currentStage='av-mux';
             setJobProgress(audioStage+1,0,'audioMuxing',{});
             const mixed=await runner.run({
               files:[{name:'/video.mp4',data:bytes},{name:'/sound.mp4',data:sound}],
@@ -2151,6 +2155,7 @@
           if(!bytes||bytes.byteLength<500||
               String.fromCharCode(...bytes.slice(4,8))!=='ftyp')
             throw new Error('Joined output does not have a valid MP4 header.');
+          currentStage='preview';
           resultUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));
           const resultVideo=$('#resultVideo');
           await new Promise((resolve,reject)=>{
@@ -2204,7 +2209,7 @@
           if(resultUrl){URL.revokeObjectURL(resultUrl);resultUrl=null;}
           allChunks=[];
           state.conversion={
-            ok:false,error:String(error?.message||error),
+            ok:false,error:String(error?.message||error),stage:currentStage,
             elapsedSeconds:Number(((performance.now()-started)/1000).toFixed(2)),
             chunkCount:plan.segments.length,mode,inputTransport:inputMode
           };
@@ -2216,6 +2221,7 @@
             /error|fail|invalid|exceed|cannot|unable|unsupported|filter.*end|non.monoton|buffer|mismatch|duration|dts|pts/i.test(line)
           ).slice(-8);
           $('#reverseErrorDetail').textContent=[
+            'Stage: '+currentStage,
             String(error?.message||error).split('\n')[0],
             ...diagnosticLines,
             ...logs.slice(-5)
