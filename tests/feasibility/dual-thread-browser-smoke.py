@@ -280,7 +280,7 @@ def main():
                           window.__lateSourceResolve = null;
                           Blob.prototype.slice = function(...args) {
                             if (this instanceof File &&
-                                ['stale.mp4', 'hanging.mp4'].includes(this.name))
+                                ['stale.mp4', 'hanging.mp4', 'cancelled.mp4'].includes(this.name))
                               return {arrayBuffer:()=>new Promise(resolve=>{
                                 if(this.name==='stale.mp4')
                                   window.__lateSourceResolve=resolve;
@@ -322,17 +322,48 @@ def main():
                         assert page.locator("#loadStatus").get_attribute("data-phase") == "error"
                         assert len(page.locator("#loadStatus").inner_text()) > 10
                         page.locator("#languageButton").click()
-                        page.evaluate("""() => {
-                          Blob.prototype.slice = window.__oldSlice;
-                          window.setTimeout = window.__realTimeout;
-                        }""")
+                        page.evaluate("() => { window.setTimeout = window.__realTimeout }")
                         print(f"[PASS] {mode} stalled source loading times out",
+                              flush=True)
+
+                        # A user must be able to cancel a provider read without
+                        # waiting for the automatic 30-second timeout.
+                        page.locator("#sourceInput").set_input_files({
+                            "name": "cancelled.mp4", "mimeType": "video/mp4",
+                            "buffer": b"\x00\x00\x00\x18ftypisom" + b"\x00" * 12
+                        })
+                        assert page.locator("#cancelLoadButton").is_visible(), mode
+                        page.locator("#cancelLoadButton").click()
+                        assert page.locator("#loadStatus").get_attribute("data-phase") == "empty"
+                        assert page.locator("#cancelLoadButton").is_hidden(), mode
+                        assert page.locator("#reversePanel").is_hidden(), mode
+                        assert page.locator("#resultArea").is_hidden(), mode
+                        page.evaluate("() => { Blob.prototype.slice = window.__oldSlice }")
+                        print(f"[PASS] {mode} user-cancelled provider read cannot leave stale results",
                               flush=True)
 
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#loadStatus[data-phase='ready']").wait_for(timeout=10000)
                         assert page.locator("#reversePanel").is_visible(), mode
                         assert page.locator("#reverseButton").is_enabled(), mode
+
+                        # The app accepts only one source. Two files dropped at
+                        # once must be rejected rather than silently using the
+                        # first file and discarding the second without warning.
+                        page.evaluate("""() => {
+                          const dt = new DataTransfer();
+                          dt.items.add(new File(['one'], 'one.mp4', {type:'video/mp4'}));
+                          dt.items.add(new File(['two'], 'two.mp4', {type:'video/mp4'}));
+                          document.querySelector('#dropZone').dispatchEvent(
+                            new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:dt}));
+                        }""")
+                        assert page.locator("#loadStatus").get_attribute("data-phase") == "error"
+                        assert page.locator("#resultArea").is_hidden(), mode
+                        assert page.locator("#reversePanel").is_hidden(), mode
+                        page.locator("#sourceInput").set_input_files(str(source))
+                        page.locator("#loadStatus[data-phase='ready']").wait_for(timeout=10000)
+                        print(f"[PASS] {mode} multiple dropped files rejected; valid source restored",
+                              flush=True)
                         print(f"[PASS] {mode} Foundation lifecycle rejects/replaces invalid media",
                               flush=True)
 
