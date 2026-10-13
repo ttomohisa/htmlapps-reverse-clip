@@ -151,3 +151,54 @@ jobs:
         env:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/file-standalone-browser-smoke.py
+
+  # TEMPORARY v0.6 G2 evidence run. The full-resolution harness is normally
+  # opt-in to protect the owner's GitHub Actions quota. Remove/disable this
+  # automatic job after its explicit MT performance investigation.
+  experimental-mt-hd:
+    name: One-time isolated MT 720p/1080p video proof
+    needs: build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+      - name: Download verified standalone HTML
+        uses: actions/download-artifact@v4
+        with:
+          name: standalone-html-${{ github.event.pull_request.head.sha || github.sha }}
+          path: .
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2.2.0
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Local smoke dependencies and memory sampler
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check playwright psutil
+          command -v ffmpeg && command -v ffprobe || {
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          }
+      - name: Real MT 720p 10-second ping-pong with AAC and full-frame comparison
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/v060-stress-browser-smoke.py --profile standard --runtime MT --mode pingpong --runs 1 --audio --timeout-ms 360000 --report v060-mt-720p-aac.json
+      - name: Real MT 1080p 5-second reverse and full-frame comparison
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/v060-stress-browser-smoke.py --profile high --runtime MT --mode reverse --runs 1 --timeout-ms 360000 --report v060-mt-1080p-reverse.json
+      - name: Save small desktop MT measurements
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: v060-mt-performance-${{ github.sha }}
+          path: v060-mt-*.json
+          if-no-files-found: ignore
+          retention-days: 7
