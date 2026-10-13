@@ -517,8 +517,8 @@
   <main class="main">
     <section class="page-intro" aria-labelledby="heroTitle">
       <div>
-        <h2 id="heroTitle" data-i18n="introTitle">動画逆再生 — 最大10秒の実験版</h2>
-        <p data-i18n="lead">最大10秒の動画を分割逆再生します。5秒を超える変換は検証中です。</p>
+        <h2 id="heroTitle" data-i18n="introTitle">動画の逆再生・往復再生（実験版）</h2>
+        <p data-i18n="lead">動画の好きな区間を逆再生・往復再生MP4に。最大10秒、映像のみ。スマートフォンの動作は検証中です。</p>
     <p id="mtBrowserNotice" class="rc-hint" hidden role="status" aria-live="polite"></p>
       </div>
       <div class="local-badge">
@@ -582,8 +582,8 @@
   </div>
 
   <section class="rc-export" id="reversePanel" hidden aria-labelledby="reverseTitle">
-    <h3 id="reverseTitle" data-i18n="reverseTitle">短い動画を逆再生（実験版）</h3>
-    <p id="reverseDescription" data-i18n="reverseDescription" class="rc-hint">映像のみ／最大2秒／15fps。WASMでMP4を作成します。音声・長い動画・往復再生は未対応です。</p>
+    <h3 id="reverseTitle" data-i18n="reverseTitle">逆再生MP4を作成（実験版）</h3>
+    <p id="reverseDescription" data-i18n="reverseDescription" class="rc-hint">映像のみ・15fps。最大10秒の区間を分割処理し、MP4で保存します。</p>
     <p id="reverseStatus" class="rc-status" role="status" aria-live="polite"></p>
     <div class="rc-actions">
       <button id="reverseButton" class="button primary" type="button" disabled data-i18n="reverseButton">逆再生MP4を作成</button>
@@ -816,8 +816,8 @@
     "brandMeta": "好きな区間を逆再生MP4に",
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
-    "introTitle": "動画逆再生 — 最大10秒の実験版",
-    "lead": "動画の一部を最大10秒まで逆再生MP4に変換します。5秒まではAndroidで確認済み、10秒は検証中です。",
+    "introTitle": "動画の逆再生・往復再生（実験版）",
+    "lead": "動画の好きな区間を逆再生・往復再生MP4に。最大10秒、映像のみ。スマートフォンの動作は検証中です。",
     "localBadge": "完全ローカル処理",
     "workspaceTitle": "動画を読み込む",
     "workspaceBody": "ブラウザー内でプレビューして短い範囲を選びます。",
@@ -927,6 +927,7 @@
     "reverseSuccess": "逆再生MP4を作成しました。結果を再生して保存してください。",
     "reverseUnsupported": "このブラウザーでは逆再生用WASMを起動できません。",
     "reverseSaved": "逆再生MP4を保存しました。",
+    "pingpongSaved": "往復再生MP4を保存しました。",
     "resultInfo": "{duration}秒・{size}・映像のみ・{chunks}区間・処理時間{elapsed}秒",
     "reverseSourcePreparing": "動画を端末内で準備中です…",
     "reverseSourceUnreadable": "選択した動画を読み込めません。写真・クラウド上の動画を端末に保存してから選び直してください。",
@@ -955,8 +956,8 @@
     "brandMeta": "Reverse moments from your videos",
     "helpTitle": "How to use & limitations",
     "close": "Close",
-    "introTitle": "Reverse Clip — up to 10 seconds (experimental)",
-    "lead": "Reverse and export up to 10 seconds as MP4. Android tests passed at 5 seconds; 10 seconds is experimental.",
+    "introTitle": "Reverse & ping-pong video (experimental)",
+    "lead": "Turn a selected clip (up to 10s) into a silent reversed or forward-and-back MP4. Phone compatibility remains experimental.",
     "localBadge": "Fully local processing",
     "workspaceTitle": "Load a video",
     "workspaceBody": "Preview locally and select a short section.",
@@ -1066,6 +1067,7 @@
     "reverseSuccess": "Reversed MP4 ready. Preview and save it.",
     "reverseUnsupported": "This browser cannot start the reverse WASM.",
     "reverseSaved": "Reversed MP4 saved.",
+    "pingpongSaved": "Ping-pong MP4 saved.",
     "resultInfo": "{duration}s · {size} · silent video · {chunks} chunks · {elapsed}s processing",
     "reverseSourcePreparing": "Preparing a local copy of the selected video…",
     "reverseSourceUnreadable": "Could not read the selected video. Save it locally on your device, then select it again instead of selecting it directly from a cloud or photo provider.",
@@ -2039,7 +2041,7 @@
         a.href=resultUrl;
         a.download=normalizeMP4Filename();
         a.click();
-        showToast(translate('reverseSaved'),{tone:'success'});
+        showToast(translate(state.conversion.mode==='pingpong'?'pingpongSaved':'reverseSaved'),{tone:'success'});
       }
 
       function reportFilename() {
