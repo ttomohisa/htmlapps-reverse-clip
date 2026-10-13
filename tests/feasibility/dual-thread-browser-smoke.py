@@ -115,6 +115,7 @@ def main():
                         assert ("MT" if mode == "multi-thread" else "ST") in page.locator("#runtimeModeLabel").inner_text()
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
+                        assert page.locator("#reverseFilename").input_value() == "source-reverse", mode
                         page.locator("#rangeStart").fill("0")
                         page.locator("#rangeStart").dispatch_event("change")
                         page.locator("#rangeEnd").fill("1")
@@ -205,6 +206,7 @@ def main():
                         # 1280x720 (not the old long-edge 720px preset).
                         page.locator("#sourceInput").set_input_files(str(hd_source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
+                        assert page.locator("#reverseFilename").input_value() == "hd-source-reverse", mode
                         page.locator("#rangeStart").fill("0")
                         page.locator("#rangeStart").dispatch_event("change")
                         page.locator("#rangeEnd").fill("1")
@@ -260,7 +262,72 @@ def main():
                             "buffer": b"not a real mp4 container"
                         })
                         page.locator("#loadStatus[data-phase='error']").wait_for(timeout=10000)
+                        assert "MP4/MOV" in page.locator("#loadStatus").inner_text(), mode
                         assert page.locator("#resultArea").is_hidden(), mode
+
+                        # A plausible ftyp atom alone is insufficient: the
+                        # browser decoder must still accept the video itself.
+                        page.locator("#sourceInput").set_input_files({
+                            "name": "fake-codec.mov", "mimeType": "video/quicktime",
+                            "buffer": b"\x00\x00\x00\x18ftypisom" + b"\x00" * 24
+                        })
+                        page.locator("#loadStatus[data-phase='error']").wait_for(timeout=10000)
+                        assert page.locator("#reversePanel").is_hidden(), mode
+
+                        # Delayed reads from an old input cannot reactivate it.
+                        page.evaluate("""() => {
+                          window.__oldSlice = Blob.prototype.slice;
+                          window.__lateSourceResolve = null;
+                          Blob.prototype.slice = function(...args) {
+                            if (this instanceof File &&
+                                ['stale.mp4', 'hanging.mp4'].includes(this.name))
+                              return {arrayBuffer:()=>new Promise(resolve=>{
+                                if(this.name==='stale.mp4')
+                                  window.__lateSourceResolve=resolve;
+                              })};
+                            return window.__oldSlice.apply(this,args);
+                          };
+                        }""")
+                        page.locator("#sourceInput").set_input_files({
+                            "name":"stale.mp4", "mimeType":"video/mp4",
+                            "buffer": b"\x00\x00\x00\x18ftypisom" + b"\x00" * 12
+                        })
+                        assert page.locator("#loadStatus").get_attribute("data-phase") == "inspecting"
+                        page.locator("#sourceInput").set_input_files(str(source))
+                        page.locator("#loadStatus[data-phase='ready']").wait_for(timeout=10000)
+                        page.evaluate("""() => window.__lateSourceResolve(
+                          new Uint8Array([0,0,0,24,102,116,121,112,105,115,111,109,
+                            0,0,0,0,105,115,111,109,105,115,111,109]).buffer)""")
+                        assert page.locator("#loadStatus").get_attribute("data-phase") == "ready"
+                        assert page.locator("#sourceName").inner_text() == source.name
+                        print(f"[PASS] {mode} old file inspection cannot replace the new source",
+                              flush=True)
+
+                        # Simulate a cloud/photo provider that never answers.
+                        # The production 30s source timer is shortened only
+                        # inside the test to keep the suite inexpensive.
+                        page.evaluate("""() => {
+                          window.__realTimeout = window.setTimeout;
+                          window.setTimeout=(callback, delay, ...args)=>
+                            window.__realTimeout(callback,delay===30000?350:delay,...args);
+                        }""")
+                        page.locator("#sourceInput").set_input_files({
+                            "name": "hanging.mp4", "mimeType": "video/mp4",
+                            "buffer": b"\x00\x00\x00\x18ftypisom" + b"\x00" * 12
+                        })
+                        page.locator("#loadStatus[data-phase='error']").wait_for(timeout=5000)
+                        assert page.locator("#reversePanel").is_hidden(), mode
+                        assert page.locator("#resultArea").is_hidden(), mode
+                        page.locator("#languageButton").click()
+                        assert page.locator("#loadStatus").get_attribute("data-phase") == "error"
+                        assert len(page.locator("#loadStatus").inner_text()) > 10
+                        page.locator("#languageButton").click()
+                        page.evaluate("""() => {
+                          Blob.prototype.slice = window.__oldSlice;
+                          window.setTimeout = window.__realTimeout;
+                        }""")
+                        print(f"[PASS] {mode} stalled source loading times out",
+                              flush=True)
 
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#loadStatus[data-phase='ready']").wait_for(timeout=10000)
