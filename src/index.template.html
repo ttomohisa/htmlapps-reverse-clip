@@ -2013,11 +2013,18 @@
         lockHelpBackground();
         try{helpDialog.showModal();}catch(error){unlockHelpBackground();throw error;}
       });
-      $('#closeHelpButton').addEventListener('click',()=>helpDialog.close());
+      // Close handlers restore the background position immediately; native
+      // dialog "close" events are dispatched asynchronously on some browsers.
+      function closeHelpDialog(){
+        if(helpDialog.open) helpDialog.close();
+        unlockHelpBackground();
+      }
+      $('#closeHelpButton').addEventListener('click',closeHelpDialog);
+      helpDialog.addEventListener('cancel',unlockHelpBackground);
       helpDialog.addEventListener('close',unlockHelpBackground);
       helpDialog.addEventListener('click',event=>{
         const rect=helpDialog.getBoundingClientRect();
-        if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)helpDialog.close();
+        if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)closeHelpDialog();
       });
       window.addEventListener('pagehide',()=>{clearSourceTimeout();resetConversion();if(state.url)URL.revokeObjectURL(state.url);});
       outputFilename.value='reverse-clip-check';
