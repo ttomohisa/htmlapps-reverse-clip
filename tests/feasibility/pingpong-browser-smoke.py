@@ -166,7 +166,13 @@ def main():
                         assert page.locator("#reverseFilename").input_value()=="personal-name"
                         page.locator("#modeInput").select_option("pingpong")
                         assert page.locator("#reverseFilename").input_value()=="personal-name"
-                        page.locator("#reverseFilename").fill("marker-15fps-pingpong")
+                        # After changing mode, the previous result is
+                        # correctly hidden, so its filename input is not
+                        # interactable. Re-selecting the source intentionally
+                        # restores the mode-specific default before export.
+                        page.locator("#sourceInput").set_input_files(str(short))
+                        page.locator("#reversePanel").wait_for(state="visible",timeout=20000)
+                        assert page.locator("#reverseFilename").input_value()=="marker-15fps-pingpong"
 
                         # 31 original frames => 60 output; balances endpoint
                         # pieces that could otherwise become one-frame segments.
