@@ -107,3 +107,7 @@ The product is **still experimental**. These automated desktop tests do not esta
 ### Future non-expiring WASM distribution
 
 The experimental `video-reverse` runtime is still fetched from a pinned **expiring GitHub Actions artifact at build time**. The build now also understands immutable public Builder Release ZIPs, with independently pinned ST/MT archive and embedded-byte SHA-256 values and the appropriate FFmpeg/x264/Emscripten notices. This path is **not activated** until the Builder's source-complete candidate is reviewed, a fixed public Release is authorized and the lock is updated. See `docs/THREADING_DISTRIBUTION.md`. There is no change to the app's zero-runtime-upload policy or Browser Kitty postponement.
+
+## v0.1.7 — guarded HD 720p-class pilot (2026-10-13)
+
+The prior 360/720px presets still mean *maximum long-edge pixels*, not native 360p/720p. A separate **HD 720p-class (pilot)** option now caps the long edge at **1280px**, producing 1280×720 from a suitable landscape source or 720×1280 portrait, never upscaling smaller inputs. It is limited to **0.5–5 seconds** with at most 2-second chunks; longer selections show an error rather than silently downgrading quality. This mode is not yet qualified on physical Android, and video-only/15fps and the frame-memory ceiling still apply.

@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.1.6",
-  "description": "Experimental local Reverse Clip ST/MT FFmpeg WASM builds with bounded reverse MP4 output and cancellation/source-switch safety; Android/Windows prioritized.",
-  "descriptionJa": "逆再生MP4を端末内で生成するST/MT実験版。キャンセル・ファイル差し替え時のWASM解放と再実行を強化しました。Android/Windowsを優先して検証中です。",
+  "version": "0.1.7",
+  "description": "Experimental reverse MP4 ST/MT with 360/720px long-edge presets and a guarded native 720p-class 5-second output pilot.",
+  "descriptionJa": "ST/MT両版で逆再生MP4を作る実験版。従来の長辺360/720pxに加えて、標準720p級の最大5秒出力を試験的に追加しました。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",

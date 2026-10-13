@@ -97,3 +97,12 @@ test('a late WASM runner belongs to its original conversion and is always dispos
   assert.ok(html.includes('if(conversionRunner===jobRunner)conversionRunner=null;'));
   assert.ok(html.includes("controller.signal.addEventListener('abort',onAbort,{once:true})"));
 });
+
+test('HD 720p class is distinct from the long-edge 720px setting and guarded',()=>{
+  assert.ok(html.includes('value="720" data-i18n="qualityHigh"'));
+  assert.ok(html.includes('value="1280" data-i18n="qualityHdPilot"'));
+  assert.ok(html.includes('const hdPilot = Number($(\'#qualityInput\').value) === 1280;'));
+  assert.ok(html.includes('const hdTooLong = hdPilot && duration > 5'));
+  assert.ok(html.includes('rangeHdPilotTooLong'));
+  assert.ok(html.includes('rangeHdPilotWarning'));
+});

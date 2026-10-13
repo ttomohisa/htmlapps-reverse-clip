@@ -49,6 +49,25 @@ def fixture(directory: Path) -> Path:
     return target
 
 
+def hd_fixture(directory: Path) -> Path:
+    """Generate native 1280x720 source without writing thousands of MB of PPMs."""
+    target = directory / "hd-source.mp4"
+    subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+        "-f", "lavfi", "-i", "testsrc2=size=1280x720:rate=10",
+        "-t", "2", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "30",
+        "-pix_fmt", "yuv420p", str(target)], check=True)
+    return target
+
+
+def validate_hd_mp4(filename: Path):
+    validate_mp4(filename)
+    data = json.loads(subprocess.check_output(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height", "-of", "json", str(filename)], text=True))
+    video = data["streams"][0]
+    assert (video["width"], video["height"]) == (1280, 720), data
+
+
 def validate_mp4(filename: Path):
     data = json.loads(subprocess.check_output(["ffprobe", "-v", "error",
         "-show_entries", "stream=codec_type,codec_name,nb_frames:format=duration",
@@ -63,6 +82,7 @@ def validate_mp4(filename: Path):
 def main():
     with tempfile.TemporaryDirectory(prefix="reverse-dual-real-") as temp:
         source = fixture(Path(temp))
+        hd_source = hd_fixture(Path(temp))
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -179,6 +199,34 @@ def main():
                         download2.value.save_as(retry_target)
                         validate_mp4(retry_target)
                         print(f"[PASS] {mode} real MP4 conversion recovers after cancel/source switch",
+                              flush=True)
+
+                        # Explicit HD 720p-class pilot: the source is truly
+                        # 1280x720 (not the old long-edge 720px preset).
+                        page.locator("#sourceInput").set_input_files(str(hd_source))
+                        page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
+                        page.locator("#rangeStart").fill("0")
+                        page.locator("#rangeStart").dispatch_event("change")
+                        page.locator("#rangeEnd").fill("1")
+                        page.locator("#rangeEnd").dispatch_event("change")
+                        page.locator("#qualityInput").select_option("1280")
+                        assert page.locator("#reverseButton").is_enabled(), (
+                            mode, page.locator("#rangeNotice").inner_text())
+                        assert "720p" in page.locator("#qualityInput").locator("option:checked").inner_text()
+                        page.locator("#reverseButton").click()
+                        page.wait_for_function("""() =>
+                          !document.querySelector('#resultArea').hidden ||
+                          !document.querySelector('#reverseErrorDetails').hidden""",
+                          timeout=120000)
+                        if page.locator("#reverseErrorDetails").is_visible():
+                            raise AssertionError(f"{mode} HD pilot: " +
+                                page.locator("#reverseErrorDetail").inner_text())
+                        with page.expect_download(timeout=10000) as hd_download:
+                            page.locator("#saveReverseButton").click()
+                        hd_output = Path(temp) / f"{mode}-hd720.mp4"
+                        hd_download.value.save_as(hd_output)
+                        validate_hd_mp4(hd_output)
+                        print(f"[PASS] {mode} 1-second native 1280x720 HD pilot export",
                               flush=True)
 
                         assert not errors, (mode, errors)

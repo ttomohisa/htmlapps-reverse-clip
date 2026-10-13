@@ -532,7 +532,7 @@
       <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
       <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
       <label><span data-i18n="modeLabel">作成モード（計画値）</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option value="pingpong" data-i18n="modePingpong" disabled>往復再生（今後）</option></select></label>
-      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option></select></label>
+      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option><option value="1280" data-i18n="qualityHdPilot">HD 720p級（試験）</option></select></label>
     </div>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
     <p id="memoryEstimate" class="rc-hint"></p>
@@ -798,6 +798,9 @@
     "qualityLabel": "実験版の画質",
     "qualityStandard": "長辺360px",
     "qualityHigh": "長辺720px",
+    "qualityHdPilot": "HD 720p級（試験）",
+    "rangeHdPilotWarning": "最大長辺1280px（横1280×720／縦720×1280相当）の試験設定です。最大5秒。実機での安定性は未確認です。",
+    "rangeHdPilotTooLong": "HD 720p級の試験設定は最大5秒です。範囲を短くするか長辺360／720pxを選んでください。",
     "rangeValid": "この範囲は実験版で処理できます。",
     "rangeInvalid": "開始・終了を確認してください（0.5〜10秒）。",
     "rangeTooLong": "この実験版は最大10秒です。自動で範囲を短くすることはありません。",
@@ -910,6 +913,9 @@
     "qualityLabel": "Experimental quality",
     "qualityStandard": "Long edge 360px",
     "qualityHigh": "Long edge 720px",
+    "qualityHdPilot": "HD 720p-class (pilot)",
+    "rangeHdPilotWarning": "Experimental long-edge 1280px (1280×720 landscape / 720×1280 portrait) output, up to 5 seconds, not yet validated on physical phones.",
+    "rangeHdPilotTooLong": "HD 720p-class pilot is limited to 5 seconds. Shorten the selection or use a 360/720px long-edge preset.",
     "rangeValid": "This segment is within the experimental limits.",
     "rangeInvalid": "Check start and end (0.5–10 seconds).",
     "rangeTooLong": "This experimental build supports up to 10 seconds and will not silently shorten the selection.",
@@ -1179,7 +1185,7 @@
       }
       function outputDimensions() {
         const width = video.videoWidth, height = video.videoHeight;
-        // Experimental values refer to the LONG edge, not native 360p/720p.
+        // 360/720 cap the long edge; the distinct 1280 preset enables native 720p-class dimensions, without upscaling.
         const edge = Number($('#qualityInput').value);
         const scale = Math.min(1, edge / Math.max(1, width, height));
         return {width:Math.max(16,Math.floor(width*scale/2)*2),
@@ -1198,18 +1204,25 @@
         }
         const largestFrames = plan ? Math.max(...plan.segments.map(s=>s.frames)) : 0;
         const mib = dims.width * dims.height * 1.5 * largestFrames / 1048576;
+        // Full-HD 720p-class resolution is a separate, cautious pilot:
+        // retain no-upscaling and the per-chunk 96MiB lower-bound guard,
+        // and allow <=5s until physical Android MT repeat tests exist.
+        const hdPilot = Number($('#qualityInput').value) === 1280;
+        const hdTooLong = hdPilot && duration > 5 + 1e-8;
         const safe = Boolean(plan && mib <= 96 && dims.width <= 2048 &&
-                             dims.height <= 2048 && $('#modeInput').value === 'reverse');
+                             dims.height <= 2048 && !hdTooLong &&
+                             $('#modeInput').value === 'reverse');
         state.validRange = safe;
         if (safe) {
           $('#rangeNotice').textContent = format('rangePlan',{
             count:plan.segments.length,duration:plan.expectedDuration.toFixed(2)
           }) + ((Math.abs(plan.selectedStart-start)>.001 || Math.abs(plan.selectedEnd-end)>.001)
                ? ' '+translate('rangeSnapNote') : '') +
-               (plan.expectedDuration>5 ? ' '+translate('rangeTenSecondWarning') : '');
+               (plan.expectedDuration>5 ? ' '+translate('rangeTenSecondWarning') : '') +
+               (hdPilot ? ' '+translate('rangeHdPilotWarning') : '');
         } else {
           const notice = !plan ? duration > MAX_CLIP_SECONDS ? 'rangeTooLong' : 'rangeInvalid'
-                               : 'rangeMemoryHigh';
+                               : hdTooLong ? 'rangeHdPilotTooLong' : 'rangeMemoryHigh';
           $('#rangeNotice').textContent = translate(notice);
         }
         $('#memoryEstimate').textContent = format('memoryNotice',{mib:mib.toFixed(0)});

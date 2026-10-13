@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.7] - 2026-10-13 (experimental HD 720p-class output)
+- Keep the existing long-edge 360px / 720px presets and add a **separate** long-edge 1280px pilot for true 1280×720 landscape or 720×1280 portrait source without upscaling.
+- Hard-cap the HD 720p-class pilot at 5 seconds, preserve up-to-2-second FFmpeg chunks and the existing 96 MiB estimated frame-buffer limit. No automatic shortening or quality downgrade.
+- Disclose device-memory/performance uncertainty in both JA/EN. Real-device Android ST/MT 720p output is **not** claimed until tested.
+- Expand Chrome ST/MT smoke with native 1280×720 H.264 source, 1-second real HD MP4 download and ffprobe dimension/codec/frame checks.
+- Browser Kitty remains deferred; do not merge or release.
+
+
 ## [0.1.6] - 2026-10-13 (cancel/retry & source-switch hardening)
 - Prevent a WASM runner that finishes initializing *after* a cancellation or file change from being published or executed. Dispose each conversion's own runner even when stale, without touching a newer conversion.
 - Make output-video metadata loading abortable; cancellation immediately cleans up preview listeners/timers rather than waiting for a timeout.
