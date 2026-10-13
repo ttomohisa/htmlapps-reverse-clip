@@ -29,7 +29,7 @@ test('selection handles, keyboard input, half-open interval plan and source play
   for(const marker of ['id="trimStartSlider"','id="trimEndSlider"',
     'id="trimSelectedTrack"','id="previewSelectionButton"',
     "addEventListener('input',()=>moveTrimHandle(which))",
-    "const maxSpan=$('#qualityInput').value==='1280'?5:MAX_CLIP_SECONDS",
+    "maxSpan=$('#qualityInput').value==='1280'?5:MAX_CLIP_SECONDS",
     'function previewSelectedSource()','function syncTrimControls()']) {
     assert.ok(html.includes(marker),marker);
   }
