@@ -112,6 +112,10 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y ffmpeg
           }
+      - name: Syntax-check opt-in v0.6 HD endurance harness (do not run load test)
+        shell: bash
+        run: python -m py_compile tests/feasibility/v060-stress-browser-smoke.py
+
       - name: Reverse H.264 MP4 using ST and real pthread MT
         shell: bash
         env:
