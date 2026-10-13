@@ -2209,7 +2209,17 @@
             chunkCount:plan.segments.length,mode,inputTransport:inputMode
           };
           $('#reverseErrorDetails').hidden=false;
-          $('#reverseErrorDetail').textContent=(String(error?.message||error)+'\n'+logs.slice(-8).join('\n')).slice(0,1400);
+          // Encoder statistics often overwrite the *useful* FFmpeg error in
+          // the last few log lines. Keep diagnostic failures visible before
+          // recent context, without retaining raw source names/media bytes.
+          const diagnosticLines=logs.filter(line=>
+            /error|fail|invalid|exceed|cannot|unable|unsupported|filter.*end|non.monoton|buffer|mismatch|duration|dts|pts/i.test(line)
+          ).slice(-8);
+          $('#reverseErrorDetail').textContent=[
+            String(error?.message||error).split('\n')[0],
+            ...diagnosticLines,
+            ...logs.slice(-5)
+          ].join('\n').slice(0,2200);
           $('#reverseStatus').textContent=translate(controller.signal.aborted?'reverseCancelled':'reverseFailure');
           showToast(translate(controller.signal.aborted?'reverseCancelled':'reverseFailure'));
         }finally{
