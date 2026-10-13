@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.2.0 App Foundation development (Android/Windows-first; device acceptance and stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
+**Development status: v0.3.0 Trim & Reverse development (Android/Windows-first; device acceptance and stable release pending).** Reverse up to 10 seconds of silent video; 10-second Android operation remains unverified. Android users confirmed 1s and 5s exports, including 5s at long-edge 720px in 12.7s (user report). iPhone testing is deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Feasibility record](docs/feasibility/G1.md)
 
@@ -121,3 +121,12 @@ The v0.1.x technical spike has produced enough implementation evidence to advanc
 Reverse Clip now checks a **32-byte prefix** for a plausible ISO-BMFF/QuickTime atom before video decoding, rejecting obviously mislabeled text/RIFF/EBML without loading the entire file. This is preliminary structural validation, not a guarantee of codec support. A stuck photo-provider read or media-metadata load times out after **30 seconds** with localized recovery instructions. Generations protect new inputs from delayed results of earlier selections. MP4 save names default to `<source-stem>-reverse.mp4`, while remaining editable. The optional JSON diagnostic contains a source state/error key, **not** the media's filename or bytes. Physical Android source-intake acceptance is still pending; see `docs/feasibility/ANDROID_V020_MATRIX.md`.
 
 **Cancel a pending source:** The "Cancel loading" control is available only during inspection. It immediately invalidates the source generation and clears the UI so another video may be selected; a browser-level photo-provider read may still finish internally but can never overwrite a new source. Multiple dropped videos are rejected with an explanation instead of silently selecting only the first.
+
+## v0.3.0 — Trim & Reverse (2026-10-13)
+
+- The source preview now has two **native range handles**, suitable for touch and keyboard navigation. They stay synchronized with the precise start/end number fields. Moving handles respects a minimum 0.5s section, up to 10s in the experimental 360/720px presets, or 5s for the HD pilot. Invalid manually typed times are explained rather than silently shortened.
+- **Play selected section** seeks the original video to the start and pauses playback at the chosen end. This is a source inspection aid—not a fake pre-rendered reverse preview. The reversed MP4 can be previewed **after** conversion and saved with an editable filename.
+- The supplied 64×64 SVG is used for both favicon and header icon. The header now describes the purpose of Reverse Clip, leaving ST/MT details under Build information. The language button says JA (rather than 日本語), the local-processing badge says **完全ローカル処理** in Japanese, and the obsolete feasibility footer text is gone.
+- The Help dialog prevents **background scrolling** including mobile scroll chaining while retaining its own internal scrolling, and restores the old page position on Close, Escape or backdrop dismissal.
+
+**Current status:** v0.3.0 is development-in-progress. Desktop ST/MT tests are necessary but not sufficient for Android physical-device acceptance, 720p10s or 1080p5s, audio/ping-pong, and a permanent GPL corresponding-source release. Browser Kitty integration remains on hold.

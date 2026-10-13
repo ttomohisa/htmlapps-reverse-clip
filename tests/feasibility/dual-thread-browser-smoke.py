@@ -112,7 +112,7 @@ def main():
                         assert isolated == (mode == "multi-thread"), (mode, isolated)
                         if mode == "multi-thread":
                             assert shared, (mode, shared)
-                        assert ("MT" if mode == "multi-thread" else "ST") in page.locator("#runtimeModeLabel").inner_text()
+                        assert ("MT" if mode == "multi-thread" else "ST") in page.locator("#runtimeModeLabel").text_content()
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
                         assert page.locator("#reverseFilename").input_value() == "source-reverse", mode
@@ -137,6 +137,82 @@ def main():
                         target = Path(temp) / f"{mode}-result.mp4"
                         download.value.save_as(target)
                         validate_mp4(target)
+
+                        # v0.3.0: both real range handles control the numeric
+                        # fields, keyboard arrows, highlighted selection and
+                        # the *source* playback interval. No false reverse
+                        # preview prior to creating the final video.
+                        assert page.locator("#trimStartSlider").is_enabled()
+                        assert page.locator("#trimEndSlider").is_enabled()
+                        page.locator("#rangeStart").fill("0.5")
+                        page.locator("#rangeStart").dispatch_event("change")
+                        page.locator("#rangeEnd").fill("1.5")
+                        page.locator("#rangeEnd").dispatch_event("change")
+                        assert page.locator("#trimStartSlider").input_value() == "0.5"
+                        assert page.locator("#trimEndSlider").input_value() == "1.5"
+                        page.locator("#trimStartSlider").focus()
+                        page.keyboard.press("ArrowRight")
+                        assert abs(float(page.locator("#rangeStart").input_value())-.6)<.0001
+                        page.keyboard.press("ArrowLeft")
+                        assert abs(float(page.locator("#rangeStart").input_value())-.5)<.0001
+                        page.locator("#trimEndSlider").focus()
+                        page.keyboard.press("ArrowLeft")
+                        assert abs(float(page.locator("#rangeEnd").input_value())-1.4)<.0001
+                        page.keyboard.press("ArrowRight")
+                        assert abs(float(page.locator("#rangeEnd").input_value())-1.5)<.0001
+                        assert page.locator("#trimSelectedTrack").evaluate(
+                          "el => parseFloat(el.style.width)") > 0
+
+                        page.locator("#previewSelectionButton").click()
+                        page.wait_for_function("""() => {
+                          const v=document.querySelector('#sourceVideo');
+                          return v.paused && v.currentTime>=1.45 && v.currentTime<=1.6;
+                        }""",timeout=15000)
+                        assert page.locator("#reverseButton").is_enabled()
+                        page.locator("#reverseButton").click()
+                        page.wait_for_function("""() =>
+                          !document.querySelector('#resultArea').hidden ||
+                          !document.querySelector('#reverseErrorDetails').hidden""",
+                          timeout=90000)
+                        if page.locator("#reverseErrorDetails").is_visible():
+                            raise AssertionError(f"{mode} selected middle: " +
+                                page.locator("#reverseErrorDetail").inner_text())
+                        page.locator("#reverseFilename").fill("my-selected-part")
+                        with page.expect_download(timeout=15000) as middle_download:
+                            page.locator("#saveReverseButton").click()
+                        assert middle_download.value.suggested_filename == "my-selected-part.mp4"
+                        middle = Path(temp) / f"{mode}-middle-selection.mp4"
+                        middle_download.value.save_as(middle)
+                        validate_mp4(middle)
+                        red = subprocess.check_output(
+                            ["ffmpeg","-v","error","-i",str(middle),
+                             "-vf","scale=1:1:flags=neighbor,format=rgb24",
+                             "-f","rawvideo","-pix_fmt","rgb24","pipe:1"])
+                        assert len(red)//3 == 15
+                        assert red[0] > red[-3]+12, "middle section did not reverse actual frame order"
+                        print(f"[PASS] {mode} v0.3 trim handles / keyboard / source preview / actual middle reversed MP4",
+                              flush=True)
+
+                        # End-of-file interval: the closed start and half-open
+                        # end must render one second, never an extra tail frame.
+                        page.locator("#rangeStart").fill("1.0")
+                        page.locator("#rangeStart").dispatch_event("change")
+                        page.locator("#rangeEnd").fill("2.0")
+                        page.locator("#rangeEnd").dispatch_event("change")
+                        page.locator("#reverseButton").click()
+                        page.wait_for_function("""() =>
+                          !document.querySelector('#resultArea').hidden ||
+                          !document.querySelector('#reverseErrorDetails').hidden""",
+                          timeout=90000)
+                        if page.locator("#reverseErrorDetails").is_visible():
+                            raise AssertionError(f"{mode} selected tail: " +
+                                page.locator("#reverseErrorDetail").inner_text())
+                        with page.expect_download(timeout=15000) as tail_download:
+                            page.locator("#saveReverseButton").click()
+                        tail=Path(temp) / f"{mode}-tail-selection.mp4"
+                        tail_download.value.save_as(tail)
+                        validate_mp4(tail)
+                        print(f"[PASS] {mode} v0.3 clip ending exactly at source end",flush=True)
 
                         # A real cancellation can land while loadEmbedded() is
                         # awaiting WASM initialization. A runner that resolves
@@ -374,6 +450,48 @@ def main():
                             assert page.evaluate(
                                 "document.documentElement.scrollWidth <= innerWidth"
                             ), (mode, viewport_width)
+                        # The provided icon must be shared by the favicon and
+                        # brand image. The header describes the app, not ST/MT.
+                        assert page.locator("link[rel=icon]").get_attribute("href") == \
+                            page.locator("#appBrandIcon").get_attribute("src")
+                        assert "ST/MT" not in page.locator(".brand-meta").inner_text()
+                        assert " · " not in page.locator(".brand-meta").inner_text()
+
+                        # The language-toggle text must be JA rather than 日本語,
+                        # independent of which locale the test browser starts in.
+                        first_label=page.locator("#languageButton").inner_text()
+                        page.locator("#languageButton").click()
+                        second_label=page.locator("#languageButton").inner_text()
+                        assert {first_label,second_label} == {"JA","EN"}
+                        assert page.locator(".local-badge span").inner_text() in (
+                            "完全ローカル処理","Fully local processing")
+                        page.locator("#languageButton").click()
+
+                        # Both explicit Close and Escape must unlock the
+                        # background while leaving the dialog body scrollable.
+                        before_y=page.evaluate("""() => {
+                          document.documentElement.style.scrollBehavior='auto';
+                          window.scrollTo(0,document.documentElement.scrollHeight);
+                          return window.scrollY;
+                        }""")
+                        page.locator("#helpButton").click()
+                        assert page.locator("#helpDialog").is_visible()
+                        assert page.evaluate("""() =>
+                          document.body.classList.contains('help-modal-open') &&
+                          document.documentElement.classList.contains('help-modal-open') &&
+                          getComputedStyle(document.body).position==='fixed'""")
+                        assert page.locator("#helpDialog .dialog-body").evaluate(
+                            "el => el.scrollHeight >= el.clientHeight")
+                        page.locator("#closeHelpButton").click()
+                        page.wait_for_function("() => !document.querySelector('#helpDialog').open")
+                        after_y=page.evaluate("window.scrollY")
+                        assert abs(after_y-before_y)<=2,(mode,before_y,after_y)
+                        page.locator("#helpButton").click()
+                        page.keyboard.press("Escape")
+                        page.wait_for_function("() => !document.querySelector('#helpDialog').open")
+                        assert not page.evaluate("document.body.classList.contains('help-modal-open')")
+                        print(f"[PASS] {mode} JA/EN, supplied icon and help scroll locking",flush=True)
+
                         assert not errors, (mode, errors)
                         assert not external, (mode, external)
                         print(f"[PASS] {mode} real standalone browser video reverse+download; "

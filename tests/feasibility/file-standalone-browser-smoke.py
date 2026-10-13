@@ -71,7 +71,7 @@ def main() -> None:
                     page.locator("#sourceInput").wait_for(timeout=20000)
                     assert page.evaluate("location.protocol") == "file:"
                     assert page.evaluate("globalThis.crossOriginIsolated") is False
-                    assert "ST" in page.locator("#runtimeModeLabel").inner_text()
+                    assert "ST" in page.locator("#runtimeModeLabel").text_content()
                     page.locator("#sourceInput").set_input_files(str(src))
                     page.locator("#reversePanel").wait_for(state="visible", timeout=15000)
                     page.locator("#rangeStart").fill("0")

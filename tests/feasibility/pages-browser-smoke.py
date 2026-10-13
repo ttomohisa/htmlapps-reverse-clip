@@ -95,7 +95,7 @@ def main():
                     response = st.goto(base + "/", wait_until="load", timeout=30000)
                     assert response and response.status == 200
                     assert st.evaluate("globalThis.crossOriginIsolated") is False
-                    assert st.locator("#runtimeModeLabel").inner_text().find("ST") >= 0
+                    assert st.locator("#runtimeModeLabel").text_content().find("ST") >= 0
                     assert st.evaluate("typeof SharedArrayBuffer") == "undefined"
                     print("[PASS] GitHub Pages ST root is available without isolation", flush=True)
                     st.close()
@@ -137,7 +137,7 @@ def main():
                             "GitHub Pages MT did not isolate after first visit and "
                             f"one refresh: {diagnosis}; pageErrors={errors}"
                         )
-                    assert "MT" in mt.locator("#runtimeModeLabel").inner_text()
+                    assert "MT" in mt.locator("#runtimeModeLabel").text_content()
                     registrations = mt.evaluate("""async () =>
                         (await navigator.serviceWorker.getRegistrations())
                         .map(reg => new URL(reg.scope).pathname)""")
@@ -174,7 +174,7 @@ def main():
                     response = root.goto(base + "/", wait_until="load", timeout=30000)
                     assert response and response.status == 200
                     assert root.evaluate("globalThis.crossOriginIsolated") is False
-                    assert "ST" in root.locator("#runtimeModeLabel").inner_text()
+                    assert "ST" in root.locator("#runtimeModeLabel").text_content()
                     print("[PASS] Pages ST remains unisolated after MT worker install",
                           flush=True)
                     context.close()

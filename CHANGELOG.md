@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.0] - 2026-10-13 (Trim & Reverse development)
+- Add two native, touch/keyboard-accessible trim handles directly below the source video, synchronized with numeric start/end fields and an illustrated selected interval. Keep user-typed invalid numeric ranges invalid rather than silently shortening them. Moving a handle enforces 0.5s minimum and current output quality limits.
+- Add "Play selected section" of the **original** source; playback stops at the end boundary. Actual reversed MP4 remains previewed only after conversion and may be saved with a user-edited filename.
+- Replace favicon and header icon with the user-supplied 64x64 green/white SVG (verified SHA-256), change JA language button label from 日本語 to JA, change local badge to 完全ローカル処理, replace technical branding subtitle with an app-purpose description, remove obsolete feasibility footer suffix, and show ST/MT only under Build information.
+- Prevent background scrolling on the Help dialog via fixed-body scroll lock; preserve scrolling inside the dialog and restore body position on Close/Escape/backdrop.
+- Add real Chrome ST/MT test cases for middle/tail selections, downloaded MP4 frame order, handle keyboard interaction, source play range, content/icon/lang labels, modal background lock and responsive viewports.
+- The actual Android device, full 720p10s / 1080p5s, ping-pong, audio and stable source-complete GPL distribution remain separate acceptance gates. Do not open a Browser Kitty integration PR yet.
+
+
 ### v0.2.0 — 2026-10-13 App Foundation follow-up (safe import and recovery)
 - Validate only the first 32 bytes of an MP4/MOV's ISO-BMFF/QuickTime atom structure before handing it to browser playback. Reject obvious renamed text/RIFF/EBML without reading or copying a 1GiB video; full codec compatibility still depends on native browser/FFmpeg decoding.
 - Bound stuck photo-provider reads or stalled media metadata to 30 seconds, show a localized recovery message, revoke stale Blob URLs, and reject any late async result from the old source.
