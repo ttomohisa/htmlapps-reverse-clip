@@ -59,10 +59,17 @@ def generate_sources(directory:Path):
         "-f","lavfi","-i","testsrc2=size=160x90:rate=15:duration=2.4",
         "-c:v","libx264","-preset","ultrafast","-crf","24",
         "-pix_fmt","yuv420p","-an",str(silent)],check=True)
-    return voiced,silent
+    stereo=directory/"stereo-long.mp4"
+    subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+        "-f","lavfi","-i","testsrc2=size=160x90:rate=15:duration=12",
+        "-f","lavfi","-i","sine=frequency=440:sample_rate=48000:duration=11",
+        "-map","0:v:0","-map","1:a:0","-c:v","libx264",
+        "-preset","ultrafast","-crf","25","-pix_fmt","yuv420p",
+        "-c:a","aac","-ac","2","-b:a","128k",str(stereo)],check=True)
+    return voiced,silent,stereo
 
 
-def mp4_info(path:Path, frames:int, audio:bool, duration:float):
+def mp4_info(path:Path, frames:int, audio:bool, duration:float, channels=None):
     data=json.loads(subprocess.check_output(
        ["ffprobe","-v","error",
         "-show_entries","stream=codec_name,codec_type,nb_frames,duration,channels:format=duration",
@@ -75,6 +82,8 @@ def mp4_info(path:Path, frames:int, audio:bool, duration:float):
     if audios:
         assert audios[0]["codec_name"]=="aac",data
         assert 1<=int(audios[0]["channels"])<=2,data
+        if channels is not None:
+            assert int(audios[0]["channels"])==channels,data
         if audios[0].get("duration"):
             assert abs(float(audios[0]["duration"])-duration)<.16,data
     assert abs(float(data["format"]["duration"])-duration)<.16,data
@@ -96,7 +105,7 @@ def crossings(samples,t0,t1):
     section=samples[begin:end]
     assert len(section)>5000,(len(section),len(samples))
     assert max(section)-min(section)>200,"unexpected silence in audio"
-    return sum(1 for a,b in zip(section,section[1:]) if (a<0)<= (b>=0) and (a<0)!=(b<0))
+    return sum(1 for a,b in zip(section,section[1:]) if (a<0)!=(b<0))
 
 
 def verify_audio_direction(path:Path, mode:str):
@@ -115,10 +124,12 @@ def verify_audio_direction(path:Path, mode:str):
     else:raise ValueError(mode)
 
 
-def export(page,directory:Path,mode:str,with_audio:bool):
-    page.locator("#rangeStart").fill("0")
+def export(page,directory:Path,mode:str,with_audio:bool,
+           start=0.0,end=1.0,frames=None,check_tones=True,
+           channels=None,filename_suffix=""):
+    page.locator("#rangeStart").fill(str(start))
     page.locator("#rangeStart").dispatch_event("change")
-    page.locator("#rangeEnd").fill("1")
+    page.locator("#rangeEnd").fill(str(end))
     page.locator("#rangeEnd").dispatch_event("change")
     page.locator("#modeInput").select_option(mode)
     if with_audio:
@@ -138,19 +149,29 @@ def export(page,directory:Path,mode:str,with_audio:bool):
           page.locator("#reverseErrorDetail").inner_text())
     with page.expect_download(timeout=15000) as d:
         page.locator("#saveReverseButton").click()
-    target=directory/f"{mode}-{'aac' if with_audio else 'silent'}.mp4"
+    target=directory/f"{mode}-{'aac' if with_audio else 'silent'}{filename_suffix}.mp4"
     d.value.save_as(target)
-    expected_frames=28 if mode=="pingpong" else 15
-    mp4_info(target,expected_frames,with_audio,expected_frames/15)
-    if with_audio:verify_audio_direction(target,mode)
-    print(f"[PASS] {mode}: actual H.264 + {'AAC' if with_audio else 'no audio'} MP4,"
-          f" {expected_frames} frames, decoded and saved",flush=True)
+    source_frames=round(end*15)-round(start*15)
+    expected_frames=frames if frames is not None else (
+        (2*source_frames-2) if mode=="pingpong" else source_frames)
+    mp4_info(target,expected_frames,with_audio,expected_frames/15,channels)
+    if with_audio and check_tones:
+        verify_audio_direction(target,mode)
+    if with_audio and not check_tones:
+        samples=decoded_pcm(target)
+        assert len(samples)>expected_frames/15*SAMPLE_RATE*.9,len(samples)
+        for a,b in ((.18,.28),(expected_frames/15-.35,expected_frames/15-.25)):
+            assert crossings(samples,a,b)>30,(mode,a,b)
+    print(f"[PASS] {mode}: real {'stereo' if channels==2 else 'mono/silent'} "
+          f"H264+{'AAC' if with_audio else 'no-audio'} {expected_frames} frames,"
+          f" {expected_frames/15:.3f}s, downloaded and decoded",flush=True)
+    return target
 
 
 def main():
     with tempfile.TemporaryDirectory(prefix="reverse-v05-audio-") as temp:
         directory=Path(temp)
-        voiced,silent=generate_sources(directory)
+        voiced,silent,stereo=generate_sources(directory)
         server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
         threading.Thread(target=server.serve_forever,daemon=True).start()
         base=f"http://127.0.0.1:{server.server_port}"
@@ -182,8 +203,30 @@ def main():
 
                         page.wait_for_function("() => !document.querySelector('#audioReverseOption').disabled",timeout=40000)
                         assert page.locator("#audioInput").is_enabled()
-                        export(page,directory, "reverse", True)
-                        export(page,directory, "pingpong", True)
+                        export(page,directory, "reverse", True,channels=1)
+                        export(page,directory, "pingpong", True,channels=1)
+                        # The 0.5s minimum requires eight frames at 15fps.
+                        # Audio is aligned to the frame-snapped .533s window.
+                        export(page,directory,"reverse",True,
+                               end=.5,frames=8,check_tones=False,
+                               channels=1,filename_suffix="-min")
+                        export(page,directory,"pingpong",True,
+                               end=.5,frames=14,check_tones=False,
+                               channels=1,filename_suffix="-min")
+                        # Real stereo, 5s Reverse and full 10s Ping-pong
+                        # audio (20s of AAC after encoding) exercise the
+                        # bounded areverse/asplit/concat and 2*N-2 timeline.
+                        page.locator("#sourceInput").set_input_files(str(stereo))
+                        page.locator("#reversePanel").wait_for(state="visible",timeout=10000)
+                        page.wait_for_function(
+                            "() => !document.querySelector('#audioReverseOption').disabled",
+                            timeout=40000)
+                        export(page,directory,"reverse",True,
+                               end=5,frames=75,check_tones=False,
+                               channels=2,filename_suffix="-5s")
+                        export(page,directory,"pingpong",True,
+                               end=10,frames=298,check_tones=False,
+                               channels=2,filename_suffix="-10s")
                         page.locator("#sourceInput").set_input_files(str(silent))
                         page.locator("#reversePanel").wait_for(state="visible",timeout=10000)
                         page.wait_for_function("""() =>
