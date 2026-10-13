@@ -130,6 +130,12 @@ jobs:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/browser-video-smoke.py
 
+      - name: Verify real 0.5–10s ping-pong MP4 and no duplicate turn/loop frames (ST and MT)
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/pingpong-browser-smoke.py
+
       - name: Verify true offline file-protocol ST and self-extract MP4
         shell: bash
         env:

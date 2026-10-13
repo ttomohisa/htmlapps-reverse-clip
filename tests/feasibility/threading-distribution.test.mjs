@@ -34,6 +34,9 @@ for(const [threading,path] of [['single-thread','dist/index.html'],['multi-threa
     const manifest=extractJson(html,'BUILD_MANIFEST');
     assert.equal(manifest.runtime.threading,threading);
     assert.equal(manifest.runtime.profile,'video-reverse');
+    const enabled=Array.isArray(lock.features)&&lock.features.includes('pingpong');
+    assert.equal(manifest.runtime.pingpongEnabled,enabled);
+    assert.ok(html.includes('const PINGPONG_ENABLED = '+String(enabled)+';'));
     assert.equal(manifest.runtime.requiresCrossOriginIsolation,threading==='multi-thread');
     const embedded=extractJson(html,'assetBundle');
     const assets=embedded.dependencies['reverse-wasm'].assets;

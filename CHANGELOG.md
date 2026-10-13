@@ -6,7 +6,7 @@
 - The frame-exact composition for N selected source frames is **0..N-1, N-2..1** (2N-2 frames). Skip the turning frame on the return, and the starting frame at the end so repeated playback has no doubled loop-boundary frame. Do not skip arbitrary H.264 packets. No audio yet.
 - A pure shared timeline planner balances chunks to avoid a 1-frame reverse tail, preserves 0.5–10s trim and HD pilot <=5s, counts all output frames before saving, and rejects missing or excess encoded packets in the Builder.
 - Modes are exclusive; changing mode clears stale output and updates the suggested suffix between `-reverse.mp4` and `-pingpong.mp4` without overwriting a user-edited filename. UI previews only the completed MP4 and shows expected duration.
-- The ping-pong control is **fail-closed** while the app still pins the earlier reverse-only Builder asset: the build embeds a capability flag from the reviewed `reverse-runtime.lock.json`. Enable the mode only after an actual new dual ST/MT WASM build passes browser tests and is pinned by SHA-256. No fake compatibility fallback.
+- The ping-pong control is **fail-closed** until both real ST/MT binary SHA-256 values are pinned. The experimental Builder build at commit `076fe727...`, CI run `38345618409` produced distinct verified new cores; their hash-locked bytes are integrated, with real Chrome ST/MT ping-pong playback and frame-order regression. This is temporary Actions storage until a permanent source-complete GPL release is authorized.
 - v0.4.0 remains a development milestone: Android physical MT, VFR/rotation, full-size 720p/1080p and an immutable corresponding-source GPL release require further acceptance. Do not update Browser Kitty.
 
 

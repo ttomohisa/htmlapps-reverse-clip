@@ -3,9 +3,9 @@
   "kind": "experimental-dual-github-actions-artifact",
   "status": "temporary-not-release",
   "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-  "builderCommit": "8fc25b01e66613234cd64efab7eed56ba2b79afc",
-  "workflowRunId": 38208271161,
-  "artifactId": 11728810899,
+  "builderCommit": "076fe727801295ba30b2db1e0565d832e094c524",
+  "workflowRunId": 38345618409,
+  "artifactId": 11788728409,
   "profile": "video-reverse",
   "builderVersion": "1.10.4",
   "wasmLicense": "GPL-2.0-or-later",
@@ -14,15 +14,18 @@
     "single-thread": {
       "assets": {
         "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
-        "ffmpeg.wasm": "108b70f13298c13c565ec6b62f5c00091f97173fbdd4d29e7350ac5a33af3127"
+        "ffmpeg.wasm": "9d8c9ed2c1fc94bb9b5bed4d6546bc7cd8e0bd7a93e6fb3031f5e9d8215b05bb"
       }
     },
     "multi-thread": {
       "assets": {
         "ffmpeg.js": "e88f95f77ee94acc8df3cef559e48e76cbf78a6175e831d712a471a48d614007",
-        "ffmpeg.wasm": "46e9edf355eb535659208e4729ad1d6ca36f6269247abdb4ad998759be29c956"
+        "ffmpeg.wasm": "a5c5654d6ad6bf7fa5dcab6e764450d9b9af55b61dfc2cb2126f320ee481091e"
       }
     }
   },
-  "notes": "Two distinct ST/MT cores from the same pinned commit; SHA-256 checked at build. Actions artifact expires. Stable publication requires an immutable Builder release with corresponding GPL sources. No runtime CDN/upload."
+  "notes": "Distinct experimentally built ST/MT cores for video-reverse and forward-then-reverse ping-pong; SHA-256 verified at build. The Builder Actions artifact expires 2026-10-20. No runtime downloads. Permanent corresponding-source GPL Release and Android physical-device testing are pending.",
+  "features": [
+    "pingpong"
+  ]
 }
