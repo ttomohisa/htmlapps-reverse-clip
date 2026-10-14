@@ -3,13 +3,13 @@
   "kind": "experimental-dual-github-actions-artifact",
   "status": "temporary-not-release",
   "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-  "builderCommit": "bdeb3bc55389fe17577c04752cb83f92703f306d",
-  "workflowRunId": 38529286664,
-  "artifactId": 11877088890,
+  "builderCommit": "8e60da7cf9de644ce3f6cce9c007b17e6a385c53",
+  "workflowRunId": 38603383794,
+  "artifactId": 11914029733,
   "profile": "video-reverse",
-  "builderVersion": "1.10.5",
+  "builderVersion": "1.10.6",
   "wasmLicense": "GPL-2.0-or-later",
-  "browserRuntimeSha256": "34c29442c74d9d178666d9788f5ba9f74bb1c56e2052dc0f94dc417ccb427d43",
+  "browserRuntimeSha256": "32edec91e98e93ef10496a4daaed7e42cabf33ab705df4ca287376ab96cf1ce4",
   "variants": {
     "single-thread": {
       "assets": {
@@ -19,12 +19,12 @@
     },
     "multi-thread": {
       "assets": {
-        "ffmpeg.js": "e88f95f77ee94acc8df3cef559e48e76cbf78a6175e831d712a471a48d614007",
+        "ffmpeg.js": "0f41f937b6535d92159bfafbe063735286e8c693475c4ede856f0df7e8168fa4",
         "ffmpeg.wasm": "8a9e45ce28d06d9dfde734d41d9af022d1158798b4967bb1e05ee41c20cd193c"
       }
     }
   },
-  "notes": "v0.6 PVM sparse-VFR timestamp regression fix: normalize original input timeline to 15fps before trim=start_frame:end_frame and bounded reverse. Builder ST+MT real browser smoke CI 38529286664 PASS, new hash-pinned WASM in temporary artifact 11877088890 (expires 2026-10-21). Old Builder source bundle/artifact was for 1.10.4 and is NOT corresponding source for 1.10.5. App full PVM synthetic regression, mobile acceptance, audio seams and permanent source-complete GPL release remain pending.",
+  "notes": "v0.6 sparse WebCodecs VFR frame-window fix (source FPS normalization before trim), plus experimental MT pthread teardown per chunk in Builder 1.10.6. Builder Chrome ST+MT core smoke CI 38603383794 success. New core SHA256 pinned to temporary artifact 11914029733 (expires 2026-10-21). App Chrome 1080p sparse input 10s MT endurance and physical Android pending; no 1.10.6 GPL corresponding-source release or legal approval. Previous source bundle only covers 1.10.4.",
   "features": [
     "pingpong",
     "audio-mux"
