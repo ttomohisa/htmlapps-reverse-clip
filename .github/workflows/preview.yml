@@ -29,6 +29,7 @@ jobs:
     timeout-minutes: 20
     outputs:
       preview_url: ${{ steps.preview.outputs.preview_url }}
+      mt_supported: ${{ steps.verify-headers.outputs.mt_supported }}
 
     steps:
       - name: Checkout repository
@@ -190,7 +191,8 @@ jobs:
 
           throw "Preview did not become ready: $lastError"
 
-      - name: Validate live ST/MT response headers before advertising a usable MT Preview
+      - name: Verify live ST Preview and report actual MT header capability
+        id: verify-headers
         if: steps.cloudflare.outputs.configured == 'true'
         shell: pwsh
         env:
@@ -208,6 +210,11 @@ jobs:
           if ($mt.Content -notmatch 'const RUNTIME_VARIANT = "multi-thread";') {
             throw 'index.mt.html is not the actual MT standalone app.'
           }
+          if ($st.Headers['Cross-Origin-Opener-Policy'] -or
+              $st.Headers['Cross-Origin-Embedder-Policy']) {
+            throw 'ST Preview should not receive MT COOP/COEP headers.'
+          }
+          $mtSupported = $true
           foreach ($header in @(
             @('Cross-Origin-Opener-Policy','same-origin'),
             @('Cross-Origin-Embedder-Policy','require-corp'),
@@ -215,15 +222,18 @@ jobs:
           )) {
             $value = [string]$mt.Headers[$header[0]]
             if ($value -ne $header[1]) {
-              throw "MT Preview requires $($header[0]): $($header[1]); received '$value'."
+              $mtSupported = $false
+              Write-Warning "MT Preview cannot run: $($header[0]) requires $($header[1]), received '$value'."
             }
           }
-          if ($st.Headers['Cross-Origin-Opener-Policy'] -or
-              $st.Headers['Cross-Origin-Embedder-Policy']) {
-            throw 'ST Preview should not receive MT COOP/COEP headers.'
+          "mt_supported=$($mtSupported.ToString().ToLowerInvariant())" |
+            Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "[PASS] Cloudflare PR Preview ST root verified."
+          if ($mtSupported) {
+            Write-Host "MT response headers present; running the real Chrome MT smoke job."
+          } else {
+            Write-Host "::notice::Cloudflare Preview does not isolate MT. Use the GitHub Pages /mt/ endpoint for real multi-thread tests."
           }
-          Write-Host "[PASS] Deployed ST root has no isolation; MT page has COOP/COEP/CORP."
-          Write-Host "Verified MT URL: $base/index.mt.html"
 
       - name: Comment Preview URL
         if: steps.cloudflare.outputs.configured == 'true'
@@ -236,7 +246,10 @@ jobs:
           $body = @"
           ## Browser Kitty PR Preview
 
-          **[Previewを開く]($env:PREVIEW_URL)**
+          **[ST Previewを開く]($env:PREVIEW_URL)**
+
+          **MT（マルチスレッド）の実機確認は [GitHub Pages版](https://ttomohisa.github.io/htmlapps-reverse-clip/mt/) を使用してください。**
+          CloudflareのPR PreviewではMTに必要なCOOP/COEPが付かないことがあるため、MT対応URLとして案内しません。
 
           - Preview: ``$env:PREVIEW_NAME``
           - Commit: ``${{ github.event.pull_request.head.sha }}``
@@ -253,7 +266,7 @@ jobs:
   verify-live-mt:
     name: Real deployed Cloudflare MT MP4 (one-time proof)
     needs: preview
-    if: ${{ needs.preview.outputs.preview_url != '' }}
+    if: ${{ needs.preview.outputs.preview_url != '' && needs.preview.outputs.mt_supported == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 9
     steps:
