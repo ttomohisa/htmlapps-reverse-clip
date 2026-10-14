@@ -1,6 +1,8 @@
 # Changelog
 
 ## [0.6.0] — Adaptive quality guard / memory and reliability (development, 2026-10-13)
+- **2026-10-14 user-reported MT frame-loss regression (OPEN):** physical Android/PC MT returned `Stage: video-segments` and `Reverse frame count mismatch: expected=30 actual=24` for a 37.89s/396kbps MP4 while ST succeeded. The fail-closed integrity check stays enforced. Introduce an actual ST/isolated MT H.264 29.97fps/VFR reproduction test and expand structured diagnostics (chunk index, start, runtime, expected/actual frames), automatically opening error detail on failure. Do not claim a fix until real MT/browser reruns succeed for the affected source.
+
 - **2026-10-14 (Android source memory path):** Add generation-aware, cancellable, <=2.5s FileReaderSync Worker probe of only the first/last 32 source bytes before preview of eligible <=64MiB mobile files. Use zero-eager-copy original File/WORKERFS when readable; keep the original bounded full-file MEMFS fallback on failed/unsupported Worker reads, plus the existing conversion-time provider retry. Abort/terminate probe and revoke URL on source switch, failure or timeout. **Full-copy-free G2 is still not satisfied** for fallbacks; physical Android testing is pending.
 - Test real MP4 exports under a desktop Android-like UA for both unmodified WORKERFS and deliberately forced Worker-probe failure/MEMFS fallback. Add Node success/failure/abort/probe cleanup coverage. Maintain ST/MT standalone and silent/AAC regressions.
 

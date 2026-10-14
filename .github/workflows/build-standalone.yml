@@ -140,6 +140,12 @@ jobs:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/browser-video-smoke.py
 
+      - name: Investigate owner-reported MT 30/24-frame mismatch using 37.89s camera-like sources
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/mt-real-source-regression.py
+
       - name: Verify real 0.5–10s ping-pong MP4 and no duplicate turn/loop frames (ST and MT)
         shell: bash
         env:

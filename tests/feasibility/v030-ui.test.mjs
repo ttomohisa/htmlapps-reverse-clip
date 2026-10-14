@@ -50,3 +50,20 @@ test('help dialog stops background scroll and restores it on all closure paths',
   }
   assert.ok(html.includes("helpDialog.showModal()"));
 });
+
+test('MT or ST frame-count failures stay fail-closed and expose actionable diagnostics',()=>{
+  assert.ok(html.includes('reverseFrameMismatch'));
+  assert.ok(html.includes("'Reverse frame count mismatch: expected=") ||
+            html.includes('Reverse frame count mismatch: expected='));
+  assert.ok(html.includes("$('#reverseErrorDetails').open=true;"));
+  assert.ok(html.includes("'Stage: '+currentStage+' · Runtime: '"));
+  assert.ok(html.includes("'Chunk: '+(currentChunkIndex+1)"));
+  for(const key of ['failedChunkIndex','failedChunkStart','failedChunkDuration',
+                    'expectedFrames','actualFrames',"errorCode:'frame-count-mismatch'"]){
+    assert.ok(html.includes(key), key);
+  }
+  assert.ok(html.includes("$('#reverseErrorDetails').open=false;"));
+  assert.ok(html.includes('An incomplete video will not be saved.'));
+  assert.ok(html.includes('不完全な動画は保存されません'));
+  assert.ok(html.includes("throw new Error('MP4 segment failed validation ("));
+});

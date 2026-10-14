@@ -106,3 +106,22 @@ Neither is a physical Android/Google Photos/Files provider test.
 In particular, success in the initial Worker read check does **not**
 guarantee that the File remains accessible after media preview. The
 full-copy prohibition required by Gate G2 remains OPEN for the fallback.
+
+## Real MT segment frame deficit (2026-10-14, investigation)
+
+A user-visible experimental Pages MT conversion failed in
+`video-segments` with `Reverse frame count mismatch: expected=30
+actual=24` for a 37.89s source, while ST succeeded. The exact video
+codec, FPS/VFR timeline and failed chunk have not been established.
+
+`mt-real-source-regression.py` creates 37.89-second 29.97fps H.264
+with B-frames and a separate video with dropped input frame timestamps,
+then verifies the *real* ST and cross-origin-isolated MT output frame
+counts, durations, full decode and MP4 download under Chrome.
+
+On errors the app now automatically opens the Error details expander,
+includes the failing chunk number/source start/duration and ST/MT
+runtime, and populates opt-in JSON diagnostics with exact
+expected/actual frame counts if FFmpeg logged the standard mismatch.
+Do **not** disable the frame-count check or silently reroute MT to ST.
+This is an investigation, not yet a reproduction of the exact owner file.

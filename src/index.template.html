@@ -943,7 +943,8 @@
     "reverseLoading": "変換の準備中…",
     "reverseInvalid": "範囲・画質を確認してください。",
     "reverseCancelled": "処理を中止しました。再実行できます。",
-    "reverseFailure": "MP4を作成できませんでした。元動画の読み取り、区間境界、空きメモリなどを確認し、範囲を短くして再試行してください。出力フレーム数が一致しない場合も保存されません。",
+    "reverseFailure": "MP4を作成できませんでした。以下のエラー詳細をご確認ください。不完全な動画は保存されません。",
+    "reverseFrameMismatch": "出力フレーム数が予定と一致しないため、MP4の保存を中止しました。以下のエラー詳細をご確認ください。",
     "reverseSuccess": "逆再生MP4を作成しました。結果を再生して保存してください。",
     "reverseUnsupported": "このブラウザーでは逆再生用WASMを起動できません。",
     "reverseSaved": "逆再生MP4を保存しました。",
@@ -1100,7 +1101,8 @@
     "reverseLoading": "Preparing conversion…",
     "reverseInvalid": "Check the selected time range and quality.",
     "reverseCancelled": "Conversion cancelled. You can retry.",
-    "reverseFailure": "Could not create MP4. Check input permissions, segment boundaries and memory; try a shorter range. Outputs with mismatched frame counts are rejected.",
+    "reverseFailure": "MP4 creation failed. Review the error details below. An incomplete video will not be saved.",
+    "reverseFrameMismatch": "The output frame count did not match the expected count, so saving was stopped. See the error details below.",
     "reverseSuccess": "Reversed MP4 ready. Preview and save it.",
     "reverseUnsupported": "This browser cannot start the reverse WASM.",
     "reverseSaved": "Reversed MP4 saved.",
@@ -2038,6 +2040,7 @@
         $('#reverseProgress').hidden=true;
         $('#cancelReverseButton').hidden=true;
         $('#reverseErrorDetails').hidden=true;
+        $('#reverseErrorDetails').open=false;
         $('#reverseErrorDetail').textContent='';
         state.conversion=null;
         $('#reverseButton').disabled=!state.validRange||!state.ready;
@@ -2088,7 +2091,7 @@
         $('#reverseStatus').textContent=translate('reverseLoading');
         const started=performance.now(), logs=[];
         let inputMode=state.copiedInput?'memory':'workerfs';
-        let allChunks=[],currentStage='wasm-load';
+        let allChunks=[],currentStage='wasm-load', currentChunkIndex=-1;
         // An invalidated job must never publish a late-loaded WASM runner.
         // Keep ownership local as well: a stale finally block must not dispose
         // a new job's runner after a cancel, file switch or pagehide.
@@ -2165,6 +2168,7 @@
           // followed by return chunks with both endpoints omitted. The join
           // remuxes complete chunks and refuses a wrong total frame count.
           for(let i=0;i<count;i++){
+            currentChunkIndex=i;
             const partKey=mode==='pingpong'?
               (plan.segments[i].direction==='forward'?'pingpongForwardChunk':'pingpongReturnChunk'):'reverseChunk';
             setJobProgress(i,0,partKey,{current:i+1,total:count});
@@ -2178,6 +2182,7 @@
           }
 
           let bytes=allChunks[0];
+          currentChunkIndex=-1;
           if(count>1){
             currentStage='video-join';
             setJobProgress(count,0,'reverseJoin',{});
@@ -2305,12 +2310,22 @@
           $('#resultVideo').load();
           $('#resultArea').hidden=true;
           allChunks=[];
+          const mismatchLine=logs.find(line=>
+            /Reverse frame count mismatch: expected=\d+ actual=\d+/.test(line));
+          const mismatchMatch=mismatchLine?.match(/expected=(\d+) actual=(\d+)/);
+          const currentChunk=currentChunkIndex>=0?plan.segments[currentChunkIndex]:null;
           state.conversion={
             ok:false,error:String(error?.message||error),stage:currentStage,
             elapsedSeconds:Number(((performance.now()-started)/1000).toFixed(2)),
-            chunkCount:plan.segments.length,mode,inputTransport:inputMode
+            chunkCount:plan.segments.length,mode,inputTransport:inputMode,
+            ...(currentChunk?{failedChunkIndex:currentChunkIndex+1,
+              failedChunkStart:currentChunk.start,failedChunkDuration:currentChunk.duration,
+              failedChunkDirection:currentChunk.direction||'reverse'}:{}),
+            ...(mismatchMatch?{expectedFrames:Number(mismatchMatch[1]),
+              actualFrames:Number(mismatchMatch[2]),errorCode:'frame-count-mismatch'}:{})
           };
           $('#reverseErrorDetails').hidden=false;
+          $('#reverseErrorDetails').open=true;
           // Encoder statistics often overwrite the *useful* FFmpeg error in
           // the last few log lines. Keep diagnostic failures visible before
           // recent context, without retaining raw source names/media bytes.
@@ -2318,13 +2333,19 @@
             /error|fail|invalid|exceed|cannot|unable|unsupported|filter.*end|non.monoton|buffer|mismatch|duration|dts|pts/i.test(line)
           ).slice(-8);
           $('#reverseErrorDetail').textContent=[
-            'Stage: '+currentStage,
+            'Stage: '+currentStage+' · Runtime: '+(RUNTIME_VARIANT==='multi-thread'?'MT':'ST'),
+            ...(currentChunk?[ 'Chunk: '+(currentChunkIndex+1)+'/'+plan.segments.length+
+              ' · sourceStart='+currentChunk.start.toFixed(3)+'s'+
+              ' · duration='+currentChunk.duration.toFixed(3)+'s'+
+              ' · direction='+(currentChunk.direction||'reverse') ]:[]),
             String(error?.message||error).split('\n')[0],
             ...diagnosticLines,
             ...logs.slice(-5)
           ].join('\n').slice(0,2200);
-          $('#reverseStatus').textContent=translate(controller.signal.aborted?'reverseCancelled':'reverseFailure');
-          showToast(translate(controller.signal.aborted?'reverseCancelled':'reverseFailure'));
+          const failureKey=controller.signal.aborted?'reverseCancelled':
+            mismatchLine?'reverseFrameMismatch':'reverseFailure';
+          $('#reverseStatus').textContent=translate(failureKey);
+          showToast(translate(failureKey));
         }finally{
           // Dispose only this job's runner. resetConversion() may already have
           // disposed it, while a newer conversion now owns conversionRunner.

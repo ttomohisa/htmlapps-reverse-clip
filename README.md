@@ -4,6 +4,17 @@
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
+## Known MT regression (2026-10-14, investigation active)
+
+The owner reported that experimental GitHub Pages ST exported their video,
+but **MT failed** with `Reverse frame count mismatch: expected=30 actual=24`
+in `video-segments`. It is not yet established whether this is caused
+by the MT decoding pipeline, exact source timestamps/codec or segment
+boundary logic. The app correctly refuses to save an incomplete MP4;
+please use **ST explicitly** for affected files while the MT bug
+is investigated. No automatic or hidden ST fallback is provided.
+See [G2](docs/feasibility/G2.md).
+
 ## Goal
 
 Select a short portion of a video and export a reversed or forward-then-reverse H.264 MP4 **without uploading the video**. Initial limits planned for v1.0.0: standard up to 720p / 10 seconds, high quality up to 1080p / 5 seconds, pending real-device proof.
