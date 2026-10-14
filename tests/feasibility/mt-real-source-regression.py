@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""One-shot reproduction matrix for MT video frame loss on real-like MP4 inputs.
+"""Reproduce source-specific MT 30->24 frame loss using sparse video timestamps.
 
-Owner's real MP4 had 37.89s container duration; MT failed a 2-second
-segment: expected 30 output frames, got 24. ST succeeded.
-This uses local 37.89s H.264 B-frame MP4 with 29.97fps and irregular
-frame timings. It never uploads user media and is *not* a phone test.
+Owner's input is H.264 High, 1920x1080, duration 37.806s,
+r_frame_rate=13/4, avg_frame_rate=877500/850637 (~1.03fps),
+time_base=1/90000. ST succeeded; MT missed 6 frames in a 2s segment.
+This test synthesizes separate 320p/1080p 39-frame source files near
+these properties, plus conventional and boundary-gap VFR controls.
+Actual decoded MP4 exports are verified: never accept 24/30 by silently
+relaxing the frame-count guard. No user video data is required.
 """
 from __future__ import annotations
 
@@ -38,12 +41,25 @@ class Handler(SimpleHTTPRequestHandler):
 
 def create_fixture(tmp: Path, name: str) -> Path:
     result = tmp / (name + ".mp4")
+    sparse = name.startswith("sparse-slide-")
+    size = "1920x1080" if name == "sparse-slide-1080" else "320x180"
     base = [
         "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-threads", "2",
         "-f", "lavfi", "-i",
-        "testsrc2=size=320x180:rate=" +
-        ("12" if name == "low-12fps" else "30000/1001") + ":duration=37.89",
+        f"testsrc2=size={size}:rate=" +
+        ("13/4" if sparse else
+         "12" if name == "low-12fps" else "30000/1001") +
+        ":duration=37.90",
     ]
+    if sparse:
+        # 39 H.264 High VFR frames in ~37.85s at 90k time base.
+        # A closely matched reproduction of the user's metadata:
+        # r_frame_rate=13/4, avg_frame_rate~1.03, plus x264 B-frames.
+        # Keep a pair of adjacent timestamps and several long holds.
+        base += ["-vf",
+                 "select='eq(n,0)+eq(n,1)+eq(n,5)+"
+                 "if(gte(n,10),not(mod(n,3))*not(eq(n,30))*not(eq(n,60)),0)'",
+                 "-fps_mode", "vfr"]
     if name == "irregular-vfr":
         # Drop 1 of 5 source frames, preserving actual timestamps.
         base += ["-vf", "select='not(eq(mod(n,5),0))'", "-fps_mode", "vfr"]
@@ -54,18 +70,38 @@ def create_fixture(tmp: Path, name: str) -> Path:
         base += ["-vf", "select='not(between(t,1.53,2.04))'", "-fps_mode", "vfr"]
     base += [
         "-map", "0:v:0", "-c:v", "libx264", "-preset", "veryfast",
-        "-bf", "3", "-g", "60", "-crf", "29", "-pix_fmt", "yuv420p",
+        "-bf", "3", "-g", "60", "-crf", "37" if sparse else "29",
+        "-pix_fmt", "yuv420p", "-profile:v", "high",
+        "-video_track_timescale", "90000",
         "-movflags", "+faststart", str(result),
     ]
     subprocess.run(base, check=True, timeout=130)
     assert result.stat().st_size > 5000, result
+    if sparse:
+        info = json.loads(subprocess.check_output([
+            "ffprobe", "-v", "error", "-select_streams", "v:0",
+            "-show_entries",
+            "stream=codec_name,profile,width,height,nb_frames,r_frame_rate,"
+            "avg_frame_rate,time_base,start_time,duration",
+            "-of", "json", str(result)], timeout=30))["streams"][0]
+        assert info["codec_name"] == "h264" and info["profile"] == "High", info
+        assert info["time_base"] == "1/90000" and info["r_frame_rate"] == "13/4", info
+        assert int(info["nb_frames"]) == 39 and 37.7 < float(info["duration"]) < 38, info
+        assert 1.0 < eval_fraction(info["avg_frame_rate"]) < 1.1, info
+        print("[MATCHED SOURCE]", name, json.dumps(info), flush=True)
     return result
+
+
+def eval_fraction(text: str) -> float:
+    from fractions import Fraction
+    return float(Fraction(text))
 
 
 def transcode(page, source: Path, mode: str, label: str, temporary: Path):
     page.locator("#sourceInput").set_input_files(str(source))
     page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
-    page.locator("#qualityInput").select_option("360")
+    page.locator("#qualityInput").select_option(
+        "1280" if "sparse-slide-1080" in label else "360")
     page.locator("#modeInput").select_option(mode)
     # Audio is already "none" by default; silent files intentionally disable
     # its selector, so Playwright must not wait for it to become enabled.
@@ -112,7 +148,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix="reverse-mt-frames-") as temp:
         tmp = Path(temp)
         fixtures = {name: create_fixture(tmp, name)
-                    for name in ("cfr-2997", "irregular-vfr", "low-12fps", "boundary-gap-vfr")}
+                    for name in ("cfr-2997", "irregular-vfr", "low-12fps", "boundary-gap-vfr",
+                                 "sparse-slide-320", "sparse-slide-1080")}
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         base = f"http://127.0.0.1:{server.server_port}"
