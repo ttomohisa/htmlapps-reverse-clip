@@ -11,6 +11,7 @@ relaxing the frame-count guard. No user video data is required.
 """
 from __future__ import annotations
 
+import argparse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
@@ -148,61 +149,111 @@ def transcode(page, source: Path, mode: str, label: str, temporary: Path,
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--phase", choices=("isolated", "repeat", "extended"),
+        default="isolated",
+        help="isolated: one browser per essential PVM test; repeat: three 720p-class"
+             " 10s MT exports on one page; extended: legacy mixed-fixture endurance")
+    args = parser.parse_args()
     assert (DIST / "index.html").is_file() and (DIST / "index.mt.html").is_file()
     with tempfile.TemporaryDirectory(prefix="reverse-mt-frames-") as temp:
         tmp = Path(temp)
-        fixtures = {name: create_fixture(tmp, name)
-                    for name in ("cfr-2997", "irregular-vfr", "low-12fps", "boundary-gap-vfr",
-                                 "sparse-slide-320", "sparse-slide-1080")}
+        fixtures = {}
+        if args.phase == "extended":
+            fixtures = {name: create_fixture(tmp, name)
+                        for name in ("cfr-2997", "irregular-vfr", "low-12fps",
+                                     "boundary-gap-vfr", "sparse-slide-320",
+                                     "sparse-slide-1080")}
         for size, label in (("320x180", "pvm-webcodecs-320"),
                             ("1920x1080", "pvm-webcodecs-1080")):
-            f=make_presentation_vfr_fixture(tmp,size)
-            info=json.loads(subprocess.check_output([
-                "ffprobe","-v","error","-select_streams","v:0",
-                "-show_entries","stream=codec_name,profile,time_base,nb_frames,"
-                "avg_frame_rate,duration","-of","json",str(f)],
+            f = make_presentation_vfr_fixture(tmp, size)
+            info = json.loads(subprocess.check_output([
+                "ffprobe", "-v", "error", "-select_streams", "v:0",
+                "-show_entries", "stream=codec_name,profile,time_base,nb_frames,"
+                "avg_frame_rate,duration", "-of", "json", str(f)],
                 timeout=30))["streams"][0]
-            assert info["codec_name"]=="h264" and info["profile"]=="High",info
-            assert info["time_base"]=="1/90000" and int(info["nb_frames"])==39,info
-            assert abs(float(info["duration"])-37.806089)<0.00002,info
-            assert abs(eval_fraction(info["avg_frame_rate"])-877500/850637)<0.00001,info
-            print("[MATCHED WEBCodecs TIMELINE]",label,info,flush=True)
-            fixtures[label]=f
+            assert info["codec_name"] == "h264" and info["profile"] == "High", info
+            assert info["time_base"] == "1/90000" and int(info["nb_frames"]) == 39, info
+            assert abs(float(info["duration"]) - 37.806089) < .00002, info
+            assert abs(eval_fraction(info["avg_frame_rate"]) - 877500 / 850637) < .00001, info
+            print("[MATCHED WEBCODECS TIMELINE]", label, info, flush=True)
+            fixtures[label] = f
+
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         base = f"http://127.0.0.1:{server.server_port}"
+        launch = {"headless": True,
+                  "args": ["--no-sandbox", "--disable-dev-shm-usage"]}
+        if os.environ.get("CHROMIUM_EXE"):
+            launch["executable_path"] = os.environ["CHROMIUM_EXE"]
+
+        def new_page(browser, runtime):
+            page = browser.new_page(accept_downloads=True)
+            path = "index.mt.html" if runtime == "MT" else "index.html"
+            response = page.goto(f"{base}/{path}",
+                                 wait_until="domcontentloaded", timeout=45000)
+            assert response and response.status == 200, runtime
+            isolated = page.evaluate("globalThis.crossOriginIsolated")
+            assert isolated == (runtime == "MT"), (runtime, isolated)
+            return page
+
         try:
             with sync_playwright() as pw:
-                launch = {"headless": True,
-                          "args": ["--no-sandbox", "--disable-dev-shm-usage"]}
-                if os.environ.get("CHROMIUM_EXE"):
-                    launch["executable_path"] = os.environ["CHROMIUM_EXE"]
-                browser = pw.chromium.launch(**launch)
-                try:
-                    for runtime in ("ST", "MT"):
-                        page = browser.new_page(accept_downloads=True)
+                if args.phase == "isolated":
+                    # Unrelated ST/MT conversions must not poison a fresh-user
+                    # correctness result. Each case has a new Chrome process.
+                    # The repeat phase independently examines accumulation.
+                    cases = [
+                        ("MT", "pvm-webcodecs-1080", "pingpong", 10),
+                        ("MT", "pvm-webcodecs-1080", "reverse", 10),
+                        ("MT", "pvm-webcodecs-320", "pingpong", 2),
+                        ("ST", "pvm-webcodecs-1080", "pingpong", 10),
+                        ("ST", "pvm-webcodecs-320", "pingpong", 2),
+                    ]
+                    for runtime, name, mode, duration in cases:
+                        browser = pw.chromium.launch(**launch)
                         try:
-                            path = "index.html" if runtime == "ST" else "index.mt.html"
-                            response = page.goto(f"{base}/{path}", wait_until="domcontentloaded", timeout=45000)
-                            assert response and response.status == 200, runtime
-                            isolated = page.evaluate("globalThis.crossOriginIsolated")
-                            assert isolated == (runtime == "MT"), (runtime, isolated)
-                            for source_name, fixture in fixtures.items():
-                                for mode in ("reverse", "pingpong"):
-                                    # The exact sparse WebCodecs fixture must
-                                    # handle BOTH a 2s chunk and all 10s
-                                    # where several intervals contain no new
-                                    # source frame (but the previous frame's
-                                    # declared display duration covers them).
-                                    durations=(2,10) if source_name.startswith("pvm-webcodecs-") else (10,)
-                                    for duration in durations:
-                                        transcode(page, fixture, mode,
-                                                  f"{runtime}-{source_name}-{mode}-{duration}s",
-                                                  tmp, duration=duration)
+                            page = new_page(browser, runtime)
+                            transcode(page, fixtures[name], mode,
+                                      f"{runtime}-{name}-{mode}-{duration}s-isolated",
+                                      tmp, duration=duration)
                         finally:
-                            page.close()
-                finally:
-                    browser.close()
+                            browser.close()
+                    print("[DONE] 5 isolated Chrome process PVM cases", flush=True)
+                elif args.phase == "repeat":
+                    # This is the explicit same-page memory/endurance gate:
+                    # no reboot or hidden ST fallback, 3 real MT exports.
+                    browser = pw.chromium.launch(**launch)
+                    try:
+                        page = new_page(browser, "MT")
+                        for repeat in range(1, 4):
+                            transcode(page, fixtures["pvm-webcodecs-1080"],
+                                      "pingpong",
+                                      f"MT-pvm-webcodecs-1080-pingpong-10s-repeat-{repeat}",
+                                      tmp, duration=10)
+                        print("[DONE] MT 3 successive 10s PVM exports", flush=True)
+                    finally:
+                        browser.close()
+                else:
+                    browser = pw.chromium.launch(**launch)
+                    try:
+                        for runtime in ("ST", "MT"):
+                            page = new_page(browser, runtime)
+                            try:
+                                for source_name, fixture in fixtures.items():
+                                    for mode in ("reverse", "pingpong"):
+                                        durations = (2, 10) if source_name.startswith(
+                                            "pvm-webcodecs-") else (10,)
+                                        for duration in durations:
+                                            transcode(page, fixture, mode,
+                                                      f"{runtime}-{source_name}-{mode}-{duration}s",
+                                                      tmp, duration=duration)
+                            finally:
+                                page.close()
+                    finally:
+                        browser.close()
+                    print("[DONE] extended mixed-fixture endurance", flush=True)
         finally:
             server.shutdown()
             server.server_close()
