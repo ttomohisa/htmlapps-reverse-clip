@@ -35,6 +35,13 @@ Existing older-user-reported ST results: 1s and 5s reverse succeeded, including 
 
 ## 2026-10-14 — v0.6 mobile Worker input-probe acceptance (all phone results PENDING)
 
+**Desktop automation verified:** [App CI #38493664787](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38493664787)
+PASS for synthetic Android user agent original WorkerFS (150 frames,
+10.000s MP4) and simulated provider rejection + MEMFS fallback
+(15 frames, 1.000s MP4), with downloaded transport diagnostics,
+no error/remote requests. Actual device and cloud-provider behavior
+remain PENDING.
+
 The Android <=64MiB eager whole-file memory copy has been replaced
 by a bounded preliminary **head/tail 32-byte FileReaderSync Worker**
 probe. Its success selects original File/WORKERFS without eager

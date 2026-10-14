@@ -7,6 +7,9 @@
 
 ## 2026-10-14 — v0.6.0 Android入力の不要なメモリコピーを抑制（実機未受入）
 
+- **CI受入（デスクトップのみ）：** [Actions #38493664787](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38493664787)がすべて成功。Android UA模擬ChromeでWorkerFSの10秒・150フレーム逆再生と、強制Worker読取失敗からMEMFS救済経路での1秒・15フレーム逆再生を、実MP4保存と診断ログのtransport値で検証。ST/MTの従来音声・往復再生等も回帰成功。実Androidの写真/クラウドプロバイダーや物理メモリは未受入。
+
+
 - 従来のAndroid 64MiB以下の動画ファイルを毎回一括コピーする方式に対して、専用Workerで先頭・末尾32バイトのみを`FileReaderSync`で試し、正常な場合は元の`File`をWORKERFSで使う。読み取れない場合は旧64MiB以下のMEMFS救済コピーを残す。失敗時の変換中再試行も維持。
 - Worker probeは最大2.5秒で終了し、キャンセル・ソース差替え・元動画の読込タイムアウトで停止してBlob URLを解放する。入力全体をサーバーへ送らず、IndexedDB等にも保存しない。
 - Nodeでprobe成功・失敗・中断・リソース解放を試験。ChromeのAndroid UA模擬では本当のMP4出力と診断JSONの`workerfs`／`memory`経路をそれぞれ検証する。
