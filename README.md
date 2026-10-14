@@ -29,6 +29,24 @@ node --test tests/feasibility/native-reverse.test.mjs
 
 This optional native test is not required by the standalone app. Android real-device export has been user-confirmed, but repeat-run memory tests, longer clips, standard 720p/1080p output and direct `file://` remain pending. The original cross-platform G1 is not complete; iPhone Safari testing is explicitly deferred.
 
+## Android input transport (v0.6.0 experimental)
+
+For selected videos up to 64 MiB, the app first checks **only the first
+and last 32 bytes** using a disposable local Worker with FileReaderSync.
+If this succeeds, the original File is passed directly to FFmpeg
+WORKERFS—no full-file `arrayBuffer()` copy is performed at selection.
+If the Worker cannot read that provider File, the established **<=64MiB
+in-memory fallback** remains available. Large files are not cloned as
+a fallback. A Worker probe succeeding does not guarantee that a cloud/
+photo picker will still be readable when conversion starts; the existing
+conversion-time read-error retry remains.
+
+The probe has a short timeout and is canceled on source replacement.
+It sends no file contents to servers and does not save source data in
+browser storage. **This is not a claim of fully copy-free input or
+Android phone acceptance**; the fallback still copies small files into
+memory. See [G2](docs/feasibility/G2.md).
+
 ## Privacy
 
 The diagnostic browser page uses an object URL to preview the selected local video and does not upload it. `connect-src 'none'` blocks runtime network connections. Diagnostic JSON records browser capability and media characteristics, **not media contents or filename**, and is saved only when you select Download.

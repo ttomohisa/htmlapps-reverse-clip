@@ -1237,9 +1237,12 @@
         audioCodec: null, audioInspectionError: null,
         audioInspectController: null, audioInspectRunner: null,
         probe: null, seek: null, note: null, validRange: false, conversion: null,
-        copiedInput: null, inputPreparePromise: null, inputTransport: 'workerfs', inputPrepareError: null };
-      // On mobile, materialize only small selected files before their picker/provider
-      // grants become inaccessible in WORKERFS/FileReaderSync. Avoid OOM for large files.
+        copiedInput: null, inputPreparePromise: null, inputProbeController: null,
+        inputTransport: 'workerfs', inputPrepareError: null };
+      // Mobile input-provider failures may require a bounded in-memory
+      // fallback. Probe tiny Worker reads first to avoid eagerly copying
+      // ordinary local files. Keep the existing fallback for providers that
+      // reject FileReaderSync; it still needs real Android G2 acceptance.
       const INPUT_MEMORY_LIMIT = 64 * 1024 * 1024;
       const MOBILE_INPUT = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
         (navigator.userAgentData?.mobile === true);
@@ -1278,6 +1281,8 @@
       }
       function releaseSource() {
         previewSelectionActive=false;
+        if(state.inputProbeController)state.inputProbeController.abort();
+        state.inputProbeController=null;
         resetConversion();
         if(state.audioInspectController)state.audioInspectController.abort();
         state.audioInspectController=null;
@@ -1323,6 +1328,8 @@
       }
       function failSource(errorKey, generation = state.generation) {
         if (generation !== state.generation || state.sourcePhase !== 'inspecting') return;
+        if(state.inputProbeController)state.inputProbeController.abort();
+        state.inputProbeController=null;
         // Clear the object URL and selected File before any pending async
         // provider read can resolve. This also invalidates stale decoder events.
         state.validRange = false;
@@ -1609,11 +1616,10 @@
       function sourceIsCurrent(file, generation) {
         return generation === state.generation && file === state.file;
       }
-      // An Android picker can return a File whose original provider handle
-      // later refuses synchronous reads from a Worker. File.arrayBuffer() is
-      // initiated immediately, then a fresh in-memory Blob is used through MEMFS.
-      // The byte limit is deliberate: copying a large input would defeat
-      // WORKERFS's low-memory design, especially on phones.
+      // An Android picker can supply a File that refuses Worker FileReaderSync
+      // (or loses provider permissions later). Copy only as a bounded fallback
+      // when a tiny Worker access check fails, or when conversion encounters
+      // a genuine WORKERFS read error. That is NOT a fully copy-free G2 path.
       async function copySelectedFile(file, generation) {
         if (file.size > INPUT_MEMORY_LIMIT)
           throw new RangeError('Selected file exceeds in-memory input limit.');
@@ -1640,8 +1646,8 @@
       async function inspectSourceBlob(blob, file, generation) {
         try {
           // Never read/copy the entire original file just to check its header.
-          // Mobile <=64MiB has already been copied once for WORKERFS recovery;
-          // sniff the detached Blob rather than racing the photo-provider File.
+          // In the fallback case, inspect the detached local Blob; on a
+          // successful Worker probe, inspect only 32 bytes of the original.
           const header = new Uint8Array(await blob.slice(0, 32).arrayBuffer());
           if (!sourceIsCurrent(file, generation) || state.sourcePhase !== 'inspecting') return;
           if (!plausibleVideoContainer(header)) {
@@ -1663,23 +1669,73 @@
         video.src = state.url;
         video.load();
       }
+      // Probe two tiny ranges before the original File is handed to the
+      // media decoder. WorkerFS internally relies on FileReaderSync and may
+      // fail for a photo/cloud provider even if <video> can preview it.
+      // This check transfers only a structured-cloned File handle; never a
+      // whole-file ArrayBuffer. It is a feasibility hint, not a guarantee
+      // the provider remains readable for the entire export.
+      function probeMobileWorkerRead(file, signal) {
+        if(signal?.aborted || typeof Worker!=='function')return Promise.resolve(false);
+        return new Promise(resolve => {
+          let worker=null,url=null,timer=0,settled=false;
+          const abort=()=>finish(false);
+          function finish(ok) {
+            if(settled)return;
+            settled=true;
+            clearTimeout(timer);
+            signal?.removeEventListener('abort',abort);
+            if(worker)worker.terminate();
+            if(url)URL.revokeObjectURL(url);
+            resolve(Boolean(ok));
+          }
+          try {
+            const script=`self.onmessage=e=>{try{
+              const file=e.data, reader=new FileReaderSync();
+              const head=reader.readAsArrayBuffer(file.slice(0,32));
+              const tail=reader.readAsArrayBuffer(file.slice(Math.max(0,file.size-32),file.size));
+              self.postMessage({ok:head.byteLength>0&&tail.byteLength>0});
+            }catch(_){self.postMessage({ok:false});}}`;
+            url=URL.createObjectURL(new Blob([script],{type:'text/javascript'}));
+            worker=new Worker(url);
+            worker.onmessage=e=>finish(e.data?.ok===true);
+            worker.onerror=()=>finish(false);
+            worker.onmessageerror=()=>finish(false);
+            signal?.addEventListener('abort',abort,{once:true});
+            timer=setTimeout(()=>finish(false),2500);
+            if(signal?.aborted){finish(false);return;}
+            worker.postMessage(file);
+          }catch(_){finish(false);}
+        });
+      }
       function prepareMobileInput(file) {
         if (!MOBILE_INPUT || file.size > INPUT_MEMORY_LIMIT) return false;
-        const generation = state.generation;
-        state.inputTransport = 'preparing';
-        // Do not decode the original provider File in <video> in parallel with
-        // file.arrayBuffer(): concurrent reads can race permissions/locks.
-        // Both preview and FFmpeg use the same detached in-memory Blob.
-        state.inputPreparePromise = copySelectedFile(file, generation).then(copy => {
-          if (!copy || !sourceIsCurrent(file, generation) || state.sourcePhase !== 'inspecting') return;
-          state.copiedInput = copy;
-          state.inputTransport = 'memory';
-          return inspectSourceBlob(copy, file, generation);
+        const generation=state.generation, controller=new AbortController();
+        state.inputProbeController=controller;
+        state.inputTransport='preparing';
+        // Do not preview and read provider-backed files concurrently.
+        // Most readable local Files can use WORKERFS directly, preserving
+        // its zero-copy input transport. Unsupported providers retain the
+        // previous <=64MiB detached-Blob fallback, but only when necessary.
+        state.inputPreparePromise=probeMobileWorkerRead(file,controller.signal).then(async canRead => {
+          if(!sourceIsCurrent(file,generation)||state.sourcePhase!=='inspecting')return;
+          if(canRead){
+            state.inputTransport='workerfs';
+            return inspectSourceBlob(file,file,generation);
+          }
+          if(controller.signal.aborted)return;
+          const copy=await copySelectedFile(file,generation);
+          if(!copy||!sourceIsCurrent(file,generation)||state.sourcePhase!=='inspecting')return;
+          state.copiedInput=copy;
+          state.inputTransport='memory';
+          return inspectSourceBlob(copy,file,generation);
         }).catch(error => {
-          if (!sourceIsCurrent(file, generation) || state.sourcePhase !== 'inspecting') return;
-          state.inputPrepareError = String(error?.message || error);
-          state.inputTransport = 'unreadable';
-          failSource('reverseSourceUnreadable', generation);
+          if(!sourceIsCurrent(file,generation)||state.sourcePhase!=='inspecting')return;
+          state.inputPrepareError=String(error?.message||error);
+          state.inputTransport='unreadable';
+          failSource('reverseSourceUnreadable',generation);
+        }).finally(()=>{
+          if(state.inputProbeController===controller)state.inputProbeController=null;
         });
         return true;
       }

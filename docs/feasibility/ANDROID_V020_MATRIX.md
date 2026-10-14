@@ -32,3 +32,29 @@ Existing older-user-reported ST results: 1s and 5s reverse succeeded, including 
 | — | — | — | — | — | PENDING | — |
 
 **Release policy:** keep this matrix honest; do not mark `PASS` based on synthetic browser tests. iPhone physical testing is deferred by the owner, and Browser Kitty integration remains explicitly postponed until the app is complete.
+
+## 2026-10-14 — v0.6 mobile Worker input-probe acceptance (all phone results PENDING)
+
+The Android <=64MiB eager whole-file memory copy has been replaced
+by a bounded preliminary **head/tail 32-byte FileReaderSync Worker**
+probe. Its success selects original File/WORKERFS without eager
+copy; failure retains the old <=64MiB MEMFS fallback. This may reduce
+allocations on normal local files, but **does not prove** compatibility
+with photo-picker providers which revoke file access after preview.
+The strict no-full-source-copy G2 condition is still OPEN.
+
+Physical Android cases still required (ST and isolated MT separately):
+- Choose a normal locally saved camera MP4 <=64MiB, record diagnostics
+  `source.transport=workerfs`, preview, and real 5s Reverse/Ping-pong export.
+- Choose an MP4 from Google Photos/Files/cloud provider <=64MiB;
+  verify metadata, preview, real conversion, transport from diagnostic
+  `memory` or `memory-fallback`, and usable error/recovery if unavailable.
+- For files >64MiB to 1GiB, verify no full `file.arrayBuffer()` copy and
+  readable WORKERFS; fail visibly rather than cloning large media.
+- Cancel while probe/provider read is pending, switch sources, retry,
+  background/resume tab and confirm no old file appears.
+- Repeat high-resolution 720p10s / 1080p5s with audio and log time,
+  crash/tab restart, OS/browser/device, and actual RAM source.
+
+Desktop Chrome with a simulated Android UA is a regression test only,
+not actual Android picker/file-provider acceptance.

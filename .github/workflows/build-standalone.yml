@@ -52,7 +52,7 @@ jobs:
 
       - name: Reverse timeline tests
         shell: pwsh
-        run: node --test ./tests/feasibility/reverse-chunk-plan.test.mjs ./tests/feasibility/source-preflight.test.mjs ./tests/feasibility/v030-ui.test.mjs ./tests/feasibility/pingpong-plan.test.mjs ./tests/feasibility/audio-mode.test.mjs
+        run: node --test ./tests/feasibility/reverse-chunk-plan.test.mjs ./tests/feasibility/source-preflight.test.mjs ./tests/feasibility/mobile-worker-probe.test.mjs ./tests/feasibility/v030-ui.test.mjs ./tests/feasibility/pingpong-plan.test.mjs ./tests/feasibility/audio-mode.test.mjs
 
       - name: Validate PowerShell syntax and encoding
         shell: powershell

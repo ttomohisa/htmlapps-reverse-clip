@@ -111,13 +111,13 @@ def main():
                     options["executable_path"] = os.environ["CHROMIUM_EXE"]
                 browser = pw.chromium.launch(**options)
                 try:
-                    # The third case exercises the 64 MiB in-memory input
-                    # transport with a simulated Android UA. It is explicitly
-                    # NOT physical-device or Android Chrome evidence.
+                    # Simulate both Android local-file WorkerFS and provider
+                    # fallback transports. This is NOT a physical phone test.
                     cases = [
                         ("single-thread", "index.html", None),
                         ("multi-thread", "index.mt.html", None),
                         ("st-mobile-ua", "index.html", ANDROID_UA),
+                        ("st-mobile-provider-fallback", "index.html", ANDROID_UA),
                     ]
                     for name, html_name, user_agent in cases:
                         opts = {"viewport": {"width": 390, "height": 800},
@@ -125,6 +125,22 @@ def main():
                         if user_agent:
                             opts["user_agent"] = user_agent
                         context = browser.new_context(**opts)
+                        if name == "st-mobile-provider-fallback":
+                            # Force only the tiny FileReaderSync probe to fail.
+                            # The actual FFmpeg runner Worker runs normally,
+                            # so an exported MP4 also tests the MEMFS fallback.
+                            context.add_init_script(script="""(() => {
+                              const NativeWorker = window.Worker;
+                              window.Worker = class SimulatedProviderWorker extends NativeWorker {
+                                postMessage(data, transfer) {
+                                  if (data instanceof File) {
+                                    queueMicrotask(() => this.onmessage?.({data:{ok:false}}));
+                                    return;
+                                  }
+                                  return super.postMessage(data, transfer);
+                                }
+                              };
+                            })();""")
                         page = context.new_page()
                         errors = []
                         external = []
@@ -143,7 +159,10 @@ def main():
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
 
-                        first = test_conversion(page, temp, f"{name}-10s", 0, 10, 150)
+                        initial_frames = 15 if name == "st-mobile-provider-fallback" else 150
+                        initial_seconds = 1 if name == "st-mobile-provider-fallback" else 10
+                        first = test_conversion(page, temp, f"{name}-first",
+                                                0, initial_seconds, initial_frames)
                         if name in ("single-thread", "multi-thread"):
                             # Both runtime variants must successfully decode,
                             # re-encode and save a second 10s job in the SAME tab.
@@ -175,10 +194,23 @@ def main():
                             assert page.locator("#resultArea").is_hidden()
                             assert not page.locator("#saveReverseButton").is_visible()
                         else:
-                            # Android-UA is only a transport regression case.
-                            # The real device's memory/performance remains unknown.
+                            # The app's own downloaded diagnostic must report
+                            # the real transport selected by the input handler.
                             assert page.evaluate("""() =>
                                 navigator.userAgent.includes('Android')""")
+                            with page.expect_download(timeout=10000) as diagnostic:
+                                page.locator("#downloadReportButton").click()
+                            report_path = temp / f"{name}-diagnostic.json"
+                            diagnostic.value.save_as(report_path)
+                            raw_report = report_path.read_text(encoding="utf-8")
+                            report = json.loads(raw_report)
+                            expected_transport = ("memory" if name.endswith("provider-fallback")
+                                                  else "workerfs")
+                            assert report["source"]["transport"] == expected_transport, report["source"]
+                            assert report["reverseConversion"]["inputTransport"] == expected_transport, report["reverseConversion"]
+                            assert "15-seconds" not in raw_report
+                            print(f"[PASS] simulated Android {name}: {expected_transport} "
+                                  "real MP4, no source filename", flush=True)
 
                         assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
                         assert not errors, (name, errors)

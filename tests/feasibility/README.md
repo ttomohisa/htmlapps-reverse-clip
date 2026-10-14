@@ -88,3 +88,21 @@ The default is `false`. Normal ST/MT real browser regressions continue to
 run on PRs. For broader 3-repeat, audio or cancel/retry cases run this
 script against a sufficiently provisioned locally hosted, isolated browser,
 and record machine/OS/browser, timings and proper memory methodology.
+
+## v0.6 Android WorkerFS probe / photo-provider memory fallback
+
+`node --test tests/feasibility/mobile-worker-probe.test.mjs`
+executes the app's actual tiny Worker probe in a controlled harness,
+checking successful zero-eager-copy decision, abort/timeout safety,
+failure cleanup, and the decision to keep the existing <=64MiB fallback.
+
+`browser-video-smoke.py` also runs with an Android-like user agent
+under **desktop Chrome**. It now makes real MP4s for both a normal
+local File (WorkerFS selected after two 32-byte reads) and a
+synthetically failed Worker provider probe (the bounded old MEMFS
+fallback), checking the downloaded diagnostic JSON transport.
+
+Neither is a physical Android/Google Photos/Files provider test.
+In particular, success in the initial Worker read check does **not**
+guarantee that the File remains accessible after media preview. The
+full-copy prohibition required by Gate G2 remains OPEN for the fallback.
