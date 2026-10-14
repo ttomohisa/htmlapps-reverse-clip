@@ -40,11 +40,18 @@ def create_fixture(tmp: Path, name: str) -> Path:
     result = tmp / (name + ".mp4")
     base = [
         "ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-threads", "2",
-        "-f", "lavfi", "-i", "testsrc2=size=320x180:rate=30000/1001:duration=37.89",
+        "-f", "lavfi", "-i",
+        "testsrc2=size=320x180:rate=" +
+        ("12" if name == "low-12fps" else "30000/1001") + ":duration=37.89",
     ]
     if name == "irregular-vfr":
         # Drop 1 of 5 source frames, preserving actual timestamps.
         base += ["-vf", "select='not(eq(mod(n,5),0))'", "-fps_mode", "vfr"]
+    if name == "boundary-gap-vfr":
+        # A camera/recorder that emits no frames for half a second near
+        # the 2s chunk boundary; the ST path has processed this locally.
+        # Decoder frame threading and filter EOF must not truncate output.
+        base += ["-vf", "select='not(between(t,1.53,2.04))'", "-fps_mode", "vfr"]
     base += [
         "-map", "0:v:0", "-c:v", "libx264", "-preset", "veryfast",
         "-bf", "3", "-g", "60", "-crf", "29", "-pix_fmt", "yuv420p",
@@ -105,7 +112,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="reverse-mt-frames-") as temp:
         tmp = Path(temp)
         fixtures = {name: create_fixture(tmp, name)
-                    for name in ("cfr-2997", "irregular-vfr")}
+                    for name in ("cfr-2997", "irregular-vfr", "low-12fps", "boundary-gap-vfr")}
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         base = f"http://127.0.0.1:{server.server_port}"
