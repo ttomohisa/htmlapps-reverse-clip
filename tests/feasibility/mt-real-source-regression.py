@@ -189,9 +189,16 @@ def main():
                             assert isolated == (runtime == "MT"), (runtime, isolated)
                             for source_name, fixture in fixtures.items():
                                 for mode in ("reverse", "pingpong"):
-                                    transcode(page, fixture, mode,
-                                              f"{runtime}-{source_name}-{mode}", tmp,
-                                              duration=2 if source_name.startswith("pvm-webcodecs-") else 10)
+                                    # The exact sparse WebCodecs fixture must
+                                    # handle BOTH a 2s chunk and all 10s
+                                    # where several intervals contain no new
+                                    # source frame (but the previous frame's
+                                    # declared display duration covers them).
+                                    durations=(2,10) if source_name.startswith("pvm-webcodecs-") else (10,)
+                                    for duration in durations:
+                                        transcode(page, fixture, mode,
+                                                  f"{runtime}-{source_name}-{mode}-{duration}s",
+                                                  tmp, duration=duration)
                         finally:
                             page.close()
                 finally:
