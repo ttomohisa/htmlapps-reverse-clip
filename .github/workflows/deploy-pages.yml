@@ -1,13 +1,26 @@
-name: Deploy standalone app to GitHub Pages
+name: Deploy Reverse Clip experimental ST/MT to GitHub Pages
 
+# Publication-only change: the app's v0.6 work stays in its Draft PR.
+# Deploy an immutable, SHA-verified CI output rather than rebuilding an
+# unfinished branch or depending on an expiring Builder WASM artifact.
 on:
-  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-pages.yml"
+      - "docs/PAGES_MT_TEST.md"
+      - "tests/verify-published-pages.py"
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy-pages.yml"
+      - "docs/PAGES_MT_TEST.md"
+      - "tests/verify-published-pages.py"
+  workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 
@@ -16,87 +29,133 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: windows-latest
-    timeout-minutes: 20
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
     outputs:
-      pages-ready: ${{ steps.pages-status.outputs.ready }}
+      pages_ready: ${{ steps.pages-status.outputs.ready }}
     steps:
-      - name: Checkout repository
+      - name: Checkout deployment code
         uses: actions/checkout@v6
 
-      - name: Validate PowerShell syntax and encoding
-        shell: powershell
-        run: .\scripts\check-powershell-syntax.ps1
+      - name: Download immutable ST/MT Pages files from verified Reverse Clip CI
+        uses: actions/download-artifact@v4
+        with:
+          repository: ttomohisa/htmlapps-reverse-clip
+          run-id: 38498330193
+          name: standalone-html-ebebaa12f85f8355cf47f0a79c04135d63860b58
+          github-token: ${{ github.token }}
+          path: .
 
-      - name: Build and verify standalone HTML
-        shell: pwsh
-        run: ./scripts/check-repository.ps1
+      - name: Fail closed on wrong artifact bytes or wrong ST/MT layout
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          expected = {
+              "pages-dist/index.html": "96cbc5f7d08c4ae6c30682ce2d6b9d0d31fa233f405a9419f58802b2f7c23a5f",
+              "pages-dist/mt/index.html": "9e5349eab193d09babd251d42b1aa344d32feedcd4961529c965f0ad201ce8b4",
+              "pages-dist/mt/coi-serviceworker.js": "e97bbac6017322d48aa54a5bc7ce473c725a4b7376ff245002e0ba71c3dcdd7e",
+          }
+          for file, digest in expected.items():
+              path = Path(file)
+              assert path.is_file(), file
+              actual = hashlib.sha256(path.read_bytes()).hexdigest()
+              assert actual == digest, (file, digest, actual)
+              print("[PASS] Pinned distribution", file, actual)
+          st = Path("pages-dist/index.html").read_text("utf-8")
+          mt = Path("pages-dist/mt/index.html").read_text("utf-8")
+          assert 'const RUNTIME_VARIANT = "single-thread";' in st
+          assert 'const RUNTIME_VARIANT = "multi-thread";' in mt
+          assert "coi-serviceworker.js" not in st
+          assert 'sw.src = "./coi-serviceworker.js";' in mt
+          assert "window.coi" in mt
+          assert "connect-src 'none'" in st and "connect-src 'none'" in mt
+          assert "v0.6.0" in st and "v0.6.0" in mt
+          Path("pages-dist/.nojekyll").write_bytes(b"")
+          print("[PASS] ST root and service-worker-isolated MT /mt/ layout")
+          PY
 
-      - name: Check whether GitHub Pages is enabled
+      - name: Check whether repository GitHub Pages is enabled
         id: pages-status
-        shell: pwsh
+        if: github.event_name != 'pull_request'
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh api "repos/$env:GITHUB_REPOSITORY/pages" --silent 2>$null
+          if gh api "repos/$GITHUB_REPOSITORY/pages" --silent >/dev/null 2>&1; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages enabled: continuing deployment."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ### GitHub Pages needs one-time setup
 
-          if ($LASTEXITCODE -eq 0) {
-            "ready=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            Write-Host "GitHub Pages is enabled. The deployment will continue."
-            exit 0
-          }
+          The pinned ST/MT app files and the /mt/ COI service worker were
+          verified, but the repository GitHub Pages API is unavailable.
 
-          "ready=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          1. Open **Settings → Pages** in ttomohisa/htmlapps-reverse-clip.
+          2. Under **Build and deployment**, set **Source: GitHub Actions**.
+          3. In **Actions**, re-run **Deploy Reverse Clip experimental ST/MT to GitHub Pages**.
 
-          @"
-          ## GitHub Pages is not enabled yet
-
-          The standalone HTML was built successfully, but deployment was skipped.
-
-          1. Open **Settings → Pages** in this repository.
-          2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-          3. Open **Actions**, select this workflow, and choose **Re-run all jobs**.
-
-          This one-time repository setting cannot be enabled with the default `GITHUB_TOKEN`.
-          "@ | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
-
-          Write-Warning "GitHub Pages is not enabled. Deployment is skipped; see the workflow summary for setup steps."
-          exit 0
+          No source app PR or Builder PR needs to be merged to do this.
+          EOF
+            echo "::warning::GitHub Pages not enabled; skip upload/deploy until Pages source is GitHub Actions."
+          fi
 
       - name: Configure GitHub Pages
         if: steps.pages-status.outputs.ready == 'true'
         uses: actions/configure-pages@v6
 
-      - name: Upload GitHub Pages artifact
+      - name: Upload source-verified ST/MT GitHub Pages artifact
         if: steps.pages-status.outputs.ready == 'true'
         uses: actions/upload-pages-artifact@v5
         with:
-          path: dist
-
-      - name: Upload standalone build artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: standalone-html-${{ github.sha }}
-          path: |
-            *.html
-            dist/index.html
-            dist/index.self-extract.html
-            dist/dependency-manifest.json
-            dist/self-extract-manifest.json
-            dist/.nojekyll
-          if-no-files-found: error
-          retention-days: 14
+          path: pages-dist
 
   deploy:
-    if: needs.build.outputs.pages-ready == 'true'
-    needs: build
+    needs: prepare
+    if: github.event_name != 'pull_request' && needs.prepare.outputs.pages_ready == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
+      - name: Deploy pinned experimental app to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+  verify-live-mt:
+    name: Confirm real published /mt/ isolation and MP4 export
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Pages verifier
+        uses: actions/checkout@v6
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2.2.0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install test dependencies
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          command -v ffmpeg && command -v ffprobe || {
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          }
+          python -m py_compile tests/verify-published-pages.py
+      - name: Verify real deployed Pages MT in Chrome
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+          PAGES_URL: ${{ needs.deploy.outputs.page_url }}
+        run: python tests/verify-published-pages.py
