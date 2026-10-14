@@ -4,16 +4,21 @@
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
-## Known MT regression (2026-10-14, investigation active)
+## Low-frame-rate MT correction (2026-10-15, device acceptance pending)
 
-The owner reported that experimental GitHub Pages ST exported their video,
-but **MT failed** with `Reverse frame count mismatch: expected=30 actual=24`
-in `video-segments`. It is not yet established whether this is caused
-by the MT decoding pipeline, exact source timestamps/codec or segment
-boundary logic. The app correctly refuses to save an incomplete MP4;
-please use **ST explicitly** for affected files while the MT bug
-is investigated. No automatic or hidden ST fallback is provided.
-See [G2](docs/feasibility/G2.md).
+The owner's H.264 High 37.806s MP4 contained only ~39 video samples
+with long static presentation spans. Older MT returned `30 expected /
+24 actual`. Builder 1.10.6 now normalizes the source timeline to
+15fps **before** trimming exact frame windows and adds explicit MT
+pthread pool teardown. [Real Chrome CI #38618083612](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38618083612)
+passes fresh-browser ST/MT low-FPS conversions and **three consecutive
+10s MT Ping-pong exports on the same page**. Frame-count checks
+remain strict, and no automatic MT-to-ST fallback is introduced.
+
+The **owner's exact source video and physical Android device are
+not yet retested**. Pages binary-refresh [PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)
+will deliver the new isolated-MT experiment only once merged by the
+owner and the live deployment tests pass. See [G2](docs/feasibility/G2.md).
 
 ## Goal
 

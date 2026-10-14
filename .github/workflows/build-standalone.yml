@@ -146,13 +146,6 @@ jobs:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/mt-real-source-regression.py
 
-      # ONE-TIME v0.6.0 gate check. Revert this routine CI stress step after
-      # recording the result; keep --phase=repeat opt-in in the harness.
-      - name: Check three 10s sparse-source MT exports without page reload
-        shell: bash
-        env:
-          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
-        run: python tests/feasibility/mt-real-source-regression.py --phase repeat
 
       - name: Verify real 0.5–10s ping-pong MP4 and no duplicate turn/loop frames (ST and MT)
         shell: bash

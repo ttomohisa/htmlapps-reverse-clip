@@ -5,6 +5,14 @@
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
 
+## 2026-10-15 — 低fps動画の修正とMTの実Chrome 3連続検証が成功（G2実機は未受入）
+
+- 元動画と同様の **H.264 High／1920×1080／39フレーム／37.806089秒／平均約1.03fps** のスライド型VFR合成ファイルで旧版の出力フレーム不足を再現した。Builder 1.10.6で元動画の表示時刻を15fpsに正規化してから区間をフレーム境界で切り出し、厳密な出力フレーム数検査は維持する。MTのpthread Workerを区間終了後に解放する処理も追加した。
+- [アプリ実Chrome CI #38618083612](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38618083612) が全ジョブ成功。新しいChromeでのST／MT変換、同一MTページからの**10秒往復再生×3回**と保存・フレーム数照合に成功。通常の動画・音声・キャンセル・オフライン検証も成功した。
+- さらに多数の異なる動画を同一Chromeプロセスで変換した場合の負荷検証は別途残るため、テストを `mt-real-source-regression.py --phase isolated/repeat/extended` に分けた。通常CIから一度きりの3連続高負荷実行は外し、必要なときに手動で再実行できる。
+- [Pages公開更新PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4) は開発PR #1／#2をマージせず、SHA固定した1.10.6バイナリだけを公開テスト用に更新する。公開後は実URLから2秒・10秒のスライド型VFR往復再生を確認する。
+- **G2は未合格**。ユーザーの実際のMP4とAndroid実機での3回連続、メモリ・音声・ファイル読み込みの受入が必要。iPhone延期中。対応ソース付きレビュー候補は [Builder #38617100332](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38617100332) で検証済みだが、恒久Releaseと法的レビューは未完了。v0.7.0への移行は保留。
+
 ## 2026-10-14 — 実機MTの出力フレーム数不一致（G2ブロック中）
 
 - ユーザーからGitHub Pagesの**ST成功・MT失敗**報告。MTの実エラーは `Stage: video-segments`、`Reverse frame count mismatch: expected=30 actual=24`。元動画の表示情報は長さ37.89秒、396kb/s。MTの2秒・15fps区間で6フレーム不足している。原因はまだ未確定で、メモリ不足と決めつけない。

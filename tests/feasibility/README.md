@@ -125,3 +125,27 @@ runtime, and populates opt-in JSON diagnostics with exact
 expected/actual frame counts if FFmpeg logged the standard mismatch.
 Do **not** disable the frame-count check or silently reroute MT to ST.
 This is an investigation, not yet a reproduction of the exact owner file.
+
+## Sparse presentation-video regression: isolated / repeat / extended
+
+`tests/feasibility/mt-real-source-regression.py` synthesizes a
+39-sample, 37.806089-second H.264 High presentation MP4 with long
+explicit ISO-BMFF STTS display durations. It reproduces the old
+28/9 return chunk regression, even though typical 15/30fps footage
+passes. Current exact Builder 1.10.6 ST/MT candidate normalizes
+original VFR to target FPS before bounding the reverse sample window.
+
+- `--phase isolated` (default, regular CI): short/10s ST+MT
+  correctness, one fresh Chrome process per case to avoid unrelated
+  experimental fixture buildup.
+- `--phase repeat` (manual, demonstrated PASS in app CI #38618083612):
+  one isolated Chrome MT page, 3 consecutive 10s Ping-pong exports;
+  saves/decodes and checks **298 frames per export**.
+- `--phase extended` (manual only, resource-intensive): previous
+  mixed-format ST/MT source matrix in one Chrome process. It previously
+  exhausted WebAssembly memory after dozens of conversions; this
+  remains a separate endurance investigation.
+
+CI no longer automatically runs `--phase repeat` on every PR push
+to avoid unnecessary Actions usage. None of these desktop cases alone
+constitutes real Android G2 performance/heap acceptance.

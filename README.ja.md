@@ -4,9 +4,11 @@
 
 [製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [G2受入状況](docs/feasibility/G2.md) · [MTの実測](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md) · [English README](README.md)
 
-## MT版で確認されている不具合（2026-10-14、調査中）
+## MT版の低fps動画への修正（2026-10-15、実機受入待ち）
 
-GitHub Pagesの実機試験で、**ST版は成功した一方、MT版は区間の30フレーム予定に対して24フレームしか出力できず失敗**しました。動画の種類やタイムスタンプとMT処理の組み合わせなど、原因は調査中です。不完全なMP4を保存させないフレーム数検査は維持します。問題が解決するまで、該当動画では**ST版を明示的に利用**してください。MTと偽ってSTへ自動切替する機能はありません。詳細は[G2](docs/feasibility/G2.md)。
+元動画は約38秒に39フレームのH.264 Highスライド型動画で、旧MT版は30枚予定に対して24枚しか出力できませんでした。**Builder 1.10.6**で、時間軸を15fpsへ正規化してから区間を切り出すように修正しました。新ChromeでのST・MT検証と同一MTページでの10秒往復再生3回は[CI #38618083612](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38618083612)で成功しています。
+
+ただし**お使いの元動画／Android実機での修正確認はまだ行っていません**。修正版のGitHub Pages公開用[PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)はユーザーによるマージ待ちで、公開済みMTページはそれまで旧版です。フレーム数の厳密な検査は維持し、MTからSTへの自動切替はしません。詳細は[G2](docs/feasibility/G2.md)。
 
 ## 目的
 
