@@ -19,6 +19,7 @@ import subprocess
 import tempfile
 import threading
 from playwright.sync_api import sync_playwright
+from presentation_vfr_fixture import make_presentation_vfr_fixture
 
 ROOT = Path(__file__).resolve().parents[2]
 DIST = ROOT / "dist"
@@ -97,18 +98,20 @@ def eval_fraction(text: str) -> float:
     return float(Fraction(text))
 
 
-def transcode(page, source: Path, mode: str, label: str, temporary: Path):
+def transcode(page, source: Path, mode: str, label: str, temporary: Path,
+             duration: float = 10):
     page.locator("#sourceInput").set_input_files(str(source))
     page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
     page.locator("#qualityInput").select_option(
-        "1280" if "sparse-slide-1080" in label else "360")
+        "1280" if "sparse-slide-1080" in label or "pvm-webcodecs-1080" in label
+        else "360")
     page.locator("#modeInput").select_option(mode)
     # Audio is already "none" by default; silent files intentionally disable
     # its selector, so Playwright must not wait for it to become enabled.
     assert page.locator("#audioInput").input_value() == "none"
     page.locator("#rangeStart").fill("0")
     page.locator("#rangeStart").dispatch_event("change")
-    page.locator("#rangeEnd").fill("10")
+    page.locator("#rangeEnd").fill(str(duration))
     page.locator("#rangeEnd").dispatch_event("change")
     assert page.locator("#reverseButton").is_enabled(), (
         label, page.locator("#rangeNotice").inner_text(),
@@ -133,7 +136,8 @@ def transcode(page, source: Path, mode: str, label: str, temporary: Path):
         "-of", "json", str(target)
     ], timeout=30))
     video = [s for s in metadata["streams"] if s.get("codec_type") == "video"]
-    expected = 298 if mode == "pingpong" else 150
+    expected_source_frames = round(duration * 15)
+    expected = 2*expected_source_frames-2 if mode == "pingpong" else expected_source_frames
     assert len(video) == 1 and video[0]["codec_name"] == "h264", metadata
     assert int(video[0]["nb_frames"]) == expected, metadata
     assert abs(float(metadata["format"]["duration"]) - expected / 15) < .08, metadata
@@ -150,6 +154,20 @@ def main():
         fixtures = {name: create_fixture(tmp, name)
                     for name in ("cfr-2997", "irregular-vfr", "low-12fps", "boundary-gap-vfr",
                                  "sparse-slide-320", "sparse-slide-1080")}
+        for size, label in (("320x180", "pvm-webcodecs-320"),
+                            ("1920x1080", "pvm-webcodecs-1080")):
+            f=make_presentation_vfr_fixture(tmp,size)
+            info=json.loads(subprocess.check_output([
+                "ffprobe","-v","error","-select_streams","v:0",
+                "-show_entries","stream=codec_name,profile,time_base,nb_frames,"
+                "avg_frame_rate,duration","-of","json",str(f)],
+                timeout=30))["streams"][0]
+            assert info["codec_name"]=="h264" and info["profile"]=="High",info
+            assert info["time_base"]=="1/90000" and int(info["nb_frames"])==39,info
+            assert abs(float(info["duration"])-37.806089)<0.00002,info
+            assert abs(eval_fraction(info["avg_frame_rate"])-877500/850637)<0.00001,info
+            print("[MATCHED WEBCodecs TIMELINE]",label,info,flush=True)
+            fixtures[label]=f
         server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         base = f"http://127.0.0.1:{server.server_port}"
@@ -172,7 +190,8 @@ def main():
                             for source_name, fixture in fixtures.items():
                                 for mode in ("reverse", "pingpong"):
                                     transcode(page, fixture, mode,
-                                              f"{runtime}-{source_name}-{mode}", tmp)
+                                              f"{runtime}-{source_name}-{mode}", tmp,
+                                              duration=2 if source_name.startswith("pvm-webcodecs-") else 10)
                         finally:
                             page.close()
                 finally:
