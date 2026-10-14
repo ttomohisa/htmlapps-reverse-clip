@@ -3,28 +3,28 @@
   "kind": "experimental-dual-github-actions-artifact",
   "status": "temporary-not-release",
   "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
-  "builderCommit": "d1feee021aae6feb53eab1084664123f602c2085",
-  "workflowRunId": 38357268611,
-  "artifactId": 11794061552,
+  "builderCommit": "bdeb3bc55389fe17577c04752cb83f92703f306d",
+  "workflowRunId": 38529286664,
+  "artifactId": 11877088890,
   "profile": "video-reverse",
-  "builderVersion": "1.10.4",
+  "builderVersion": "1.10.5",
   "wasmLicense": "GPL-2.0-or-later",
   "browserRuntimeSha256": "34c29442c74d9d178666d9788f5ba9f74bb1c56e2052dc0f94dc417ccb427d43",
   "variants": {
     "single-thread": {
       "assets": {
         "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
-        "ffmpeg.wasm": "4b8d462196b50dd7bbe51e1b329df3d53afa01022ebf5eea2ca23a65c3386b51"
+        "ffmpeg.wasm": "b12598c46d9e98f4f46f5c510476261b9d226ae0de01dc8bd8859d9eeacb108b"
       }
     },
     "multi-thread": {
       "assets": {
         "ffmpeg.js": "e88f95f77ee94acc8df3cef559e48e76cbf78a6175e831d712a471a48d614007",
-        "ffmpeg.wasm": "42ee5317ca6ce2cc139c481bb8de8182f9e1e4315c855718cf307f9d8afb2958"
+        "ffmpeg.wasm": "8a9e45ce28d06d9dfde734d41d9af022d1158798b4967bb1e05ee41c20cd193c"
       }
     }
   },
-  "notes": "v0.5 AAC reverse/ping-pong with ST+MT Builder CI 38357268611 and final ST+MT downloaded MP4/decoded PCM app CI 38358181120 PASS, including mono 0.5s/1s, 5s stereo reverse and 10s stereo ping-pong 298 frames. Fixed chunk 120-frame cap vs finished MP4 960-frame cap, exact frame counts required. Physical Android, audible seams and permanent GPL Release not accepted. EXPIRING Builder Actions artifact 11794061552 expires 2026-10-20.",
+  "notes": "v0.6 PVM sparse-VFR timestamp regression fix: normalize original input timeline to 15fps before trim=start_frame:end_frame and bounded reverse. Builder ST+MT real browser smoke CI 38529286664 PASS, new hash-pinned WASM in temporary artifact 11877088890 (expires 2026-10-21). Old Builder source bundle/artifact was for 1.10.4 and is NOT corresponding source for 1.10.5. App full PVM synthetic regression, mobile acceptance, audio seams and permanent source-complete GPL release remain pending.",
   "features": [
     "pingpong",
     "audio-mux"
