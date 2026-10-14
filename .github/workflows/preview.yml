@@ -27,6 +27,8 @@ jobs:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: windows-latest
     timeout-minutes: 20
+    outputs:
+      preview_url: ${{ steps.preview.outputs.preview_url }}
 
     steps:
       - name: Checkout repository
@@ -188,6 +190,41 @@ jobs:
 
           throw "Preview did not become ready: $lastError"
 
+      - name: Validate live ST/MT response headers before advertising a usable MT Preview
+        if: steps.cloudflare.outputs.configured == 'true'
+        shell: pwsh
+        env:
+          PREVIEW_URL: ${{ steps.preview.outputs.preview_url }}
+        run: |
+          $base = $env:PREVIEW_URL.TrimEnd('/')
+          $st = Invoke-WebRequest -Uri "$base/" -MaximumRedirection 5 -TimeoutSec 30
+          $mt = Invoke-WebRequest -Uri "$base/index.mt.html" -MaximumRedirection 5 -TimeoutSec 30
+          if ($st.StatusCode -ne 200 -or $mt.StatusCode -ne 200) {
+            throw "Preview did not return HTTP 200 for both ST and MT entries."
+          }
+          if ($st.Content -notmatch 'const RUNTIME_VARIANT = "single-thread";') {
+            throw 'Root is not the ST standalone app.'
+          }
+          if ($mt.Content -notmatch 'const RUNTIME_VARIANT = "multi-thread";') {
+            throw 'index.mt.html is not the actual MT standalone app.'
+          }
+          foreach ($header in @(
+            @('Cross-Origin-Opener-Policy','same-origin'),
+            @('Cross-Origin-Embedder-Policy','require-corp'),
+            @('Cross-Origin-Resource-Policy','same-origin')
+          )) {
+            $value = [string]$mt.Headers[$header[0]]
+            if ($value -ne $header[1]) {
+              throw "MT Preview requires $($header[0]): $($header[1]); received '$value'."
+            }
+          }
+          if ($st.Headers['Cross-Origin-Opener-Policy'] -or
+              $st.Headers['Cross-Origin-Embedder-Policy']) {
+            throw 'ST Preview should not receive MT COOP/COEP headers.'
+          }
+          Write-Host "[PASS] Deployed ST root has no isolation; MT page has COOP/COEP/CORP."
+          Write-Host "Verified MT URL: $base/index.mt.html"
+
       - name: Comment Preview URL
         if: steps.cloudflare.outputs.configured == 'true'
         shell: pwsh
@@ -212,3 +249,35 @@ jobs:
             --body $body `
             --edit-last `
             --create-if-none
+
+  verify-live-mt:
+    name: Real deployed Cloudflare MT MP4 (one-time proof)
+    needs: preview
+    if: ${{ needs.preview.outputs.preview_url != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout actual PR sources
+        uses: actions/checkout@v6
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2.2.0
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install lightweight browser test dependencies
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          command -v ffmpeg && command -v ffprobe || {
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          }
+          python -m py_compile tests/feasibility/cloudflare-preview-mt-smoke.py
+      - name: Verify actual deployed MT browser isolation and downloaded MP4
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+          PREVIEW_URL: ${{ needs.preview.outputs.preview_url }}
+        run: python tests/feasibility/cloudflare-preview-mt-smoke.py
