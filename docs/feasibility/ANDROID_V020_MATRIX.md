@@ -1,8 +1,23 @@
 # Reverse Clip v0.2.0 — Android physical-device acceptance matrix
 
-**Status: PENDING REAL-DEVICE VALIDATION.** v0.2.0 App Foundation exists in [Draft PR #2](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/2). Neither passing a Linux Chrome emulator nor using an Android user-agent counts as physical Android proof.
+**Status (2026-10-15): historical v0.2 matrix mostly unaccepted; a targeted later v0.6 regression was USER-REPORTED PASS on real Android.** v0.2.0 App Foundation exists in [Draft PR #2](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/2). Neither passing a Linux Chrome emulator nor using an Android user-agent counts as physical Android proof.
 
 Use the current PR preview's **ST page** and **MT page** (configured with cross-origin isolation). These are temporary PR previews; do not confuse them with unmerged public GitHub Pages. The Builder's current assets are a temporary Actions artifact. Do not merge PRs or import into Browser Kitty solely because this matrix exists.
+
+## 2026-10-15 real Android result — specific v0.6 regression only
+
+Following the merged [experimental Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)
+and [deployed isolated MT Chrome test #38667384368](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38667384368),
+the owner reported that the same original H.264 High,
+1920×1080, 37.806089s, ~1.03fps presentation MP4 that previously
+failed on MT now **succeeds on PC and Android**. Record this as
+**USER-REPORTED PASS for that video and bug**, not as a blanket pass
+for the earlier A20-01 through A20-12 input-state tests, Photos/file
+providers, large files, or the broader Gate G2 720p/1080p/audio
+matrix. Device/Android/browser versions, separate repetition timings
+and transport diagnostics were not supplied. The original
+64MiB provider fallback still makes a full memory copy.
+iPhone tests remain deferred.
 
 ## Test procedure
 

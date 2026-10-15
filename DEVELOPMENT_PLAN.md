@@ -1,9 +1,16 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.6.0 development (Memory / Performance / Reliability): real ST full-size synthetic exports and two exact isolated MT full-size cases PASS on desktop; three-repeat MT, physical Android, G2, audio listening and permanent GPL distribution remain PENDING. iPhone testing deferred.
+> **Status (2026-10-15):** v0.6.0 development. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-15 — 修正版MTのPC・Android実機成功を報告（特定不具合は改善）
+
+- [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)をユーザーがマージし、[実公開URLのChrome CI #38667384368](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38667384368)でMT分離・2秒58フレーム・10秒298フレームの合成スライド型MP4保存・デコードが成功。
+- **実機ユーザー報告：「PCもAndroidも成功したよ」**。前にMTで `expected=30 actual=24` と失敗した元動画について、修正版で両環境の成功が確認できた。今回は動画や端末名・処理秒数・3回それぞれの詳細ログを取得していないため、**元動画の特定不具合のユーザー受入成功**として記録し、他の試験項目まで一括で合格扱いしない。
+- G2は引き続き残課題を記録：実機カメラ動画の720p10秒・1080p5秒の各モード反復、音声折返しの聞き取り・同期、キャンセル再実行、Androidファイル提供元ごとの元ファイルコピー例外、性能記録、対応ソース付き恒久GPL Release。iPhone実機は延期。
+- **進行判断：** 従来の低fps重大ブロッカーは解消見込み。ただし全G2を正式に閉じるまではv0.7.0へのバージョン移行を完了扱いにしない。v0.7.0 UI/保存フローの準備作業は残条件の整理と切り離して検討できる。
 
 ## 2026-10-15 — 低fps動画の修正とMTの実Chrome 3連続検証が成功（G2実機は未受入）
 

@@ -4,11 +4,11 @@
 
 [製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [G2受入状況](docs/feasibility/G2.md) · [MTの実測](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md) · [English README](README.md)
 
-## MT版の低fps動画への修正（2026-10-15、実機受入待ち）
+## MT版の低fps動画への修正（2026-10-15、PC・Android実機で成功報告）
 
 元動画は約38秒に39フレームのH.264 Highスライド型動画で、旧MT版は30枚予定に対して24枚しか出力できませんでした。**Builder 1.10.6**で、時間軸を15fpsへ正規化してから区間を切り出すように修正しました。新ChromeでのST・MT検証と同一MTページでの10秒往復再生3回は[CI #38618083612](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38618083612)で成功しています。
 
-ただし**お使いの元動画／Android実機での修正確認はまだ行っていません**。修正版のGitHub Pages公開用[PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)はユーザーによるマージ待ちで、公開済みMTページはそれまで旧版です。フレーム数の厳密な検査は維持し、MTからSTへの自動切替はしません。詳細は[G2](docs/feasibility/G2.md)。
+[Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)はマージ済みで、[公開MT版の実Chrome検証 #38667384368](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38667384368)も成功しました。**ユーザーから、以前失敗していた元動画がPC・Androidの両方で成功したと報告されました。** この不具合については改善を実機確認できましたが、端末名・個別の処理時間・その他のG2項目（高解像度の全モード反復、音声、メモリ、元動画の全量コピー禁止）は未受入です。フレーム数の厳密な検査を維持し、MTからSTへの無断切替はしません。詳細は[G2](docs/feasibility/G2.md)。
 
 ## 目的
 

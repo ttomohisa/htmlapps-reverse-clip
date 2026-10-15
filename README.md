@@ -4,7 +4,7 @@
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
-## Low-frame-rate MT correction (2026-10-15, device acceptance pending)
+## Low-frame-rate MT correction (2026-10-15, user-reported PC/Android success)
 
 The owner's H.264 High 37.806s MP4 contained only ~39 video samples
 with long static presentation spans. Older MT returned `30 expected /
@@ -15,10 +15,13 @@ passes fresh-browser ST/MT low-FPS conversions and **three consecutive
 10s MT Ping-pong exports on the same page**. Frame-count checks
 remain strict, and no automatic MT-to-ST fallback is introduced.
 
-The **owner's exact source video and physical Android device are
-not yet retested**. Pages binary-refresh [PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)
-will deliver the new isolated-MT experiment only once merged by the
-owner and the live deployment tests pass. See [G2](docs/feasibility/G2.md).
+**Owner follow-up (2026-10-15):** [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)
+was merged and its [live MT smoke #38667384368](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38667384368)
+passed. The owner confirmed the previously failing real video now
+**works on both PC and Android**. This resolves the specific
+user-reported regression; exact device information, individual
+three-repeat timing and other G2 scenarios remain unverified.
+See [G2](docs/feasibility/G2.md).
 
 ## Goal
 
