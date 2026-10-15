@@ -174,6 +174,10 @@ def main():
                         assert page.locator("#flowEditButton").is_disabled()
                         assert page.locator("#flowResultButton").is_disabled()
                         assert page.locator("#dropZone").is_visible()
+                        assert page.locator("#diagnosticsDetails").evaluate("el => !el.open")
+                        assert page.locator("#developmentDetails").evaluate("el => !el.open")
+                        assert page.locator("#probeButton").is_hidden()
+                        assert page.locator("#guaranteesTitle").is_hidden()
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
                         assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
@@ -229,6 +233,12 @@ def main():
                             # the real transport selected by the input handler.
                             assert page.evaluate("""() =>
                                 navigator.userAgent.includes('Android')""")
+                            # Diagnostics were moved behind an explicit
+                            # disclosure. Normal editing users need not see
+                            # internal Worker/WASM controls on every visit.
+                            assert page.locator("#diagnosticsDetails").evaluate(
+                                "el => !el.open")
+                            page.locator("#diagnosticsDetails > summary").click()
                             with page.expect_download(timeout=10000) as diagnostic:
                                 page.locator("#downloadReportButton").click()
                             report_path = temp / f"{name}-diagnostic.json"

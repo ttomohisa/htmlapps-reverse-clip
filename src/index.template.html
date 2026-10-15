@@ -490,6 +490,17 @@
     #reverseProgress{width:100%;height:13px;accent-color:var(--accent);margin:8px 0}
     #resultArea{margin-top:12px}
     #reverseStatus{min-height:20px}
+    /* Keep diagnostics and development context accessible without forcing
+       ordinary mobile editing through a long troubleshooting dashboard. */
+    .rc-advanced{margin:0 0 16px;border-radius:14px;overflow:hidden}
+    .rc-advanced>summary{min-height:48px;display:list-item;padding:14px 18px;cursor:pointer}
+    .rc-advanced>.workspace{margin:0;padding:10px 18px 20px;border:0;border-top:1px solid var(--line);
+      border-radius:0;box-shadow:none}
+    .rc-advanced>.section{padding:16px 18px 22px;border-top:1px solid var(--line)}
+    .rc-advanced>summary:focus-visible{outline:3px solid var(--focus);outline-offset:-4px}
+    @media(max-width:520px){
+      .rc-advanced>.workspace,.rc-advanced>.section{padding:12px 14px 18px}
+    }
     /* Mobile workflow: one focused step at a time, without a bottom overlay. */
     .rc-flow-nav,.rc-mobile-only{display:none}
     @media(max-width:600px){
@@ -640,6 +651,7 @@
     </div>
     <progress id="reverseProgress" max="100" value="0" hidden aria-label="Conversion progress"></progress>
     <details id="reverseErrorDetails" hidden><summary data-i18n="errorDetailTitle">エラー詳細</summary><pre id="reverseErrorDetail" class="rc-report"></pre></details>
+    <button id="openDiagnosticsButton" class="button" type="button" hidden data-i18n="openDiagnostics">診断ログを保存する</button>
     <div id="resultArea" hidden>
       <h4 id="resultTitle" data-i18n="resultTitle">逆再生の結果</h4>
       <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="Reversed result MP4"></video>
@@ -657,6 +669,8 @@
     </div>
   </section>
 </section>
+<details id="diagnosticsDetails" class="rc-advanced">
+  <summary data-i18n="diagnosticsSummary">困ったときの診断</summary>
 <section class="shell workspace" aria-labelledby="probeTitle">
   <div class="workspace-head">
     <div><h2 id="probeTitle" data-i18n="probeTitle">動作テスト</h2>
@@ -677,18 +691,22 @@
   </div>
   <p class="rc-hint" data-i18n="reportPrivacy">保存されるログにはブラウザー情報が含まれますが、動画の内容やファイル名は含みません。</p>
 </section>
+</details>
 <!-- APP:END -->
 
+    <details id="developmentDetails" class="rc-advanced">
+      <summary data-i18n="developmentSummary">開発中の機能と制限</summary>
     <section class="shell section" aria-labelledby="guaranteesTitle">
   <div class="section-head"><h2 class="section-title" id="guaranteesTitle" data-i18n="guaranteesTitle">開発状況：技術検証中</h2>
-  <p data-i18n="guaranteesBody">最大5秒・音声なしの分割逆再生を技術検証中。長い動画・iPhoneへの対応は未確認です。</p></div>
+  <p data-i18n="guaranteesBody">PCと一部Android実機で逆再生・往復再生を確認済み。動画形式・音声・高解像度は引き続き検証しています。</p></div>
   <div class="card-grid">
     <article class="card"><div class="card-number">01</div><h3 data-i18n="card1Title">フレームの反転</h3><p data-i18n="card1Body">ネイティブFFmpegで20フレームの逆順と、折返しが重複しない39フレームの往復を確認。</p></article>
     <article class="card"><div class="card-number">02</div><h3 data-i18n="card2Title">ブラウザー検証</h3><p data-i18n="card2Body">ファイル読み込み・シーク・Worker・基本WASMの動作を端末別に確認中。</p></article>
-    <article class="card"><div class="card-number">03</div><h3 data-i18n="card3Title">動画書き出し</h3><p data-i18n="card3Body">短い区間の逆再生とMP4結合を検証中。スマホでの5秒処理は未検証です。</p></article>
+    <article class="card"><div class="card-number">03</div><h3 data-i18n="card3Title">動画書き出し</h3><p data-i18n="card3Body">最大10秒の逆再生・往復再生MP4に対応。高解像度・音声付き出力は検証中です。</p></article>
   </div>
 </section>
 
+    </details>
     <section class="shell section">
       <details>
         <summary data-i18n="buildInfo">Build information</summary>
@@ -948,6 +966,9 @@
     "rangeInvalid": "開始・終了を確認してください（0.5〜10秒）。",
     "rangeTooLong": "この実験版は最大10秒です。自動で範囲を短くすることはありません。",
     "memoryNotice": "各区間で保持する映像フレームの概算: 最大約{mib}MiB（実際のメモリ使用量はこれより大きくなります）",
+    "diagnosticsSummary": "困ったときの診断",
+    "openDiagnostics": "診断ログを保存する",
+    "developmentSummary": "開発中の機能と制限",
     "probeTitle": "動作テスト",
     "probeBody": "動画を選んでから実行すると、シーク・Worker・基本WASMをまとめて確認します。逆再生やMP4保存の試験ではありません。",
     "runProbe": "ブラウザーの動作を確認",
@@ -965,13 +986,13 @@
     "reportSaved": "診断ログを保存しました。",
     "noVideo": "動画を選んでから実行してください。",
     "guaranteesTitle": "開発状況：技術検証中",
-    "guaranteesBody": "Androidで5秒の逆再生を確認済み。10秒はPCで検証中、Android実機の性能・連続実行は未確認です。",
+    "guaranteesBody": "逆再生・往復再生をPCと一部Android実機で確認済み。動画形式や音声、メモリ負荷などの対応範囲は引き続き検証しています。",
     "card1Title": "反転アルゴリズム",
     "card1Body": "ネイティブFFmpegで20フレームの逆順と、折返しに重複がない39フレームの往復を確認。",
     "card2Title": "ブラウザー検証",
     "card2Body": "動画選択・シーク・Worker・基本WASMを端末別に確認中です。",
     "card3Title": "MP4作成",
-    "card3Body": "短い区間を逆再生して1本のMP4へ結合。10秒の変換とフレーム数検証を実験中です。",
+    "card3Body": "最大10秒の短い区間を逆再生・往復再生MP4に変換します。高解像度や音声付き出力の検証は継続中です。",
     "helpBasicsTitle": "使い方",
     "helpStep1": "動画を選択します。可能な端末では撮影からも取り込めます。",
     "helpStep2": "元動画の直下のハンドルか秒数入力で区間を調整し、「選択範囲を再生」で確認します。",
@@ -1120,6 +1141,9 @@
     "rangeInvalid": "Check start and end (0.5–10 seconds).",
     "rangeTooLong": "This experimental build supports up to 10 seconds and will not silently shorten the selection.",
     "memoryNotice": "Approximate buffered frames per segment: up to ~{mib}MiB (actual RAM use is higher).",
+    "diagnosticsSummary": "Troubleshooting and diagnostics",
+    "openDiagnostics": "Download a diagnostic report",
+    "developmentSummary": "Development status and limitations",
     "probeTitle": "Browser checks",
     "probeBody": "After selecting a video, run one check for seeking, Worker and basic WASM. This does not reverse or export video.",
     "runProbe": "Check browser capabilities",
@@ -1137,13 +1161,13 @@
     "reportSaved": "Diagnostic JSON downloaded.",
     "noVideo": "Choose a video first.",
     "guaranteesTitle": "Development status: feasibility",
-    "guaranteesBody": "Android 5-second export is user-confirmed. 10-second mobile performance and repeat-run stability remain unverified.",
+    "guaranteesBody": "Reverse and ping-pong exports are verified on desktop and selected Android devices. Other codecs, audio and high-memory scenarios are still under review.",
     "card1Title": "Reverse algorithm",
     "card1Body": "Native FFmpeg baseline passed 20-frame reversal and 39-frame ping-pong with no repeated turning frame.",
     "card2Title": "Browser compatibility",
     "card2Body": "Testing local video selection, seeking, Workers and basic WebAssembly support.",
     "card3Title": "MP4 export",
-    "card3Body": "Short segments become one reversed MP4. Up to 10 seconds and strict encoded frame counts are experimental.",
+    "card3Body": "Reverse or ping-pong up to 10 seconds. High-resolution and audio modes are still being validated.",
     "helpBasicsTitle": "How to test",
     "helpStep1": "Choose a video, or record one where supported.",
     "helpStep2": "Drag the start/end handles below the source video, or enter times; play the selected portion to check it.",
@@ -2192,6 +2216,7 @@
         $('#cancelReverseButton').hidden=true;
         $('#reverseErrorDetails').hidden=true;
         $('#reverseErrorDetails').open=false;
+        $('#openDiagnosticsButton').hidden=true;
         $('#reverseErrorDetail').textContent='';
         $('#flowSaveHint').hidden=true;
         $('#resultDimensions').textContent='';
@@ -2489,6 +2514,7 @@
           };
           $('#reverseErrorDetails').hidden=false;
           $('#reverseErrorDetails').open=true;
+          $('#openDiagnosticsButton').hidden=false;
           // Encoder statistics often overwrite the *useful* FFmpeg error in
           // the last few log lines. Keep diagnostic failures visible before
           // recent context, without retaining raw source names/media bytes.
@@ -2611,6 +2637,12 @@
       $('#probeButton').addEventListener('click',probeBrowser);
       $('#seekButton').addEventListener('click',probeSeek);
       $('#downloadReportButton').addEventListener('click',saveDiagnostic);
+      $('#openDiagnosticsButton').addEventListener('click',()=>{
+        const details=$('#diagnosticsDetails');
+        details.open=true;
+        details.scrollIntoView({block:'start',behavior:'auto'});
+        details.querySelector('summary').focus({preventScroll:true});
+      });
       outputFilename.addEventListener('blur',()=>outputFilename.value=reportFilename());
       $('#languageButton').addEventListener('click',()=>{language=language==='ja'?'en':'ja';writeStorage(storageKeys.language,language);applyLanguage();});
       const helpDialog = $('#helpDialog');

@@ -125,3 +125,24 @@ test('JA/EN workflow labels and actual output metadata are present; saving does 
   assert.ok(html.includes('Ping-pong MP4 download started.'));
   assert.ok(!html.includes('逆再生MP4を保存しました。'));
 });
+
+test('optional diagnosis and development explanations are collapsed but accessible',()=>{
+  for(const id of ['diagnosticsDetails','developmentDetails','openDiagnosticsButton']){
+    assert.equal(html.split('id="'+id+'"').length-1,1,id);
+  }
+  assert.ok(html.includes('<details id="diagnosticsDetails" class="rc-advanced">'));
+  assert.ok(html.includes('<details id="developmentDetails" class="rc-advanced">'));
+  assert.ok(html.includes('"diagnosticsSummary": "困ったときの診断"'));
+  assert.ok(html.includes('"diagnosticsSummary": "Troubleshooting and diagnostics"'));
+  assert.ok(html.includes('"openDiagnostics": "診断ログを保存する"'));
+  assert.ok(html.includes('details.open=true;'));
+  assert.ok(html.includes("details.querySelector('summary').focus({preventScroll:true});"));
+  assert.ok(html.includes("$('#openDiagnosticsButton').hidden=false;"));
+  assert.ok(html.includes("$('#openDiagnosticsButton').hidden=true;"));
+  // Moved to a disclosure, not removed: the original diagnostic export,
+  // JS/WASM test and technical status still exist exactly once.
+  for(const id of ['downloadReportButton','probeButton','seekButton','probeReport',
+                   'guaranteesTitle','guaranteesBody','buildVersion']){
+    assert.equal(html.split('id="'+id+'"').length-1,1,id);
+  }
+});
