@@ -34,6 +34,18 @@ before that. Going back to Edit without changing anything retains the
 result; changing a setting or selecting a new file invalidates the old
 result and save action. Failure details stay accessible on the Edit step.
 
+The Browser checks and Development status are now **collapsed native disclosures**
+for normal editing, but the diagnostics and JSON export remain available.
+An export error presents a button that opens/focuses diagnostics for
+manual download; no user media is included.
+
+[Mobile regression CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206)
+PASS on real ST/MT browser conversion, frame integrity, AAC,
+return/cancel flow, JA/EN, long filenames and 320/360/390px widths.
+A separate [Pages UI test PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
+will enable physical Android review after owner merge. This CI is
+not a physical Android UX approval.
+
 The navigation is sticky beneath the header and uses at least 44px
 tap targets; no fixed bottom bar hides the save area. On desktop the
 existing continuous page remains intact. Result displays actual

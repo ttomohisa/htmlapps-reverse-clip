@@ -5,6 +5,42 @@ Gate G2 remains OPEN. No v0.7.0 version bump, tag or release has occurred.**
 iPhone Safari is explicitly deferred. Windows Chrome/Edge and physical
 Android Chrome are the current target devices.
 
+## 2026-10-15 automated UX acceptance — Chrome/browser PASS
+
+[App CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206)
+**SUCCESS**: Windows PowerShell build, Node UI/state tests and
+real ST/isolated MT H.264 MP4/AAC/browser regressions all passed.
+This includes Android-UA file transport (simulated, not a real phone),
+long Japanese filenames, widths 320/360/390px without horizontal
+scrolling, accessible navigation buttons, returning to Edit, stale
+results disabled, repeated 10-second output, full MP4 decode,
+client-only data paths and language switching. A separately run
+local headless Chrome test generated/saved an actual H.264 MP4,
+opened the native diagnostic disclosure on demand, verified it is
+initially collapsed, and checked the resulting metadata and
+download hint.
+
+A subsequent UI refinement now keeps normal users focused on the
+Video/Edit/Result steps. The previous **Browser checks** and
+**Development status** sections are **not removed**: each has a
+native `<details>` disclosure, collapsed by default, with a 48px+
+tap summary and full JA/EN labels. A conversion failure exposes a
+direct **Download diagnostic report** path that expands/focuses the
+diagnostic section. Browser download status says download started,
+not OS save completed. Internal result/diagnostic data still remain
+in memory and are not uploaded.
+
+The real-device Android UI/safe-area/keyboard, actual audio listening,
+source-provider memory fallback and all outstanding G2 items remain
+**PENDING**. iPhone verification is postponed. v0.6.0 stays the
+version; this is not v0.7.0 milestone approval.
+
+A separate [Pages test-only PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
+pins the exact green build for Android UX review without merging
+this unfinished app development PR. A Pages PR check does not
+establish live mobile behavior until the owner merges it and the
+`verify-live-mt` deployment job passes.
+
 ## What is implemented
 
 On narrow screens (CSS width **<=600px**) the app offers three native
@@ -47,17 +83,18 @@ The result MP4 remains available to retry download while unchanged.
 
 | Case | Expected behavior | Status |
 | --- | --- | --- |
-| Fresh source, no MP4 | Video current; Edit/Result disabled; empty state shows picker | Implemented, browser regression pending |
-| Source metadata ready | Edit automatically selected, source playable, settings enabled | Implemented, browser regression pending |
-| Source replaced/cancelled/unreadable | Video current, old Result disabled; stale async loads cannot resurface | Existing generation guard; browser regression pending |
-| Valid 0.5–10s MP4 | Result current only after fully validated output; Save downloads actual H.264 | Existing ST/MT smoke + new mobile checks pending |
-| Back to Edit without changes | Existing MP4 retained; navigating to Result works | Implemented, browser regression pending |
-| Edit trim/quality/mode/audio after output | Old MP4 and Save cleared, Result disabled | Existing state invalidation; browser regression pending |
-| Abort/error or failed frame count | Stays on Edit and shows error details, never an incomplete MP4 | Existing guard; browser regression pending |
-| Result metadata | Actual MP4 dimensions, FPS, duration, output size; filename editable | Implemented, browser regression pending |
-| 320/360/390px and long JA filename | No horizontal scrolling, controls 44px+, sticky steps visible without bottom overlays | Automated regression pending; physical phone pending |
-| JA/EN toggling | Current phase and selected output preserved, navigation/metadata translated | Automated regression pending |
-| ST and true COI MT | Both generate/download real MP4; source file never uploaded | Real browser suite pending |
+| Fresh source, no MP4 | Video current; Edit/Result disabled; empty state shows picker | Automated Chrome PASS; physical Android pending |
+| Source metadata ready | Edit automatically selected, source playable, settings enabled | Automated Chrome PASS; physical Android pending |
+| Source replaced/cancelled/unreadable | Video current, old Result disabled; stale async loads cannot resurface | Automated ST/MT Chrome PASS; provider-specific Android pending |
+| Valid 0.5–10s MP4 | Result current only after fully validated output; Save downloads actual H.264 | Actual ST/MT Chrome MP4 PASS |
+| Back to Edit without changes | Existing MP4 retained; navigating to Result works | Browser PASS |
+| Edit trim/quality/mode/audio after output | Old MP4 and Save cleared, Result disabled | Browser PASS |
+| Abort/error or failed frame count | Stays on Edit and shows error details, never an incomplete MP4 | ST/MT regression PASS; independent Android still pending |
+| Result metadata | Actual MP4 dimensions, FPS, duration, output size; filename editable | Browser PASS |
+| 320/360/390px and long JA filename | No horizontal scrolling, controls 44px+, sticky steps visible without bottom overlays | Automated PASS; physical phone pending |
+| JA/EN toggling | Current phase and selected output preserved, navigation/metadata translated | Browser PASS |
+| ST and true COI MT | Both generate/download real MP4; source file never uploaded | Browser/CI PASS; phone pending |
+| Foldable diagnostics (initially closed) | Native disclosure retains tests/log export; error button opens diagnostics | Browser and Node PASS; Android pending |
 | Physical Android, keyboard, picker, OS save location | Source and Save workflows remain accessible, safe-area behavior correct | **Pending real device** |
 | Real high-resolution repeated exports/audio/whole-copy | All G2 performance/privacy/cancel/audio conditions satisfied | **Pending G2**, independent of UX |
 
