@@ -23,6 +23,29 @@ user-reported regression; exact device information, individual
 three-repeat timing and other G2 scenarios remain unverified.
 See [G2](docs/feasibility/G2.md).
 
+## Mobile Video / Edit / Result flow (v0.7 preparation, v0.6.0 development)
+
+On small screens (600px or below), a three-step navigation keeps the
+current task visible: **Video → Edit → Result**. Choose or capture
+a local video, then adjust its short range/mode/quality/audio. The
+app automatically moves to Result only after a generated H.264 MP4 has
+passed preview and duration validation; the Result tab is unavailable
+before that. Going back to Edit without changing anything retains the
+result; changing a setting or selecting a new file invalidates the old
+result and save action. Failure details stay accessible on the Edit step.
+
+The navigation is sticky beneath the header and uses at least 44px
+tap targets; no fixed bottom bar hides the save area. On desktop the
+existing continuous page remains intact. Result displays actual
+rendered resolution, FPS, output duration and file size and an editable
+MP4 filename. **Save MP4 initiates a browser download; the app cannot
+confirm where the operating system finally stores it.**
+
+This is **UI work toward v0.7.0**, not a v0.7.0 release or a pass of
+Gate G2. Android on-device layout, audio listening, memory and the
+source-file whole-copy exception still need acceptance; iPhone is
+deferred. See [mobile flow acceptance](docs/feasibility/V070_MOBILE_FLOW.md).
+
 ## Goal
 
 Select a short portion of a video and export a reversed or forward-then-reverse H.264 MP4 **without uploading the video**. Initial limits planned for v1.0.0: standard up to 720p / 10 seconds, high quality up to 1080p / 5 seconds, pending real-device proof.

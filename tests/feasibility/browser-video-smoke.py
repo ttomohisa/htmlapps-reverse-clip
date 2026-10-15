@@ -239,6 +239,39 @@ def main():
                             print(f"[PASS] simulated Android {name}: {expected_transport} "
                                   "real MP4, no source filename", flush=True)
 
+                        if name == "single-thread":
+                            # Responsive keyboard/tap/long filename regression.
+                            # Replacing a source after export must invalidate the
+                            # old Result and save immediately.
+                            long_name = "とても長い動画のファイル名-" * 18 + ".mp4"
+                            page.locator("#flowVideoButton").click()
+                            page.locator("#sourceInput").set_input_files({
+                                "name": long_name, "mimeType": "video/mp4",
+                                "buffer": source.read_bytes()})
+                            page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
+                            assert page.locator("#flowResultButton").is_disabled()
+                            assert page.locator("#resultArea").is_hidden()
+                            page.locator("#flowVideoButton").click()
+                            assert long_name in page.locator("#selectedSourceText").inner_text()
+                            page.locator("#languageButton").click()
+                            assert page.locator("#flowEditButton").inner_text() == "Edit"
+                            assert page.locator("#flowResultButton").inner_text() == "Result"
+                            page.locator("#languageButton").click()
+                            assert page.locator("#flowEditButton").inner_text() == "編集"
+                            for width in (320, 360, 390):
+                                page.set_viewport_size({"width": width, "height": 720})
+                                assert not page.evaluate("""() =>
+                                    document.documentElement.scrollWidth > innerWidth"""), width
+                                for control in ("#flowVideoButton","#flowEditButton","#flowResultButton"):
+                                    assert page.locator(control).bounding_box()["height"] >= 44, control
+                                page.locator("#flowGoEditButton").click()
+                                assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
+                                assert page.locator("#reverseButton").is_visible()
+                                page.locator("#flowVideoButton").click()
+                            page.set_viewport_size({"width": 390, "height": 800})
+                            print("[PASS] 320/360/390 widths, JA/EN mobile nav, "
+                                  "long filename, stale-result invalidation", flush=True)
+
                         assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
                         assert not errors, (name, errors)
                         assert not external, (name, external)
