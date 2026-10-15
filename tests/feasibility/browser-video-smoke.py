@@ -253,11 +253,15 @@ def main():
                             assert page.locator("#resultArea").is_hidden()
                             page.locator("#flowVideoButton").click()
                             assert long_name in page.locator("#selectedSourceText").inner_text()
+                            original_edit = page.locator("#flowEditButton").inner_text()
+                            original_result = page.locator("#flowResultButton").inner_text()
                             page.locator("#languageButton").click()
-                            assert page.locator("#flowEditButton").inner_text() == "Edit"
-                            assert page.locator("#flowResultButton").inner_text() == "Result"
+                            changed_edit = page.locator("#flowEditButton").inner_text()
+                            changed_result = page.locator("#flowResultButton").inner_text()
+                            assert {original_edit, changed_edit} == {"Edit", "編集"}
+                            assert {original_result, changed_result} == {"Result", "結果"}
                             page.locator("#languageButton").click()
-                            assert page.locator("#flowEditButton").inner_text() == "編集"
+                            assert page.locator("#flowEditButton").inner_text() == original_edit
                             for width in (320, 360, 390):
                                 page.set_viewport_size({"width": width, "height": 720})
                                 assert not page.evaluate("""() =>
