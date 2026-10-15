@@ -103,7 +103,10 @@ def transcode(page, source: Path, mode: str, label: str, temporary: Path,
              duration: float = 10):
     page.locator("#sourceInput").set_input_files(str(source))
     page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
-    page.locator("#flowEditButton").click()
+    # The workflow nav is intentionally mobile-only; desktop keeps
+    # the existing single continuous form without visible step buttons.
+    if page.evaluate("matchMedia('(max-width:600px)').matches"):
+        page.locator("#flowEditButton").click()
     page.locator("#qualityInput").select_option(
         "1280" if "sparse-slide-1080" in label or "pvm-webcodecs-1080" in label
         else "360")
