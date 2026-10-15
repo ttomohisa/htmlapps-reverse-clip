@@ -388,7 +388,7 @@ def main():
                         })
                         assert page.locator("#loadStatus").get_attribute("data-phase") == "inspecting"
                         page.locator("#sourceInput").set_input_files(str(source))
-                        page.locator("#loadStatus[data-phase='ready']").wait_for(timeout=10000)
+                        page.wait_for_function("() => document.querySelector('#loadStatus').dataset.phase === 'ready'", timeout=10000)
                         page.evaluate("""() => window.__lateSourceResolve(
                           new Uint8Array([0,0,0,24,102,116,121,112,105,115,111,109,
                             0,0,0,0,105,115,111,109,105,115,111,109]).buffer)""")
@@ -437,7 +437,7 @@ def main():
                               flush=True)
 
                         page.locator("#sourceInput").set_input_files(str(source))
-                        page.locator("#loadStatus[data-phase='ready']").wait_for(timeout=10000)
+                        page.wait_for_function("() => document.querySelector('#loadStatus').dataset.phase === 'ready'", timeout=10000)
                         assert page.locator("#reversePanel").is_visible(), mode
                         assert page.locator("#reverseButton").is_enabled(), mode
 
@@ -455,7 +455,7 @@ def main():
                         assert page.locator("#resultArea").is_hidden(), mode
                         assert page.locator("#reversePanel").is_hidden(), mode
                         page.locator("#sourceInput").set_input_files(str(source))
-                        page.locator("#loadStatus[data-phase='ready']").wait_for(timeout=10000)
+                        page.wait_for_function("() => document.querySelector('#loadStatus').dataset.phase === 'ready'", timeout=10000)
                         print(f"[PASS] {mode} multiple dropped files rejected; valid source restored",
                               flush=True)
                         print(f"[PASS] {mode} Foundation lifecycle rejects/replaces invalid media",
