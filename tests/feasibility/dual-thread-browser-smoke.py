@@ -116,12 +116,14 @@ def main():
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
                         assert page.locator("#reverseFilename").input_value() == "source-reverse", mode
+                        page.locator("#flowEditButton").click()
                         page.locator("#rangeStart").fill("0")
                         page.locator("#rangeStart").dispatch_event("change")
                         page.locator("#rangeEnd").fill("1")
                         page.locator("#rangeEnd").dispatch_event("change")
                         assert page.locator("#reverseButton").is_enabled(), (
                             mode, page.locator("#rangeNotice").inner_text())
+                        page.locator("#flowEditButton").click()
                         page.locator("#reverseButton").click()
                         page.wait_for_function("""() =>
                           !document.querySelector('#resultArea').hidden ||
@@ -144,6 +146,7 @@ def main():
                         # preview prior to creating the final video.
                         assert page.locator("#trimStartSlider").is_enabled()
                         assert page.locator("#trimEndSlider").is_enabled()
+                        page.locator("#flowEditButton").click()
                         page.locator("#rangeStart").fill("0.5")
                         page.locator("#rangeStart").dispatch_event("change")
                         page.locator("#rangeEnd").fill("1.5")
@@ -169,6 +172,7 @@ def main():
                           return v.paused && v.currentTime>=1.45 && v.currentTime<=1.6;
                         }""",timeout=15000)
                         assert page.locator("#reverseButton").is_enabled()
+                        page.locator("#flowEditButton").click()
                         page.locator("#reverseButton").click()
                         page.wait_for_function("""() =>
                           !document.querySelector('#resultArea').hidden ||
@@ -195,10 +199,12 @@ def main():
 
                         # End-of-file interval: the closed start and half-open
                         # end must render one second, never an extra tail frame.
+                        page.locator("#flowEditButton").click()
                         page.locator("#rangeStart").fill("1.0")
                         page.locator("#rangeStart").dispatch_event("change")
                         page.locator("#rangeEnd").fill("2.0")
                         page.locator("#rangeEnd").dispatch_event("change")
+                        page.locator("#flowEditButton").click()
                         page.locator("#reverseButton").click()
                         page.wait_for_function("""() =>
                           !document.querySelector('#resultArea').hidden ||
@@ -233,6 +239,7 @@ def main():
                             }
                           };
                         }""")
+                        page.locator("#flowEditButton").click()
                         page.locator("#reverseButton").click()
                         page.wait_for_function("() => window.__lateLoads === 1", timeout=15000)
                         page.locator("#cancelReverseButton").click()
@@ -245,6 +252,7 @@ def main():
 
                         # Changing the source during an await must likewise
                         # invalidate the job and dispose *its own* late runner.
+                        page.locator("#flowEditButton").click()
                         page.locator("#reverseButton").click()
                         page.wait_for_function("() => window.__lateLoads === 2", timeout=15000)
                         # Restore the actual runtime BEFORE switching sources:
@@ -263,11 +271,13 @@ def main():
                               flush=True)
 
                         # Re-run an actual MP4 export after the two cancellations.
+                        page.locator("#flowEditButton").click()
                         page.locator("#rangeStart").fill("0")
                         page.locator("#rangeStart").dispatch_event("change")
                         page.locator("#rangeEnd").fill("1")
                         page.locator("#rangeEnd").dispatch_event("change")
                         assert page.locator("#reverseButton").is_enabled(), mode
+                        page.locator("#flowEditButton").click()
                         page.locator("#reverseButton").click()
                         page.wait_for_function("""() =>
                           !document.querySelector('#resultArea').hidden ||
@@ -289,6 +299,7 @@ def main():
                         page.locator("#sourceInput").set_input_files(str(hd_source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=10000)
                         assert page.locator("#reverseFilename").input_value() == "hd-source-reverse", mode
+                        page.locator("#flowEditButton").click()
                         page.locator("#rangeStart").fill("0")
                         page.locator("#rangeStart").dispatch_event("change")
                         page.locator("#rangeEnd").fill("1")
@@ -297,6 +308,7 @@ def main():
                         assert page.locator("#reverseButton").is_enabled(), (
                             mode, page.locator("#rangeNotice").inner_text())
                         assert "720p" in page.locator("#qualityInput").locator("option:checked").inner_text()
+                        page.locator("#flowEditButton").click()
                         page.locator("#reverseButton").click()
                         page.wait_for_function("""() =>
                           !document.querySelector('#resultArea').hidden ||

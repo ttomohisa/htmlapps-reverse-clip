@@ -159,6 +159,7 @@ def verify_stereo_channels(path:Path, duration:float):
 def export(page,directory:Path,mode:str,with_audio:bool,
            start=0.0,end=1.0,frames=None,check_tones=True,
            channels=None,filename_suffix=""):
+    page.locator("#flowEditButton").click()
     page.locator("#rangeStart").fill(str(start))
     page.locator("#rangeStart").dispatch_event("change")
     page.locator("#rangeEnd").fill(str(end))
@@ -278,6 +279,7 @@ def main():
                         export(page,directory,"reverse",False)
 
                         # Invalidated output cannot be saved after a new job.
+                        page.locator("#flowEditButton").click()
                         page.locator("#modeInput").select_option("pingpong")
                         assert page.locator("#resultArea").is_hidden()
                         page.evaluate("""() => {

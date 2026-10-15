@@ -245,8 +245,10 @@ def run_profile(browser, base: str, directory: Path, runtime: str,
         else:
             assert page.locator("#audioInput").input_value() == "none"
         for mode in modes:
+            page.locator("#flowEditButton").click()
             page.locator("#modeInput").select_option(mode)
             for iteration in range(1, runs + 1):
+                page.locator("#flowEditButton").click()
                 assert page.locator("#reverseButton").is_enabled(), (
                     runtime, profile, mode, page.locator("#rangeNotice").text_content())
                 began = time.perf_counter()

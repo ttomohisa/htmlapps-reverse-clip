@@ -143,6 +143,7 @@ def verify_mp4(path:Path, expected_frames:int,ordered_indices=None):
 
 
 def export(page, directory,mode,start,end,expected_frames,indices=None):
+    page.locator("#flowEditButton").click()
     page.locator("#rangeStart").fill(str(start))
     page.locator("#rangeStart").dispatch_event("change")
     page.locator("#rangeEnd").fill(str(end))
@@ -227,6 +228,7 @@ def main():
                         # Changing conversion mode discards the old result,
                         # while preserving names intentionally edited by users.
                         page.locator("#reverseFilename").fill("personal-name")
+                        page.locator("#flowEditButton").click()
                         page.locator("#modeInput").select_option("reverse")
                         assert page.locator("#resultArea").is_hidden()
                         assert page.locator("#reverseFilename").input_value()=="personal-name"
