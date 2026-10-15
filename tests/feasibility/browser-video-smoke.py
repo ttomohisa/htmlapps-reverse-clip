@@ -57,6 +57,11 @@ def inspect_mp4(output, frames, duration):
     return hashlib.sha256(output.read_bytes()).hexdigest()
 
 def test_conversion(page, workdir, prefix, start, end, frames):
+    # A successful conversion lands on Result. Return to Edit for the
+    # next selection without losing or reusing stale generated output.
+    assert page.locator("#flowEditButton").is_enabled()
+    page.locator("#flowEditButton").click()
+    assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
     page.locator("#rangeStart").fill(str(start))
     page.locator("#rangeStart").dispatch_event("change")
     page.locator("#rangeEnd").fill(str(end))
@@ -71,8 +76,14 @@ def test_conversion(page, workdir, prefix, start, end, frames):
       !document.querySelector('#reverseErrorDetails').hidden""", timeout=150000)
     if page.locator("#reverseErrorDetails").is_visible():
         raise AssertionError(page.locator("#reverseErrorDetail").inner_text())
+    assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "result"
+    assert page.locator("#flowResultButton").get_attribute("aria-current") == "step"
+    assert page.locator("#resultDimensions").is_visible()
+    assert "15fps" in page.locator("#resultDimensions").inner_text()
+    assert page.locator("#flowSaveHint").is_hidden()
     with page.expect_download(timeout=15000) as download:
         page.locator("#saveReverseButton").click()
+    assert page.locator("#flowSaveHint").is_visible()
     result = workdir / f"{prefix}.mp4"
     download.value.save_as(result)
     expected_seconds = frames / 15
@@ -156,8 +167,22 @@ def main():
                         is_mt = name == "multi-thread"
                         assert page.evaluate("globalThis.crossOriginIsolated") == is_mt, name
                         assert page.evaluate("typeof SharedArrayBuffer === 'function'") == is_mt, name
+                        assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "video"
+                        assert page.locator("#flowVideoButton").get_attribute("aria-current") == "step"
+                        assert page.locator("#flowEditButton").is_disabled()
+                        assert page.locator("#flowResultButton").is_disabled()
+                        assert page.locator("#dropZone").is_visible()
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
+                        assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
+                        assert page.locator("#dropZone").is_hidden()
+                        assert page.locator("#flowResultButton").is_disabled()
+                        page.locator("#flowVideoButton").click()
+                        assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "video"
+                        assert page.locator("#selectedSourceSummary").is_visible()
+                        assert "15-seconds.mp4" in page.locator("#selectedSourceText").inner_text()
+                        page.locator("#flowGoEditButton").click()
+                        assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
 
                         initial_frames = 15 if name == "st-mobile-provider-fallback" else 150
                         initial_seconds = 1 if name == "st-mobile-provider-fallback" else 10
@@ -182,6 +207,7 @@ def main():
                             # Dispatch start+cancel in one JS task so the
                             # cancel is guaranteed to occur while async WASM
                             # setup is still pending (no artificial sleeps).
+                            page.locator("#flowEditButton").click()
                             page.evaluate("""() => {
                                 const start = document.querySelector('#reverseButton');
                                 const cancel = document.querySelector('#cancelReverseButton');
@@ -192,6 +218,7 @@ def main():
                             }""")
                             page.wait_for_timeout(250)
                             assert page.locator("#resultArea").is_hidden()
+                            assert page.locator("#flowResultButton").is_disabled()
                             assert not page.locator("#saveReverseButton").is_visible()
                         else:
                             # The app's own downloaded diagnostic must report

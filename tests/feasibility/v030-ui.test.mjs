@@ -67,3 +67,51 @@ test('MT or ST frame-count failures stay fail-closed and expose actionable diagn
   assert.ok(html.includes('不完全な動画は保存されません'));
   assert.ok(html.includes("throw new Error('MP4 segment failed validation ("));
 });
+
+test('mobile workflow navigation and saved-result step are implemented with native controls',()=>{
+  for(const id of [
+    'rcWorkflow','rcFlowNav','flowVideoButton','flowEditButton',
+    'flowResultButton','flowAnnouncement','selectedSourceSummary',
+    'selectedSourceText','flowGoEditButton','flowBackToEditButton',
+    'resultDimensions','flowSaveHint'
+  ]){
+    assert.equal(html.split('id="'+id+'"').length-1,1,id+' must exist exactly once');
+  }
+  assert.ok(html.includes('data-flow-step="video"'));
+  for(const step of ['video','edit','result']){
+    assert.ok(html.includes('data-flow-target="'+step+'"'));
+    assert.ok(html.includes('data-flow-step="'+step+'"]'));
+  }
+  assert.ok(html.includes('aria-current="step"'));
+  assert.ok(html.includes('position:sticky;top:var(--header-height)'));
+  assert.ok(html.includes('#rcWorkflow[data-flow-step="result"] #reversePanel > :not(#resultArea)'));
+  assert.ok(!html.includes('position:fixed;bottom:0'));
+  for(const marker of [
+    "function updateFlowNavigation()","function setFlowStep(step,",
+    "if(phase==='ready') updateFlowNavigation()",
+    "setFlowStep('edit');",
+    "if(flowStep==='edit')setFlowStep('result')",
+    "if(step==='result'&&!flowResultReady())return false",
+    "if (flowStep === 'result' && !canResult) flowStep=canEdit?'edit':'video",
+    "if(step===flowStep) button.setAttribute('aria-current','step')",
+    "$('#flowSaveHint').hidden=false",
+    "$('#flowSaveHint').hidden=true",
+    "document.querySelectorAll('[data-i18n]')"
+  ]) assert.ok(html.includes(marker),marker);
+});
+
+test('JA/EN workflow labels and actual output metadata are present; saving does not promise OS success',()=>{
+  for(const label of [
+    '"flowVideo": "動画"','"flowEdit": "編集"','"flowResult": "結果"',
+    '"flowVideo": "Video"','"flowEdit": "Edit"','"flowResult": "Result"',
+    '"flowSaveHint": "保存先はブラウザーのダウンロードから確認してください。',
+    '"flowSaveHint": "Check your browser',
+    '"flowOutputDimensions": "出力：{width} × {height}px・{fps}fps"',
+    '"flowOutputDimensions": "Output: {width} × {height}px · {fps}fps"'
+  ]) assert.ok(html.includes(label),label);
+  assert.ok(html.includes("state.conversion.outputWidth"));
+  assert.ok(html.includes("width:resultVideo.videoWidth,height:resultVideo.videoHeight"));
+  assert.ok(html.includes('逆再生MP4のダウンロードを開始しました。'));
+  assert.ok(html.includes('Ping-pong MP4 download started.'));
+  assert.ok(!html.includes('逆再生MP4を保存しました。'));
+});

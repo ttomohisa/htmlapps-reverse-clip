@@ -490,7 +490,44 @@
     #reverseProgress{width:100%;height:13px;accent-color:var(--accent);margin:8px 0}
     #resultArea{margin-top:12px}
     #reverseStatus{min-height:20px}
-    @media(max-width:600px){.rc-save{flex-direction:column;align-items:stretch}.rc-save .export-field{width:100%;flex:auto}.rc-save button{width:100%}.rc-actions .button{width:100%}}
+    /* Mobile workflow: one focused step at a time, without a bottom overlay. */
+    .rc-flow-nav,.rc-mobile-only{display:none}
+    @media(max-width:600px){
+      .rc-flow-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+        position:sticky;top:var(--header-height);z-index:20;
+        margin:0 -14px 14px;padding:8px 14px 10px;background:var(--surface);
+        border-bottom:1px solid var(--line);scroll-margin-top:var(--header-height)}
+      .rc-flow-nav button{min-width:0;min-height:44px;padding:8px 4px;
+        border:1px solid var(--line);border-radius:10px;background:var(--surface);
+        color:var(--text);font:inherit;font-size:13px;font-weight:720;cursor:pointer}
+      .rc-flow-nav button[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+      .rc-flow-nav button:disabled{opacity:.43;cursor:not-allowed}
+      .rc-flow-nav button:focus-visible,.rc-selected-summary button:focus-visible{
+        outline:3px solid var(--focus);outline-offset:2px}
+      .rc-mobile-only{display:block}
+      .rc-selected-summary{padding:12px;border-radius:12px;border:1px solid var(--line);
+        background:var(--surface-muted);margin:8px 0 2px;min-width:0}
+      .rc-selected-summary p{margin:0 0 10px;font-size:13px;overflow-wrap:anywhere}
+      .rc-selected-summary .button{min-height:44px;width:100%}
+      #flowBackToEditButton{width:100%;min-height:44px;margin-top:10px}
+      #rcWorkflow[data-flow-step="video"] #videoArea,
+      #rcWorkflow[data-flow-step="video"] #reversePanel{display:none!important}
+      #rcWorkflow[data-flow-step="edit"] #dropZone,
+      #rcWorkflow[data-flow-step="edit"] .rc-source-status,
+      #rcWorkflow[data-flow-step="edit"] #selectedSourceSummary,
+      #rcWorkflow[data-flow-step="edit"] #resultArea{display:none!important}
+      #rcWorkflow[data-flow-step="result"] #dropZone,
+      #rcWorkflow[data-flow-step="result"] .rc-source-status,
+      #rcWorkflow[data-flow-step="result"] #selectedSourceSummary,
+      #rcWorkflow[data-flow-step="result"] #videoArea,
+      #rcWorkflow[data-flow-step="result"] #reversePanel > :not(#resultArea){display:none!important}
+      #rcWorkflow[data-flow-step="result"] #reversePanel{margin:0;padding:0;border:0}
+      #rcWorkflow[data-flow-step="result"] #resultArea{margin-top:0}
+      .rc-save{flex-direction:column;align-items:stretch}
+      .rc-save .export-field{width:100%;flex:auto}
+      .rc-save button{width:100%;min-height:44px}
+      .rc-actions .button{width:100%}
+    }
   </style>
 </head>
 <body>
@@ -528,11 +565,17 @@
     </section>
 
     <!-- APP:BEGIN Feasibility diagnostic: no video export until a verified Builder runtime exists. -->
-<section class="shell workspace" aria-labelledby="workspaceTitle">
+<section class="shell workspace" id="rcWorkflow" data-flow-step="video" aria-labelledby="workspaceTitle">
   <div class="workspace-head">
     <div><h2 id="workspaceTitle" data-i18n="workspaceTitle">動画を読み込む</h2>
       <p data-i18n="workspaceBody">端末内だけで動画の情報とブラウザーの動作を調べます。</p></div>
   </div>
+  <nav id="rcFlowNav" class="rc-flow-nav" aria-label="作業の進行" data-i18n-aria-label="flowNavigation">
+    <button id="flowVideoButton" data-flow-target="video" type="button" aria-current="step" data-i18n="flowVideo">動画</button>
+    <button id="flowEditButton" data-flow-target="edit" type="button" disabled data-i18n="flowEdit">編集</button>
+    <button id="flowResultButton" data-flow-target="result" type="button" disabled data-i18n="flowResult">結果</button>
+  </nav>
+  <p id="flowAnnouncement" class="sr-only" aria-live="polite"></p>
   <div class="rc-drop" id="dropZone" role="group" aria-labelledby="fileActionHeading">
     <h3 id="fileActionHeading" data-i18n="dropTitle">動画を選ぶか撮影する</h3>
     <p data-i18n="dropHint">MP4 / MOV · 上限1GiB · ファイルは送信しません</p>
@@ -546,6 +589,10 @@
   <div class="rc-source-status">
     <p class="rc-status" id="loadStatus" role="status" aria-live="polite" data-phase="empty" data-i18n="nothingSelected">動画がまだ選択されていません。</p>
     <button class="button" id="cancelLoadButton" type="button" hidden data-i18n="cancelLoadButton">読み込みを中止</button>
+  </div>
+  <div id="selectedSourceSummary" class="rc-selected-summary rc-mobile-only" hidden>
+    <p id="selectedSourceText"></p>
+    <button id="flowGoEditButton" class="button primary" type="button" disabled data-i18n="flowGoEdit">区間を編集する</button>
   </div>
   <div id="videoArea" hidden>
     <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" aria-label="Source video"></video>
@@ -597,6 +644,7 @@
       <h4 id="resultTitle" data-i18n="resultTitle">逆再生の結果</h4>
       <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="Reversed result MP4"></video>
       <p id="resultInfo" class="rc-hint"></p>
+      <p id="resultDimensions" class="rc-hint"></p>
       <div class="rc-save">
         <label class="export-field" for="reverseFilename">
           <span class="export-label" data-i18n="reverseFilenameLabel">保存するMP4の名前</span>
@@ -604,6 +652,8 @@
         </label>
         <button class="button primary" id="saveReverseButton" type="button" data-i18n="saveReverse">MP4を保存</button>
       </div>
+      <p id="flowSaveHint" class="rc-hint" role="status" hidden data-i18n="flowSaveHint">保存先はブラウザーのダウンロードから確認してください。</p>
+      <button id="flowBackToEditButton" class="button rc-mobile-only" type="button" data-i18n="flowBackEdit">区間・設定を変更する</button>
     </div>
   </section>
 </section>
@@ -820,8 +870,18 @@
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
     "introTitle": "動画の逆再生・往復再生（実験版）",
-    "lead": "動画の好きな区間を逆再生・往復再生MP4に。最大10秒、映像のみ。スマートフォンの動作は検証中です。",
+    "lead": "動画から最大10秒の区間を選んで逆再生・往復再生MP4に。音声付きは対応動画で選べます。実機検証中です。",
     "localBadge": "完全ローカル処理",
+    "flowNavigation": "作業の進行",
+    "flowVideo": "動画",
+    "flowEdit": "編集",
+    "flowResult": "結果",
+    "flowGoEdit": "区間を編集する",
+    "flowBackEdit": "区間・設定を変更する",
+    "flowSelectedSource": "{name} · {duration}秒",
+    "flowStepAnnouncement": "{step}を表示しています",
+    "flowSaveHint": "保存先はブラウザーのダウンロードから確認してください。",
+    "flowOutputDimensions": "出力：{width} × {height}px・{fps}fps",
     "workspaceTitle": "動画を読み込む",
     "workspaceBody": "ブラウザー内でプレビューして短い範囲を選びます。",
     "dropTitle": "動画を選ぶか撮影する",
@@ -911,7 +971,7 @@
     "helpBasicsTitle": "使い方",
     "helpStep1": "動画を選択します。可能な端末では撮影からも取り込めます。",
     "helpStep2": "元動画の直下のハンドルか秒数入力で区間を調整し、「選択範囲を再生」で確認します。",
-    "helpStep3": "区間とモード（逆再生／往復再生）を選んでMP4を作成します。往復再生は折り返しの重複フレームを除外し、音声なしで出力します。",
+    "helpStep3": "モード・画質・必要に応じて音声を選び、MP4を作成します。結果を再生してから保存できます。",
     "helpPrivacyTitle": "プライバシー",
     "helpPrivacyBody": "動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。",
     "helpNotesTitle": "制限と注意",
@@ -947,8 +1007,8 @@
     "reverseFrameMismatch": "出力フレーム数が予定と一致しないため、MP4の保存を中止しました。以下のエラー詳細をご確認ください。",
     "reverseSuccess": "逆再生MP4を作成しました。結果を再生して保存してください。",
     "reverseUnsupported": "このブラウザーでは逆再生用WASMを起動できません。",
-    "reverseSaved": "逆再生MP4を保存しました。",
-    "pingpongSaved": "往復再生MP4を保存しました。",
+    "reverseSaved": "逆再生MP4のダウンロードを開始しました。",
+    "pingpongSaved": "往復再生MP4のダウンロードを開始しました。",
     "resultInfo": "{duration}秒・{size}・映像のみ・{chunks}区間・処理時間{elapsed}秒",
     "reverseSourcePreparing": "動画を端末内で準備中です…",
     "reverseSourceUnreadable": "選択した動画を読み込めません。写真・クラウド上の動画を端末に保存してから選び直してください。",
@@ -961,7 +1021,7 @@
     "pingpongForwardChunk": "往路の区間 {current}/{total} を処理中… {progress}%",
     "pingpongReturnChunk": "復路の区間 {current}/{total} を処理中… {progress}%",
     "pingpongTitle": "往復再生のMP4を作る",
-    "pingpongDescription": "選択区間の通常再生→逆再生を1本のMP4にします。折り返し地点の重複フレームを除外。15fps・音声なし・実験版です。",
+    "pingpongDescription": "選択区間を通常再生→逆再生で1本のMP4にします。折り返しの重複フレームを除きます。15fps・音声選択可（対応動画のみ）の実験版です。",
     "pingpongResultTitle": "往復再生の結果",
     "createPingpong": "往復再生MP4を作成",
     "pingpongSuccess": "往復再生MP4を作成しました。結果を確認して保存できます。",
@@ -978,8 +1038,18 @@
     "helpTitle": "How to use & limitations",
     "close": "Close",
     "introTitle": "Reverse & ping-pong video (experimental)",
-    "lead": "Turn a selected clip (up to 10s) into a silent reversed or forward-and-back MP4. Phone compatibility remains experimental.",
+    "lead": "Turn up to 10 seconds of video into a reversed or forward-and-back MP4. Audio is optional for supported sources; phone support is experimental.",
     "localBadge": "Fully local processing",
+    "flowNavigation": "Video editing steps",
+    "flowVideo": "Video",
+    "flowEdit": "Edit",
+    "flowResult": "Result",
+    "flowGoEdit": "Edit the selected section",
+    "flowBackEdit": "Change section or settings",
+    "flowSelectedSource": "{name} · {duration}s",
+    "flowStepAnnouncement": "Showing {step}",
+    "flowSaveHint": "Check your browser's downloads for the saved MP4.",
+    "flowOutputDimensions": "Output: {width} × {height}px · {fps}fps",
     "workspaceTitle": "Load a video",
     "workspaceBody": "Preview locally and select a short section.",
     "dropTitle": "Choose or record a video",
@@ -1105,8 +1175,8 @@
     "reverseFrameMismatch": "The output frame count did not match the expected count, so saving was stopped. See the error details below.",
     "reverseSuccess": "Reversed MP4 ready. Preview and save it.",
     "reverseUnsupported": "This browser cannot start the reverse WASM.",
-    "reverseSaved": "Reversed MP4 saved.",
-    "pingpongSaved": "Ping-pong MP4 saved.",
+    "reverseSaved": "Reversed MP4 download started.",
+    "pingpongSaved": "Ping-pong MP4 download started.",
     "resultInfo": "{duration}s · {size} · silent video · {chunks} chunks · {elapsed}s processing",
     "reverseSourcePreparing": "Preparing a local copy of the selected video…",
     "reverseSourceUnreadable": "Could not read the selected video. Save it locally on your device, then select it again instead of selecting it directly from a cloud or photo provider.",
@@ -1119,7 +1189,7 @@
     "pingpongForwardChunk": "Processing forward segment {current}/{total}… {progress}%",
     "pingpongReturnChunk": "Processing return segment {current}/{total}… {progress}%",
     "pingpongTitle": "Create a ping-pong MP4",
-    "pingpongDescription": "Forward then backward in one MP4. No repeated turning/loop boundary frame. Experimental silent H.264 at 15fps.",
+    "pingpongDescription": "Forward then backward in one MP4, without duplicate turning/loop frames. Experimental H.264 at 15fps; optional audio for supported sources.",
     "pingpongResultTitle": "Ping-pong result",
     "createPingpong": "Create ping-pong MP4",
     "pingpongSuccess": "Ping-pong MP4 created. Preview and save the result.",
@@ -1249,6 +1319,62 @@
       const MOBILE_INPUT = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
         (navigator.userAgentData?.mobile === true);
       let conversionEpoch = 0, conversionController = null, conversionRunner = null, resultUrl = null;
+      // v0.7 preparation: an explicit, mobile-only three-step display.
+      // The source, WASM output and conversion state are NOT duplicated or
+      // persisted when navigating. Desktop keeps the continuous form.
+      let flowStep = 'video';
+      const flowSteps = Object.freeze(['video','edit','result']);
+      const flowButtons = {
+        video: $('#flowVideoButton'),
+        edit: $('#flowEditButton'),
+        result: $('#flowResultButton')
+      };
+      function flowResultReady() {
+        return Boolean(state.ready && state.conversion?.ok && resultUrl &&
+          !$('#resultArea').hidden);
+      }
+      function updateFlowNavigation() {
+        const canEdit = state.sourcePhase === 'ready';
+        const canResult = canEdit && flowResultReady();
+        if (flowStep === 'edit' && !canEdit) flowStep='video';
+        if (flowStep === 'result' && !canResult) flowStep=canEdit?'edit':'video';
+        $('#rcWorkflow').dataset.flowStep=flowStep;
+        for (const step of flowSteps) {
+          const button=flowButtons[step];
+          button.disabled=step==='edit'?!canEdit:step==='result'?!canResult:false;
+          if(step===flowStep) button.setAttribute('aria-current','step');
+          else button.removeAttribute('aria-current');
+        }
+        $('#selectedSourceSummary').hidden=!canEdit;
+        $('#flowGoEditButton').disabled=!canEdit;
+        if(canEdit) {
+          $('#selectedSourceText').textContent=format('flowSelectedSource',{
+            name:state.file?.name||'',duration:Number.isFinite(video.duration)?
+              video.duration.toFixed(1):'—'
+          });
+        } else {
+          $('#selectedSourceText').textContent='';
+        }
+      }
+      function setFlowStep(step,{scroll=true}={}) {
+        if(!flowSteps.includes(step))return false;
+        if(step==='edit'&&!state.ready)return false;
+        if(step==='result'&&!flowResultReady())return false;
+        if(flowStep==='edit'&&step!=='edit'){
+          previewSelectionActive=false;
+          video.pause();
+          $('#trimPreviewNotice').textContent='';
+        }
+        flowStep=step;
+        updateFlowNavigation();
+        $('#flowAnnouncement').textContent=format('flowStepAnnouncement',{
+          step:translate(step==='video'?'flowVideo':step==='edit'?'flowEdit':'flowResult')
+        });
+        if(scroll&&window.matchMedia?.('(max-width:600px)').matches){
+          $('#rcFlowNav').scrollIntoView({block:'start',behavior:'auto'});
+        }
+        return true;
+      }
       // A slow cloud/photo provider or a media decoder that never returns
       // metadata must not trap the UI in "inspecting" forever.
       const SOURCE_LOAD_TIMEOUT_MS = 30000;
@@ -1279,6 +1405,8 @@
         setStatus(phase === 'empty' ? 'nothingSelected' :
                   phase === 'inspecting' ? 'loading' :
                   phase === 'ready' ? 'loaded' : state.sourceErrorKey);
+        if(phase==='ready') updateFlowNavigation();
+        else setFlowStep('video',{scroll:false});
         return true;
       }
       function releaseSource() {
@@ -1850,6 +1978,9 @@
         $('#dimensionsLabel').textContent = video.videoWidth + ' × ' + video.videoHeight;
         $('#filesizeLabel').textContent = humanSize(state.file.size);
         rangeInfo();
+        // Advance only after the preview, trim controls and output controls
+        // are all ready; a stale file-generation cannot move to Edit.
+        setFlowStep('edit');
         if(AUDIO_MUX_ENABLED)void inspectSourceAudio();
       });
       video.addEventListener('error', () => {
@@ -1906,7 +2037,14 @@
         $('#probeReport').textContent = (state.probe || state.seek) ? JSON.stringify({capabilities:state.probe,seek:state.seek},null,2) : translate('notRun');
         updateModeUi();
         rangeInfo();
-        if (state.conversion?.ok) $('#reverseStatus').textContent = translate(state.conversion.mode==='pingpong'?'pingpongSuccess':'reverseSuccess');
+        updateFlowNavigation();
+        if (state.conversion?.ok){
+          $('#reverseStatus').textContent=translate(state.conversion.mode==='pingpong'?'pingpongSuccess':'reverseSuccess');
+          $('#resultDimensions').textContent=format('flowOutputDimensions',{
+            width:state.conversion.outputWidth,height:state.conversion.outputHeight,
+            fps:state.conversion.fps
+          });
+        }
       }
       async function probeBrowser() {
         const probe = { measuredAt: new Date().toISOString(), secureContext: isSecureContext,
@@ -2042,7 +2180,10 @@
         $('#reverseErrorDetails').hidden=true;
         $('#reverseErrorDetails').open=false;
         $('#reverseErrorDetail').textContent='';
+        $('#flowSaveHint').hidden=true;
+        $('#resultDimensions').textContent='';
         state.conversion=null;
+        updateFlowNavigation();
         $('#reverseButton').disabled=!state.validRange||!state.ready;
       }
       async function reverseShortClip() {
@@ -2080,6 +2221,7 @@
         catch (_) { showToast(translate('reverseInvalid'));return; }
 
         stopInFlightAudioInspection(); // optional probe uses a separate WASM heap
+        setFlowStep('edit',{scroll:false});
         resetConversion();
         const generation=state.generation, job=++conversionEpoch, file=state.file;
         const controller=new AbortController();
@@ -2299,6 +2441,14 @@
             chunks:count,elapsed:elapsed.toFixed(2)
           });
           $('#resultArea').hidden=false;
+          $('#resultDimensions').textContent=format('flowOutputDimensions',{
+            width:resultVideo.videoWidth,height:resultVideo.videoHeight,fps:OUTPUT_FPS
+          });
+          $('#flowSaveHint').hidden=true;
+          // Do not claim result readiness until the MP4 header, duration and
+          // actual browser preview have all been checked.
+          if(flowStep==='edit')setFlowStep('result');
+          else updateFlowNavigation();
           const successText=translate(mode==='pingpong'?'pingpongSuccess':'reverseSuccess');
           $('#reverseStatus').textContent=successText;
           showToast(successText,{tone:'success'});
@@ -2345,6 +2495,8 @@
           const failureKey=controller.signal.aborted?'reverseCancelled':
             mismatchLine?'reverseFrameMismatch':'reverseFailure';
           $('#reverseStatus').textContent=translate(failureKey);
+          if(flowStep==='result')setFlowStep('edit');
+          else updateFlowNavigation();
           showToast(translate(failureKey));
         }finally{
           // Dispose only this job's runner. resetConversion() may already have
@@ -2369,6 +2521,7 @@
         a.href=resultUrl;
         a.download=normalizeMP4Filename();
         a.click();
+        $('#flowSaveHint').hidden=false;
         showToast(translate(state.conversion.mode==='pingpong'?'pingpongSaved':'reverseSaved'),{tone:'success'});
       }
 
@@ -2397,6 +2550,13 @@
         setTimeout(()=>URL.revokeObjectURL(url),15000);
         showToast(translate('reportSaved'));
       }
+      // Navigation only reveals already-created state. Result remains
+      // inaccessible until an actual MP4 Blob and metadata are available.
+      for(const step of flowSteps){
+        flowButtons[step].addEventListener('click',()=>setFlowStep(step));
+      }
+      $('#flowGoEditButton').addEventListener('click',()=>setFlowStep('edit'));
+      $('#flowBackToEditButton').addEventListener('click',()=>setFlowStep('edit'));
       $('#pickButton').addEventListener('click',()=>$('#sourceInput').click());
       $('#cancelLoadButton').addEventListener('click', () => {
         if (state.sourcePhase !== 'inspecting') return;
