@@ -100,6 +100,16 @@ test('mobile workflow navigation and saved-result step are implemented with nati
   ]) assert.ok(html.includes(marker),marker);
 });
 
+test('responsive step headings follow Video/Edit/Result and recover on desktop resize',()=>{
+  assert.ok(html.includes('id="workspaceBody" data-i18n="workspaceBody"'));
+  assert.ok(html.includes("'workspaceTitle':flowStep==='edit'?'flowEditTitle':'flowResultTitle'"));
+  assert.ok(html.includes("'workspaceBody':flowStep==='edit'?'flowEditBody':'flowResultBody'"));
+  assert.ok(html.includes("window.addEventListener('resize',updateFlowNavigation);"));
+  for(const title of ['flowEditTitle','flowResultTitle','flowEditBody','flowResultBody']){
+    assert.equal(html.split('"'+title+'":').length-1,2,title+' must be bilingual');
+  }
+});
+
 test('JA/EN workflow labels and actual output metadata are present; saving does not promise OS success',()=>{
   for(const label of [
     '"flowVideo": "動画"','"flowEdit": "編集"','"flowResult": "結果"',

@@ -62,6 +62,7 @@ def test_conversion(page, workdir, prefix, start, end, frames):
     assert page.locator("#flowEditButton").is_enabled()
     page.locator("#flowEditButton").click()
     assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
+    assert page.locator("#workspaceTitle").inner_text() in ("区間と出力を編集", "Edit section and output")
     page.locator("#rangeStart").fill(str(start))
     page.locator("#rangeStart").dispatch_event("change")
     page.locator("#rangeEnd").fill(str(end))
@@ -78,6 +79,7 @@ def test_conversion(page, workdir, prefix, start, end, frames):
         raise AssertionError(page.locator("#reverseErrorDetail").inner_text())
     assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "result"
     assert page.locator("#flowResultButton").get_attribute("aria-current") == "step"
+    assert page.locator("#workspaceTitle").inner_text() in ("結果を確認・保存", "Preview and save result")
     assert page.locator("#resultDimensions").is_visible()
     assert "15fps" in page.locator("#resultDimensions").inner_text()
     assert page.locator("#flowSaveHint").is_hidden()
@@ -175,10 +177,12 @@ def main():
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
                         assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
+                        assert page.locator("#workspaceTitle").inner_text() in ("区間と出力を編集", "Edit section and output")
                         assert page.locator("#dropZone").is_hidden()
                         assert page.locator("#flowResultButton").is_disabled()
                         page.locator("#flowVideoButton").click()
                         assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "video"
+                        assert page.locator("#workspaceTitle").inner_text() in ("動画を読み込む", "Load a video")
                         assert page.locator("#selectedSourceSummary").is_visible()
                         assert "15-seconds.mp4" in page.locator("#selectedSourceText").inner_text()
                         page.locator("#flowGoEditButton").click()

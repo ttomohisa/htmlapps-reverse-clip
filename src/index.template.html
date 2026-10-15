@@ -568,7 +568,7 @@
 <section class="shell workspace" id="rcWorkflow" data-flow-step="video" aria-labelledby="workspaceTitle">
   <div class="workspace-head">
     <div><h2 id="workspaceTitle" data-i18n="workspaceTitle">動画を読み込む</h2>
-      <p data-i18n="workspaceBody">端末内だけで動画の情報とブラウザーの動作を調べます。</p></div>
+      <p id="workspaceBody" data-i18n="workspaceBody">端末内だけで動画の情報とブラウザーの動作を調べます。</p></div>
   </div>
   <nav id="rcFlowNav" class="rc-flow-nav" aria-label="作業の進行" data-i18n-aria-label="flowNavigation">
     <button id="flowVideoButton" data-flow-target="video" type="button" aria-current="step" data-i18n="flowVideo">動画</button>
@@ -879,6 +879,10 @@
     "flowGoEdit": "区間を編集する",
     "flowBackEdit": "区間・設定を変更する",
     "flowSelectedSource": "{name} · {duration}秒",
+    "flowEditTitle": "区間と出力を編集",
+    "flowEditBody": "区間を決め、再生方法・画質・必要に応じて音声を選びます。",
+    "flowResultTitle": "結果を確認・保存",
+    "flowResultBody": "生成したMP4を再生して確認し、ファイル名を決めて保存します。",
     "flowStepAnnouncement": "{step}を表示しています",
     "flowSaveHint": "保存先はブラウザーのダウンロードから確認してください。",
     "flowOutputDimensions": "出力：{width} × {height}px・{fps}fps",
@@ -1047,6 +1051,10 @@
     "flowGoEdit": "Edit the selected section",
     "flowBackEdit": "Change section or settings",
     "flowSelectedSource": "{name} · {duration}s",
+    "flowEditTitle": "Edit section and output",
+    "flowEditBody": "Select a segment, playback mode, output quality and optional audio.",
+    "flowResultTitle": "Preview and save result",
+    "flowResultBody": "Review the generated MP4, choose a filename and download.",
     "flowStepAnnouncement": "Showing {step}",
     "flowSaveHint": "Check your browser's downloads for the saved MP4.",
     "flowOutputDimensions": "Output: {width} × {height}px · {fps}fps",
@@ -1339,6 +1347,11 @@
         if (flowStep === 'edit' && !canEdit) flowStep='video';
         if (flowStep === 'result' && !canResult) flowStep=canEdit?'edit':'video';
         $('#rcWorkflow').dataset.flowStep=flowStep;
+        const onMobile=window.matchMedia?.('(max-width:600px)').matches===true;
+        $('#workspaceTitle').textContent=translate(!onMobile||flowStep==='video'?
+          'workspaceTitle':flowStep==='edit'?'flowEditTitle':'flowResultTitle');
+        $('#workspaceBody').textContent=translate(!onMobile||flowStep==='video'?
+          'workspaceBody':flowStep==='edit'?'flowEditBody':'flowResultBody');
         for (const step of flowSteps) {
           const button=flowButtons[step];
           button.disabled=step==='edit'?!canEdit:step==='result'?!canResult:false;
@@ -2557,6 +2570,7 @@
       }
       $('#flowGoEditButton').addEventListener('click',()=>setFlowStep('edit'));
       $('#flowBackToEditButton').addEventListener('click',()=>setFlowStep('edit'));
+      window.addEventListener('resize',updateFlowNavigation);
       $('#pickButton').addEventListener('click',()=>$('#sourceInput').click());
       $('#cancelLoadButton').addEventListener('click', () => {
         if (state.sourcePhase !== 'inspecting') return;
