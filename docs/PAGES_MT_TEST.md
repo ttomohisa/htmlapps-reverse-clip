@@ -11,14 +11,14 @@ adds a published-site verifier; it **does not merge** Reverse Clip PR #1/#2,
 FFmpeg Builder PR #16, or Browser Kitty. It does not change the main app's
 source, change runtime dependencies or create a tag/Release.
 
-- **Verified source app head:** `ebebaa12f85f8355cf47f0a79c04135d63860b58`
+- **Verified source app head:** `41f01893b2f60bde296467ab3d148b3170f990fb`
   (from the app's Draft PR #2; the PR remains unmerged).
-- **Verified app CI:** [#38498330193](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38498330193).
+- **Verified app CI:** [#38618083612](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38618083612).
   Real ST/MT Chrome video, AAC, service-worker isolation, offline and frame-order
   regressions are part of that source CI. The deployment itself does not rebuild.
-- **Pinned artifact:** `11865030148`,
-  `standalone-html-ebebaa12f85f8355cf47f0a79c04135d63860b58`,
-  expires **2026-10-28 01:56:10 UTC**. The Pages workflow downloads this
+- **Pinned artifact:** `11920328768`,
+  `standalone-html-41f01893b2f60bde296467ab3d148b3170f990fb`,
+  expires **2026-10-28 18:47:41 UTC**. The Pages workflow downloads this
   exact artifact and checks three pinned SHA-256 fingerprints, failing closed.
   The generated HTML embeds the runtime; no browser-side CDN is required.
 
@@ -34,9 +34,45 @@ same-origin COI Service Worker scoped to `/htmlapps-reverse-clip/mt/`.
 When the worker is unavailable (such as restricted/private browsing), MT
 must report unavailable instead of silently falling back to ST.
 
+## 2026-10-15 experimental sparse-video patch test
+
+This version-refresh changes only the pinned Pages **test** binaries
+to Builder **1.10.6** (source commit
+`8e60da7cf9de644ce3f6cce9c007b17e6a385c53`) and adds richer
+published-site MT verification. It does NOT merge the unfinished
+Reverse Clip or Builder development PRs.
+
+The owner reported ST succeeding but MT failing with `30 expected /
+24 actual` frames on a 37.806s H.264 High presentation video. A
+synthetic 39-frame / 37.806089s equivalent reproduced a related
+older-WASM 28-vs-9 return-chunk failure. The 1.10.6 source normalizes
+VFR to 15fps **before** selecting a bounded frame-grid interval and
+adds best-effort MT pthread teardown per chunk. Strict segment frame
+counts remain mandatory.
+
+Before physical-device retesting, require real Chrome `/mt/`
+validation of both **2s Ping-pong / 58 output frames** and
+**10s Ping-pong / 298 output frames** using the 39-sample input. The
+script must confirm actual downloaded H.264 MP4, full FFmpeg decode,
+crossOriginIsolated / SharedArrayBuffer and no unexpected network
+request. The old published snapshot was only 1s-verified.
+
+**GPL matching source:** independently checked Builder 1.10.6
+source-and-binary candidate from
+[review-only CI #38617100332](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38617100332)
+(artifact `11920042823`, expires 2026-10-21). It contains the
+matching FFmpeg/x264/Emscripten sources, the new pthread cleanup,
+both ST/MT binaries and notices. This is not a permanent immutable
+public Release or final legal approval, and does not prove Android
+RAM stability.
+
+This is still an experimental test snapshot: the actual original
+media and physical Android must be retested. iPhone is deferred.
+No change is made to Browser Kitty.
+
 ## User action
 
-1. Review and merge **only this experimental Pages deployment PR**.
+1. Review and merge **only the binary-refresh Pages PR** after successful source CI.
 2. Watch its GitHub Actions `Deploy Reverse Clip experimental ST/MT to GitHub Pages`.
    If the workflow summary says GitHub Pages is not enabled, open
    **Repository Settings → Pages → Build and deployment → Source: GitHub Actions**,
