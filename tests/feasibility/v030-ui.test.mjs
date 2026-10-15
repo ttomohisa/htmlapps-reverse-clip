@@ -142,7 +142,9 @@ test('optional diagnosis and development explanations are collapsed but accessib
   // Moved to a disclosure, not removed: the original diagnostic export,
   // JS/WASM test and technical status still exist exactly once.
   for(const id of ['downloadReportButton','probeButton','seekButton','probeReport',
-                   'guaranteesTitle','guaranteesBody','buildVersion']){
+                   'guaranteesTitle','buildVersion']){
     assert.equal(html.split('id="'+id+'"').length-1,1,id);
   }
+  assert.ok(html.includes('data-i18n="guaranteesBody"'));
+
 });
