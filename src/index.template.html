@@ -634,6 +634,11 @@
       <div><span data-i18n="dimensions">サイズ</span><strong id="dimensionsLabel">—</strong></div>
       <div><span data-i18n="fileSize">容量</span><strong id="filesizeLabel">—</strong></div>
     </div>
+    <details id="sourceCompatibilityDetails" class="rc-advanced">
+      <summary data-i18n="sourceCompatibilitySummary">素材・色についての注意</summary>
+      <p class="rc-hint" data-i18n="sourceCompatibilityBody">HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsで、元のフレームレートは維持しません。</p>
+      <p class="rc-hint" data-i18n="sourceAudioSelectionNote">複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。</p>
+    </details>
     <div class="rc-grid">
       <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
       <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
@@ -936,6 +941,10 @@
     "sourceLoadCancelled": "読み込みを中止しました。別の動画を選択できます。",
     "multipleFiles": "動画は1つずつ選んでください。複数ファイルは同時に処理できません。",
     "cantRead": "動画をプレビューできません。対応していない形式か破損している可能性があります。",
+    "sourceTooShort": "動画が0.5秒未満のため変換できません。0.5秒以上のMP4またはMOVを選んでください。",
+    "sourceCompatibilitySummary": "素材・色についての注意",
+    "sourceCompatibilityBody": "HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsで、元のフレームレートは維持しません。",
+    "sourceAudioSelectionNote": "複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。",
     "fileName": "ファイル名",
     "sourceDuration": "長さ",
     "dimensions": "画面サイズ",
@@ -1119,6 +1128,10 @@
     "sourceLoadCancelled": "Video loading was cancelled. You can select another video.",
     "multipleFiles": "Choose one video at a time. Multiple dropped files cannot be processed together.",
     "cantRead": "This video cannot be previewed. The format may be unsupported or the file damaged.",
+    "sourceTooShort": "This video is shorter than 0.5 seconds. Choose an MP4 or MOV that is at least 0.5 seconds long.",
+    "sourceCompatibilitySummary": "Source format and color limitations",
+    "sourceCompatibilityBody": "HDR/10-bit input is not automatically identified or color-preserved. Colors may change even if the source can be previewed. Output is 15fps and does not retain the source frame rate.",
+    "sourceAudioSelectionNote": "Multiple audio tracks cannot be selected. When audio is available, only a supported track can be processed.",
     "fileName": "File name",
     "sourceDuration": "Duration",
     "dimensions": "Dimensions",
@@ -2058,7 +2071,13 @@
       }
       video.addEventListener('loadedmetadata', () => {
         if (!state.file || !state.url || video.currentSrc !== state.url) return;
-        if (!Number.isFinite(video.duration) || video.duration < .5 || !video.videoWidth || !video.videoHeight) {
+        if(Number.isFinite(video.duration) && video.duration > 0 && video.duration < .5){
+          // A decodable but too-short source is not a corrupt/unsupported
+          // codec. The shortest output interval is strictly 0.5 seconds.
+          failSource('sourceTooShort');
+          return;
+        }
+        if (!Number.isFinite(video.duration) || !video.videoWidth || !video.videoHeight) {
           failSource('cantRead');
           return;
         }

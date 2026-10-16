@@ -8,13 +8,27 @@ const html=read('src/index.template.html');
 const icon=read('assets/favicon.svg');
 const config=JSON.parse(read('app.config.json'));
 
-test('v0.7 development starts without claiming Gate G2 acceptance or stable release',()=>{
-  assert.equal(config.version,'0.7.0');
-  assert.match(config.description,/v0\.7\.0.*development.*G2/);
-  assert.match(config.descriptionJa,/G2実機検証とGPL恒久配布は未完了/);
+test('v0.8 development starts without claiming Gate G2 acceptance or stable release',()=>{
+  assert.equal(config.version,'0.8.0');
+  assert.match(config.description,/v0\.8\.0.*development.*G2/);
+  assert.match(config.descriptionJa,/G2・iPhone・GPL恒久配布は未完了/);
   assert.match(read('DEVELOPMENT_PLAN.md'),/v0\.7\.0 development approved by owner; G2 carried forward/);
   assert.match(read('docs/feasibility/G2.md'),/G2 NOT PASSED/);
   assert.match(read('CHANGELOG.md'),/\[0\.7\.0\].*not released/);
+});
+
+test('v0.8 input hardening distinguishes short but decodable source and discloses fidelity limits',()=>{
+  for(const key of ['sourceTooShort','sourceCompatibilitySummary','sourceCompatibilityBody',
+                    'sourceAudioSelectionNote']){
+    assert.equal(html.split('"'+key+'":').length-1,2,key+' must be available in JA/EN');
+  }
+  assert.ok(html.includes("video.duration > 0 && video.duration < .5"));
+  assert.ok(html.includes("failSource('sourceTooShort');"));
+  assert.ok(html.includes('id="sourceCompatibilityDetails"'));
+  assert.ok(html.includes('data-i18n="sourceCompatibilityBody"'));
+  assert.ok(html.includes('HDR/10-bit input is not automatically identified or color-preserved.'));
+  assert.ok(html.includes('出力は15fpsで、元のフレームレートは維持しません。'));
+  assert.ok(html.includes('Multiple audio tracks cannot be selected.'));
 });
 
 test('v0.3.0 version and exact supplied 64px favicon/brand icon',()=>{
