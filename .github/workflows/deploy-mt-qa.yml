@@ -75,6 +75,16 @@ jobs:
         run: |
           set -euo pipefail
           npx --yes wrangler@4.135.0 deploy --config wrangler.mt-qa.jsonc --name rc-reverse-clip-mt-qa
+      - name: Diagnose exact Workers.dev response headers before browser smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS -D /tmp/rc-mt-headers.txt -o /dev/null \
+            https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/index.mt.html
+          grep -Ei '^(HTTP/|X-RC-Preview-Worker:|Cross-Origin-Opener-Policy:|Cross-Origin-Embedder-Policy:|Cross-Origin-Resource-Policy:|Content-Type:)' /tmp/rc-mt-headers.txt || true
+          if ! grep -Eiq '^X-RC-Preview-Worker:[[:space:]]*active' /tmp/rc-mt-headers.txt; then
+            echo '::warning::Temporary QA Worker was bypassed for MT; check static asset routing.'
+          fi
       - name: Install Chrome
         id: chrome
         uses: browser-actions/setup-chrome@v2.2.0
