@@ -39,6 +39,30 @@ def create_source(workdir):
         "-pix_fmt", "yuv420p", str(output)], check=True)
     return output
 
+def create_compat_sources(workdir):
+    # Genuine short-but-decodable and 30/60fps MP4 fixtures. These are
+    # generated locally during CI; no user media or network input.
+    results = {}
+    for label, fps, count in (("too-short", 15, 4),
+                              ("fps30", 30, 60),
+                              ("fps60", 60, 120)):
+        target = workdir / f"{label}.mp4"
+        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y",
+            "-f", "lavfi", "-i", f"testsrc2=size=160x90:rate={fps}",
+            "-frames:v", str(count), "-c:v", "libx264", "-preset", "ultrafast",
+            "-pix_fmt", "yuv420p", str(target)], check=True)
+        results[label] = target
+    return results
+
+def inspect_compat_mp4(output, expected_frames=15):
+    report = json.loads(run("ffprobe", "-v", "error",
+        "-show_entries", "stream=codec_name,codec_type,nb_frames:format=duration",
+        "-of", "json", str(output)))
+    video = [s for s in report["streams"] if s.get("codec_type") == "video"]
+    assert len(video) == 1 and video[0]["codec_name"] == "h264", report
+    assert int(video[0]["nb_frames"]) == expected_frames, report
+    assert abs(float(report["format"]["duration"]) - expected_frames / 15) < .07, report
+
 def inspect_mp4(output, frames, duration):
     report = json.loads(run("ffprobe", "-v", "error", "-show_entries",
         "stream=codec_type,codec_name,nb_frames:format=duration", "-of", "json", str(output)))
@@ -235,6 +259,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix="bk-reverse-10s-") as temp_dir:
         temp = Path(temp_dir)
         source = create_source(temp)
+        compat = create_compat_sources(temp)
         server = ThreadingHTTPServer(("127.0.0.1", 0), IsolationHandler)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -300,6 +325,24 @@ def main():
                         assert page.locator("#developmentDetails").evaluate("el => !el.open")
                         assert page.locator("#probeButton").is_hidden()
                         assert page.locator("#guaranteesTitle").is_hidden()
+                        if name in ("single-thread","multi-thread"):
+                            # Decodable sources below the 0.5s minimum must
+                            # not be misclassified as corrupt or unsupported.
+                            page.locator("#sourceInput").set_input_files(
+                                str(compat["too-short"]))
+                            page.locator("#loadStatus[data-phase='error']").wait_for(
+                                timeout=10000)
+                            assert ("0.5" in page.locator("#loadStatus").inner_text())
+                            assert page.locator("#reversePanel").is_hidden()
+                            assert page.locator("#flowResultButton").is_disabled()
+                            before=page.locator("#loadStatus").inner_text()
+                            page.locator("#languageButton").click()
+                            assert "0.5" in page.locator("#loadStatus").inner_text()
+                            assert page.locator("#loadStatus").inner_text() != before
+                            page.locator("#languageButton").click()
+                            assert page.locator("#loadStatus").inner_text() == before
+                            print(f"[PASS] {name} decodable short input classified separately",
+                                  flush=True)
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
                         assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
@@ -457,6 +500,42 @@ def main():
                             print(f"[PASS] simulated Android {name}: {expected_transport} "
                                   "real MP4, no source filename", flush=True)
 
+                        if name in ("single-thread","multi-thread"):
+                            # Compatibility: real H.264 input at 30fps or 60fps
+                            # must produce 15fps, without silently claiming to
+                            # preserve its original frame rate.
+                            for label in ("fps30","fps60"):
+                                page.locator("#flowVideoButton").click()
+                                page.locator("#sourceInput").set_input_files(
+                                    str(compat[label]))
+                                page.locator("#reversePanel").wait_for(
+                                    state="visible", timeout=10000)
+                                page.locator("#flowEditButton").click()
+                                assert page.locator("#sourceCompatibilityDetails").count() == 1
+                                assert not page.locator("#sourceCompatibilityDetails").evaluate(
+                                    "(el) => el.open")
+                                page.locator("#sourceCompatibilityDetails > summary").click()
+                                warning=page.locator("#sourceCompatibilityDetails").inner_text()
+                                assert "15fps" in warning
+                                page.locator("#rangeStart").fill("0")
+                                page.locator("#rangeEnd").fill("1")
+                                assert page.locator("#reverseButton").is_enabled()
+                                page.locator("#reverseButton").click()
+                                page.wait_for_function("""() =>
+                                  !document.querySelector('#resultArea').hidden ||
+                                  !document.querySelector('#reverseErrorDetails').hidden""",
+                                  timeout=120000)
+                                if page.locator("#reverseErrorDetails").is_visible():
+                                    raise AssertionError(
+                                        f"{name} {label}: " +
+                                        page.locator("#reverseErrorDetail").text_content())
+                                with page.expect_download(timeout=15000) as dl:
+                                    page.locator("#saveReverseButton").click()
+                                out_file=temp/f"{name}-{label}-compat.mp4"
+                                dl.value.save_as(out_file)
+                                inspect_compat_mp4(out_file)
+                                print(f"[PASS] {name} {label} => 15fps H.264 MP4",
+                                      flush=True)
                         if name == "single-thread":
                             # Responsive keyboard/tap/long filename regression.
                             # Replacing a source after export must invalidate the
