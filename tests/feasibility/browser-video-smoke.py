@@ -323,16 +323,22 @@ def main():
                         if name in ("single-thread", "multi-thread"):
                             if name == "single-thread":
                                 # Force a deterministic runtime-preflight
-                                # error (no real MP4/WASM failure is implied).
-                                # Mock only the embedded core-presence check:
-                                # the audio inspector may reload BrowserFFmpeg,
-                                # which makes loader monkeypatches unreliable.
+                                # failure (not an actual media/WASM defect).
+                                # StandaloneAssets itself is Object.freeze()d:
+                                # assigning its .has property does nothing.
+                                # Replace the global facade with a shallow
+                                # wrapper and verify that the mock is active.
                                 page.evaluate("""() => {
-                                    window.__v07RealAssetHas = window.StandaloneAssets.has;
-                                    window.StandaloneAssets.has = function(dep,key) {
-                                        if(dep==='reverse-wasm' && key==='coreWasm') return false;
-                                        return window.__v07RealAssetHas.call(this,dep,key);
+                                    window.__v07RealAssets = window.StandaloneAssets;
+                                    window.StandaloneAssets = {
+                                        ...window.__v07RealAssets,
+                                        has(dep,key) {
+                                            if(dep==='reverse-wasm' && key==='coreWasm') return false;
+                                            return window.__v07RealAssets.has(dep,key);
+                                        }
                                     };
+                                    if(window.StandaloneAssets.has('reverse-wasm','coreWasm'))
+                                        throw new Error('missing-core test fixture did not take effect');
                                 }""")
                                 page.locator("#flowEditButton").click()
                                 page.locator("#rangeStart").fill("0")
@@ -356,8 +362,8 @@ def main():
                                 page.locator("#languageButton").click()
                                 assert page.locator("#reverseStatus").inner_text() == status
                                 page.evaluate("""() => {
-                                    window.StandaloneAssets.has = window.__v07RealAssetHas;
-                                    delete window.__v07RealAssetHas;
+                                    window.StandaloneAssets = window.__v07RealAssets;
+                                    delete window.__v07RealAssets;
                                 }""")
                                 print("[PASS] v0.7 localized failure/diagnostics and real retry readiness",
                                       flush=True)
