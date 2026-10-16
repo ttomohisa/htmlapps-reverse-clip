@@ -4,6 +4,10 @@
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
+## Android Chrome v0.9.0 ST owner smoke — 2026-10-17
+
+The owner replied **“4つともOK” (all four OK)** after testing the [v0.9.0 Cloudflare PR #2 **ST Preview**](https://r1414006067-pr-2-bk-previews.ttomohisa.workers.dev) against four requested workflows: short Reverse MP4 save/replay, short Ping-pong MP4 save/replay, cancellation/retry and audible reversed audio. This is a **user-reported phone smoke PASS**, not an independent device/media log. The device, OS/Chrome version, source codec/provider, precise settings, output hashes and RAM/timing were not supplied. **The current Android MT variant is not yet phone-accepted**; permanent source-complete GPL distribution and G3 approval remain outstanding. [Evidence/limitations](docs/release/ANDROID_ST_RC_OWNER_SMOKE.md).
+
 ## Screenshots — actual Chrome MP4 output
 
 The following screenshots show **actual exported and verified H.264 MP4 result screens** from Chrome with a locally generated motion sample. The desktop (1360×900) and mobile-size (390×844) screenshots are **desktop Chrome viewport captures, not physical Android device certification**. This is the unreleased v0.9.0 development branch.
