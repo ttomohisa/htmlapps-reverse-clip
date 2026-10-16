@@ -29,4 +29,7 @@ test('temporary pinned WASM does not masquerade as permanent GPL corresponding s
   assert.match(rc,/GPL corresponding-source/);
   assert.match(read('README.md'),/v0\.9\.0 RC PREPARATION/);
   assert.match(read('README.ja.md'),/v0\.9\.0 公開前RC準備版/);
+  assert.match(read('README-FIRST.txt'),/v0\.9\.0 — RC PREPARATION ONLY/);
+  assert.match(read('VERIFY_OFFLINE.md'),/v0\.9\.0 RC PREPARATION/);
+  assert.match(read('APP_SPEC.md'),/v0\.9\.0 RC準備中/);
 });
