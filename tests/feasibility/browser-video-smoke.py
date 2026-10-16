@@ -612,10 +612,21 @@ def main():
                                       f"output-rendered={rendered_shape}, file={file_shape}, "
                                       f"input={inspect_video_shape(compat[label])}",
                                       flush=True)
-                                if label=="mov":
-                                    assert rendered_shape==source_shape,(
-                                        "H.264 MOV source/export shape mismatch",
-                                        source_shape,rendered_shape)
+                                assert rendered_shape==source_shape,(
+                                    "H.264 MOV displayed orientation changed during export",
+                                    label,source_shape,rendered_shape)
+                                assert file_shape["coded"]==rendered_shape,(
+                                    "MP4 coded dimensions do not match Chrome presentation",
+                                    label,file_shape,rendered_shape)
+                                if label=="rotated-mov":
+                                    # Prove this is an actual display-matrix
+                                    # 90-degree rotation, then verify the
+                                    # encoded MP4 is upright without relying
+                                    # on a rotation tag after transcoding.
+                                    assert source_shape==[90,160],source_shape
+                                    assert file_shape["rotations"]==[],file_shape
+                                    print(f"[PASS] {name} MOV +90° orientation "
+                                          "baked to upright 90x160 MP4",flush=True)
                             # A truncated file with plausible ftyp must fail
                             # decoder validation and never expose a stale MP4.
                             page.locator("#flowVideoButton").click()
