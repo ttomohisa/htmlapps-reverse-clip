@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.7.0] — Mobile UX / Save Flow (development started 2026-10-16; not released)
+## [0.7.0] — Mobile UX / Save Flow (implementation complete 2026-10-16; not released)
+
+- **Code complete / automated PASS:** [ST/isolated MT, actual H.264/AAC MP4 + 320×420px UX CI #38850394911](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394911) and [PR preview #38850394895](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394895) succeeded. No app/Builder merge, tag, stable Release or Browser Kitty import.
+- **Localization:** after a real reverse or ping-pong MP4 is created, re-render output duration/bytes/chunks/elapsed, audio/silent status and mode in the newly selected JA/EN language while retaining the verified Blob, editable filename and downloadable result. Update failed/cancelled status text on locale changes.
+- **Recoverable error states:** on mobile, failed conversion opens detailed errors and moves focus to the summary; a simulated missing-core test proves failure/language switch/retry behavior before a subsequent genuine MP4 run. The simulator does not imply a real FFmpeg defect.
+- **Truthful save and accessible controls:** Save MP4 says browser download started, suggests retry/checking Downloads, and never guarantees OS completion. Native confirmation / output filename remains usable on 320×420px; source/result video aria labels and progress aria names are localized and mode-aware. In-app help accurately describes optional reverse audio and bounded Android <=64MiB input-copy fallback.
+- **Hardware and release gates unchanged:** the Android user-reported PASS is the earlier pinned v0.6.0 Pages candidate, not these v0.7 bytes. Full Android/iPhone device matrix (iPhone deferred), G2 720p/1080p repeat/memory/audio/provider tests and matching immutable GPL corresponding-source Builder release remain outstanding. The expensive MT HD endurance test was skipped in normal CI.
 
 - **Processing navigation guard:** the Video step is disabled while an MP4 conversion is active so progress and Cancel cannot be hidden by normal mobile navigation. The action is available again after success, failure or cancellation; old-job invalidation remains functional. Manually invoking the Video step during a job is guarded.
 - **Visible keyboard focus:** automatic navigation scrolls the focused step heading into view below the sticky app header rather than hiding it above the sticky step buttons. Added 320×568 mobile viewport coverage, ST/MT conversion/cancel checks. No encoding/FFmpeg asset changes.

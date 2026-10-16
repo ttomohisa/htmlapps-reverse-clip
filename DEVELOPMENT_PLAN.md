@@ -1,9 +1,22 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status (2026-10-16):** v0.7.0 development begun at owner request under a documented exception to the sequential G2 gate; G2 still OPEN, no release. The earlier Pages mobile UI candidate has an owner-reported Android basic UX PASS. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
+> **Status (2026-10-16):** v0.7.0 UX implementation complete with real ST/MT browser automation PASS; G2/hardware remains OPEN under the documented owner-directed milestone exception, no release. The earlier Pages mobile UI candidate has an owner-reported Android basic UX PASS. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-16 — v0.7.0 UX code-complete checkpoint
+
+The 3-step phone workflow, localized successful/silent/AAC/ping-pong
+MP4 results and errors, truthful downloads, accessible labels, explicit
+source-replacement guard, processing navigation lock, short viewport
+and keyboard-focus safeguards are implemented on the existing Draft.
+[Actual ST and isolated MT browser CI #38850394911](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394911) and
+[PR preview #38850394895](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394895) PASS. Browser acceptance is
+not a claim of Android or iPhone acceptance for this new branch.
+G2 real-device repeats/RAM/source-provider/audio listening and a
+permanent matching GPL Builder Release remain open; iPhone deferred.
+No merge, GitHub release or Browser Kitty integration.
 
 ## 2026-10-16 — v0.7.0 development approved by owner; G2 carried forward
 

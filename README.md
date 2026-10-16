@@ -23,6 +23,26 @@ user-reported regression; exact device information, individual
 three-repeat timing and other G2 scenarios remain unverified.
 See [G2](docs/feasibility/G2.md).
 
+## v0.7.0 UX completion checkpoint — code and browser tests
+
+The mobile experience is implemented on Draft PR #2 and passed
+[real ST/isolated MT Chrome tests #38850394911](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394911).
+This includes 320–390px and short-height (320×420px) layout, a local
+video picker/recording fallback, responsive time-range editing,
+Reverse/Ping-pong with optional AAC, clear processing/Cancel/retry
+states, MP4 preview and editable filenames, browser download/save-again
+guidance, and JA/EN result details and error messages after switching
+language. Video and progress accessible labels follow language and mode.
+Unsaved results are protected before source replacement.
+
+The app verifies the created MP4 before allowing Result/Save, and
+continues to process the user's video on the device without upload.
+Save starts a browser download; it cannot verify completion in the OS.
+This is **UX implementation and automated test completion**, not a
+v0.7.0 production release or evidence of G2/hardware sign-off.
+The public Pages Android-reviewed test page still uses an earlier
+pinned **v0.6.0** HTML. iPhone testing remains deferred.
+
 ## Mobile Video / Edit / Result flow (v0.7.0 development)
 
 On small screens (600px or below), a three-step navigation keeps the

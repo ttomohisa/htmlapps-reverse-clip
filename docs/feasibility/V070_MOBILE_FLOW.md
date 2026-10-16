@@ -1,11 +1,61 @@
 # v0.7.0 Mobile UX / Save Flow — implementation and acceptance
 
-**State (2026-10-16): v0.7.0 development is now active on Draft PR #2
-by owner-directed exception; Gate G2 remains OPEN / NOT PASSED. The
-earlier v0.6.0 Pages candidate (PR #5) has owner-reported Android basic
-workflow PASS, but was not this new v0.7.0 build. No tag or release.**
+**State (2026-10-16): v0.7.0 Mobile UX / Save Flow implementation complete
+on unmerged Draft PR #2; automated ST/isolated MT acceptance PASS.
+Formal hardware acceptance is NOT complete and Gate G2 remains OPEN /
+NOT PASSED. The owner-reported Android basic-flow PASS applies to the
+earlier Pages v0.6.0 snapshot (PR #5), NOT this new Draft v0.7.0 code.
+No tag or release.**
 iPhone Safari is explicitly deferred. Windows Chrome/Edge and physical
 Android Chrome are the current target devices.
+
+## 2026-10-16 — v0.7.0 implementation-complete / automated-acceptance checkpoint
+
+**[App build + actual ST/isolated MT Chrome CI #38850394911](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394911): ALL SUCCESS.**
+**[PR preview #38850394895](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394895): SUCCESS.** The optional MT
+full-resolution endurance job was SKIPPED and is not evidence of
+physical RAM/performance; no hardware G2 acceptance is implied.
+
+The v0.7 implementation now covers the full **Video → Edit → Result**
+workflow, local capture/file selection, short-range controls, mode,
+optional AAC audio, actual MP4 preview and metadata, user-editable
+download name, save/re-save, empty/loading/failed/success/cancelled
+states, output invalidation, source replacement confirmation,
+processing navigation guard, visible keyboard focus, sticky-header
+scroll and collapsed diagnostics.
+
+Final acceptance hardening:
+- Re-render completed MP4 duration, size, mode, AAC/silent status,
+  chunk count, elapsed time, dimensions and its accessible video label
+  **after switching Japanese/English** without altering the verified
+  MP4 Blob or editable filename. Includes Reverse and Ping-pong with
+  real AAC MP4 and silent output in **both** ST and isolated MT.
+- Keep the failure/cancelled status meaningful across language changes.
+  On a failed conversion, reveal the existing detailed error and move
+  mobile keyboard focus to its summary; the user can retry without
+  stale Save/Result access. A deterministic missing-core *test fixture*
+  exercises this UI safely; it is not a real failing source/video claim.
+- Make source video, result video and conversion progress accessible
+  names bilingual and mode-accurate; remove obsolete English help copy
+  claiming audio export is unsupported, and explain that Android's
+  <=64MiB whole-file memory copy is only a fallback when direct
+  reading fails, not a normal unconditional copy.
+- After Save, state that the **browser download was started**, never
+  that the OS saved it; suggest checking browser Downloads or pressing
+  Save MP4 again. Test editing/downloading a Japanese-named MP4 in
+  a 320×420 viewport, including a short native confirmation sheet.
+- Browser regression covers 320/360/390px and short height, long
+  Japanese source names, source/setting replacement, JA/EN result
+  retention, loading and invalid-source recovery, conversion
+  cancellation and genuine decoded MP4 output in ST/MT, along with
+  local-only runtime paths and direct ST `file://` HTML.
+
+**Decision:** v0.7.0 **UX implementation and desktop automated QA: DONE**.
+**Not accepted:** current v0.7.0 hardware Android UX and provider
+variations, iPhone Safari (explicitly deferred), complete G2
+720p10s/1080p5s device repeats/memory/audio and reviewed permanent
+GPL Builder source distribution. No version bump past v0.7.0,
+Draft PR merge, public release or Browser Kitty integration.
 
 ## 2026-10-16 — keep conversion and Cancel visible on mobile
 
@@ -225,6 +275,10 @@ The result MP4 remains available to retry download while unchanged.
 | Result metadata | Actual MP4 dimensions, FPS, duration, output size; filename editable | Browser PASS |
 | 320/360/390px and long JA filename | No horizontal scrolling, controls 44px+, sticky steps visible without bottom overlays | Automated PASS; physical phone pending |
 | JA/EN toggling | Current phase and selected output preserved, navigation/metadata translated | Browser PASS |
+| JA/EN after a real MP4 result (silent, AAC, Reverse/Ping-pong) | Re-render actual duration/size/audio/result labels without changing Blob or filename | ST/MT Chrome PASS #38850394911 |
+| Failed conversion, locale toggle and retry | Failure/Cancel status translated, details focusable, no Save; subsequent real export succeeds | ST/MT Chrome PASS #38850394911; injected failure is a test fixture |
+| Save form and confirmation at 320×420px | Native sheet fits, 44px+ actions, editable Japanese filename and Save reachable without horizontal scrolling | Chrome PASS #38850394911 |
+| Bilingual accessible media labels | Source/result videos and conversion progress have correct JA/EN labels, including Ping-pong | ST/MT Chrome PASS #38850394911 |
 | ST and true COI MT | Both generate/download real MP4; source file never uploaded | Browser/CI PASS; phone pending |
 | Foldable diagnostics (initially closed) | Native disclosure retains tests/log export; error button opens diagnostics | Browser and Node PASS; Android pending |
 | Published Pages MT Android basic Video/Edit/Result/Download flow | User can complete the basic journey on a real Android device | **OWNER-REPORTED PASS 2026-10-16**; exact device/browser, keyboard/safe area and final save destination not separately documented |
