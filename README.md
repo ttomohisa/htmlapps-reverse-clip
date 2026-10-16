@@ -4,6 +4,24 @@
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
+## v0.8.0 — additional tested media compatibility
+
+[Real ST and isolated MT Chrome CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532) now
+covers synthetic **H.264 QuickTime MOV**, a 90° display-matrix
+rotated MOV (160×90 coded input shown 90×160, exported as a real
+upright 90×160 H.264 MP4), a truncated ISO BMFF file with a
+plausible header (rejected with no stale download), and
+a source containing **two distinct AAC tracks**. In the latter
+case, the existing silent default generated H.264-only MP4 with
+zero audio streams: this does **not** add selection/preservation
+of multiple tracks. [PR preview](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118536) also succeeded.
+
+Supported claims are limited to the synthetic browser-tested cases:
+iPhone HEVC MOV, 180/270° metadata, camera-specific rotation,
+HDR/10-bit colors and selectable multiple source tracks remain
+unverified. [Compatibility evidence](docs/feasibility/V080_COMPATIBILITY_MATRIX.md)
+records the distinction.
+
 ## v0.8.0 — input compatibility work
 
 The current development milestone focuses on real files and explicit

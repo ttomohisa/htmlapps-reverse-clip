@@ -4,6 +4,26 @@
 
 [製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [G2受入状況](docs/feasibility/G2.md) · [MTの実測](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md) · [English README](README.md)
 
+## v0.8.0 — MOV・回転・破損入力・複数音声の実ファイル検証
+
+[実Chrome ST/MT CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532)で、H.264の
+QuickTime MOV、90度回転情報が入ったMOV、データの一部が欠けたMP4、
+AAC音声が2トラックあるMP4を、実ファイルから検証しました。
+H.264 MOVは逆再生MP4へ変換でき、90度回転MOVは横長160×90の
+格納データから画面上の90×160を維持し、完成MP4も90×160で
+保存できました。ヘッダーがMP4に見えても中身が欠けたファイルは
+変換できず、結果・保存操作も有効になりません。
+
+音声2トラックの動画は、既定の「音声なし」で映像のみのMP4を
+生成できることを確認しました。**複数音声トラックからの選択、
+両方の保持、どのトラックが逆再生されるかは保証しません。**
+[PRプレビュー](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118536)も成功しています。
+
+今回確認したのは合成H.264素材を使ったChrome環境であり、
+iPhoneのHEVC MOV、180/270度回転、HDR/10-bitの色再現や
+実機カメラ動画の全パターンに対応したことにはなりません。
+詳細は[互換性QA表](docs/feasibility/V080_COMPATIBILITY_MATRIX.md)。
+
 ## v0.8.0 — 入力形式・異常系の検証
 
 v0.8.0では、実際の動画ファイルと異常条件への対応を進めます。動画が正常にプレビューできても**0.5秒未満**なら変換できない理由を明示し、破損や非対応コーデックと混同しません。H.264の30fps／60fps元動画は、ST・MTの実Chrome[CI #38853679777](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679777)で**各1秒／15フレームのH.264 MP4を生成・保存・検証できました**。**出力は15fps**であり、元のフレームレートは維持しません。約0.27秒の短いH.264動画は破損と誤認せず、最短0.5秒の制限を日英で案内するテストも成功しています。

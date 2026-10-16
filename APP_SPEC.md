@@ -8,6 +8,19 @@
 > **新規リポジトリ候補:** `ttomohisa/htmlapps-reverse-clip`（GitHub上で作成済み、2026-10-11確認）  
 > **関連資料:** [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md)
 
+## 2026-10-16 — H.264 MOV・90度回転・破損MP4・複数音声の回帰検証
+
+[ST/MT実Chrome CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532)で、
+H.264 QuickTime MOVの実変換、90度回転表示の縦長90×160 MP4出力、
+ISO BMFFヘッダーだけ残した破損MP4の安全な拒否、
+AAC2トラック入力の「音声なし」出力（音声0トラック）を
+確認した。プレビュー成功と、HEVC MOV／その他の回転角／HDR／
+複数音声トラック選択を保証することは区別する。
+
+本結果は合成H.264・デスクトップChromeの確認で、実機カメラの
+向き、iPhone SafariやG2の高解像度連続メモリ試験は未受入。
+FFmpeg・音声処理コア、CSP、外部通信方針は変更していない。
+
 ## 2026-10-16 — v0.8.0形式互換性・異常系強化への移行
 
 ユーザーの指示で、既存Draft PR #2上の開発版をv0.8.0へ進める。v0.7.0で完成したスマホUI・保存・逆再生／往復再生・AACを維持する。元の開発計画どおりH.264 30/60fps、VFR、縦動画回転、MOV/HEVC、HDR/10-bit、複数音声、壊れたMP4、短すぎる動画、巨大入力などの互換性を検証する。

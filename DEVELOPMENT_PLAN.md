@@ -5,6 +5,23 @@
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
 
+## 2026-10-16 — H.264 MOV / 90° rotation / corrupt MP4 / dual AAC QA
+
+[CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532) and
+[PR preview #38857118536](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118536) ALL SUCCESS.
+Real Chrome ST and isolated MT confirmed H.264 MOV decoding and
+reverse MP4; a genuine 90° MOV display matrix was handled as browser
+portrait preview 90×160 and upright coded 90×160 output without
+residual display rotation; a 128-byte plausible ISO BMFF truncated
+source could not activate Result/Save; and a source with two AAC
+tracks exported **zero** audio tracks under the default mute setting.
+These are synthetic browser fixtures, not HEVC/iPhone/real Android
+endurance proof. No codec, FFmpeg binary, network or privacy changes.
+
+The v0.8 matrix documents remaining 180/270°/HDR/10-bit, actual
+source-track selection, file-provider and G2 phone gaps.
+No app/Builder PR merge, tag, public release or Browser Kitty import.
+
 ## 2026-10-16 — v0.8.0 Compatibility / Hardening development start
 
 The owner explicitly requested progression to the v0.8.0 milestone.

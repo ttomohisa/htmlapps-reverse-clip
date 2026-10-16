@@ -11,14 +11,16 @@
 | H.264 input at 60fps | Output explicitly 15fps, 1s = 15 frames | **PASS real ST/isolated MT Chrome #38853679777**: generated 60fps H.264, saved & probed 15-frame/1s H.264 MP4 |
 | Playable source shorter than 0.5s | Reject as *too short*, not as corrupt codec; preserve localized error across language switch | **PASS real ST/isolated MT Chrome #38853679777**, 4-frame 15fps (~0.27s) H.264; JA/EN and stale result checks |
 | VFR / ~1fps source | Exact frame grid, no missing/duplicate frames | Desktop ST/MT and user-specific Android/PC regression **PASS** on earlier snapshots; not exhaustive VFR acceptance |
-| Portrait native dimensions | Aspect and orientation correct after export | Native 90×160 output previously desktop Chrome **PASS**; 90/180/270° rotation metadata remains **UNVERIFIED** |
+| Portrait and 90° rotation metadata in H.264 MOV | Browser presentation orientation matches output MP4; resulting coded dimensions upright with no leftover display rotation | **PASS real ST/isolated MT Chrome #38857118532**: 160×90 coded input with 90° display matrix appears 90×160 in browser; output MP4 coded 90×160, no residual rotation metadata. Other angles and actual phone footage remain unverified |
+| H.264 in QuickTime MOV (without rotation) | Parse, preview, reverse, output valid H.264 MP4 with same orientation | **PASS real ST/isolated MT Chrome #38857118532**: 160×90 H.264 MOV → 15-frame/1s MP4, same presented dimensions |
 | HEVC/H.265 MOV from iPhone | Preview, rotate and MP4 export or actionable unsupported state | **DEFERRED / UNVERIFIED** on physical iPhone; do not advertise iPhone HEVC support |
 | HDR, 10-bit, BT.2020/PQ/HLG | Detect/preserve color or reject/explicitly warn | **LIMITATION DISCLOSED, NOT VERIFIED**. No reliable HDR/10-bit detection or preserved colors claimed; a successful preview alone is insufficient |
-| Multiple audio tracks | Known track selected or unsupported explained accurately | **NOT IMPLEMENTED** as a selectable feature. Single supported audio source may work, with no multi-track fidelity guarantee |
+| Two AAC audio tracks in source | In default silent mode, do not accidentally mux either audio track; no unsupported track picker | **PASS real ST/isolated MT Chrome #38857118532**: verified synthetic source has exactly two AAC streams; selected default silent Reverse yields real MP4 with one H.264 video stream and **zero audio streams**. Selecting/reversing one of multiple source tracks remains unverified/unsupported as a selectable feature |
 | Silent source | AAC option disabled, H.264-only export | **PASS in prior real ST/MT Chrome suites** |
 | Supported AAC audio source | Reverse/ping-pong AAC with expected time and channels | **PASS in prior real ST/MT Chrome suites**; device seam listening still pending |
 | Invalid extension / MIME / renamed fake MP4 | Clear unsupported/invalid-header error, no output | **PASS prior ST/MT browser/Node tests** |
-| Truncated/corrupt/unreadable source | No stale result or partial MP4; relevant error | **Partially PASS** for fake header/decoder failures. Extended real corrupt-file matrix **PENDING** |
+| Truncated ISO BMFF with plausible ftyp but missing full MP4 media/moov | Fail safely after header check, no stale MP4 or save action | **PASS real ST/isolated MT Chrome #38857118532**: 128-byte H.264 MP4 prefix causes error and leaves Result/Save unavailable; other corruption patterns remain pending |
+| Truncated/corrupt/unreadable source | No stale result or partial MP4; relevant error | **Partially PASS** for fake header/decoder failures and one real truncated-header case. Extended corruption matrix still **PENDING** |
 | Source >1GiB, empty input, Android provider | Reject huge/empty; fallback bounded to <=64MiB if direct reading fails | **Implemented and browser-simulated**, full-copy fallback remains a **known G2 violation** and real provider matrix pending |
 | 720p10s / 1080p5s repeated device stability | Three repeat exports, timing/RAM, no crash | **G2 NOT PASSED**. Selected desktop ST/MT full-size results exist, not full phone repeats |
 | Single HTML `file://`, ST readable / self-extract | Real local selection/reverse/MP4 save without network access | **PASS prior desktop Chrome CI #38850394911** |
@@ -47,6 +49,39 @@ These results cover locally generated H.264 test files on desktop
 Chrome. **No claim** is made about physical Android performance,
 iPhone HEVC MOV, HDR color fidelity, or all real-world 30/60fps VFR
 decoding behavior.
+
+## 2026-10-16 — MOV, rotation, corrupt-input and multiple-audio regression
+
+[App CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532) **ALL SUCCESS** and
+[PR preview #38857118536](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118536) **SUCCESS**.
+The suite generates all source fixtures locally in CI; no downloaded
+test media or user videos are used.
+
+- H.264 in QuickTime **MOV** (not HEVC) reverses and downloads as
+  a verified H.264 MP4 on desktop Chrome ST and isolated MT.
+- Genuine input **90° QuickTime display matrix** changes the browser
+  presentation of coded 160×90 to 90×160. The saved MP4's pixels
+  are coded **90×160** with no remaining display rotation metadata.
+  That proves the displayed orientation and coded dimensions match
+  for this fixture; it is *not* full visual/color verification or
+  180/270°/real-camera acceptance.
+- A structurally plausible but **128-byte truncated MP4** is rejected
+  after container preflight. Neither a stale result nor a Save action
+  becomes available.
+- A synthetic file with **two separate AAC audio streams** keeps
+  the default **No audio** mode and produces a real H.264-only MP4.
+  The result contains zero audio streams. There is still no
+  track-selection UI, no claim about which track an optional audio
+  conversion would choose, and no acceptance for multi-track audio
+  fidelity or preservation.
+- These browser tests preserve existing cancellation, frame-count,
+  old-source invalidation, standalone local HTML, no-upload/CSP,
+  AAC Reverse/Ping-pong and 30/60fps regressions. Opt-in high-res
+  MT endurance remained **SKIPPED**.
+
+The specific rotation and MOV result is **desktop Chrome + synthetic
+H.264**, not evidence of HEVC support, accurate HDR color, physical
+Android camera orientation or iPhone Safari. G2 remains NOT PASSED.
 
 ## Acceptance and release policy
 

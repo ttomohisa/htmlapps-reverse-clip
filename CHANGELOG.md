@@ -2,6 +2,10 @@
 
 ## [0.8.0] — Compatibility / Hardening (development started 2026-10-16; not released)
 
+- **Real MOV and rotation QA:** [CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532) ALL SUCCESS, [PR preview #38857118536](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118536) SUCCESS. True ST and COI MT generated/decoded valid H.264 QuickTime MOV, plus a 90° display-matrix MOV. Source stored as 160×90 / presented 90×160 became an upright coded 90×160 H.264 MP4 with no residual rotation metadata. Other rotation angles, real-camera HEVC/HDR and iOS remain unverified.
+- **Corrupt-media fail closed:** a 128-byte truncated but plausible MP4 header fails source decode without exposing old Result/Save in both ST/MT Chrome. More malformed variants still pending.
+- **Two-audio-track safe default:** synthetic MP4 with 2 AAC streams produced a real silent H.264-only MP4 in the default No audio mode, zero audio streams. This does not introduce a multi-track selector or establish which source track optional audio mode uses; track selection/preservation unverified. Existing video/AAC processing paths unchanged.
+
 - **Version and scope:** advance to `0.8.0` on existing unmerged Draft PR #2. Preserve v0.7 phone UX, Reverse/Ping-pong/AAC, original file privacy and strict MP4 integrity safeguards; G2 remains OPEN, no merge/release/Browser Kitty integration.
 - **Short source classification:** a decodable input below 0.5 seconds now gets specific JA/EN guidance, not an inaccurate damaged/unsupported-file diagnosis. Longer playable inputs retain the prior checks.
 - **Factual limitations:** a collapsed source-format note discloses that HDR/10-bit detection and color-fidelity preservation are not guaranteed, output is fixed at 15fps even for 30/60fps inputs, and users cannot select from multiple source audio tracks.
