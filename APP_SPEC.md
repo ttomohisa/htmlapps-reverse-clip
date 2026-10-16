@@ -1,12 +1,20 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
-> **Status:** Feasibility in progress / G1 pending（検証中・G1未合格）  
+> **Status:** v0.7.0 development under owner-directed progression（G1/G2の正式合格は未取得、リリース未実施）  
 > **作成日:** 2026-10-11  
 > **目標版:** v1.0.0  
 > **アプリ名:** Reverse Clip / 動画逆再生（仮称）  
 > **アプリslug:** `reverse-clip`（仮）  
 > **新規リポジトリ候補:** `ttomohisa/htmlapps-reverse-clip`（GitHub上で作成済み、2026-10-11確認）  
 > **関連資料:** [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md)
+
+## 2026-10-16 — v0.7.0開発への移行（G2は未合格）
+
+ユーザーの指示によりv0.7.0の**開発マイルストーン**へ進む。これは当初Gate順序に対する、開発着手のみの明示的な例外であり、G1/G2の正式合格・v1.0.0の受入条件緩和・正式公開を意味しない。
+
+当初G2ではAndroid/iPhoneで高解像度の3回連続処理と音声・キャンセル・性能・元動画全量コピー禁止を求める。iPhone試験は延期され、Androidの実機反復・RAM・試聴の記録は不十分であり、64MiB以下のフォールバックで元ファイル全体をコピーする経路は残る。これらを未受入として残す。
+
+従来の逆再生・往復再生・AAC、音声なし初期値、画質/時間上限、完全ローカル処理、Worker/WASMの後片付け、不完全MP4を保存しない安全策は維持する。過去のAndroid成功報告はv0.6.0固定Pages版が対象であり、最新v0.7.0の実機合格とは区別する。GPL対応ソース付き恒久配布は正式公開前の別必須条件として扱う。アプリ・BuilderのDraft PRはマージしない。
 
 ## 2026-10-13 — v0.5.0 Audio Modesの実ブラウザ検証
 

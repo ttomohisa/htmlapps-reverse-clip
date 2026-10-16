@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.6.0 memory/performance/reliability candidate (not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The 720p/10s and 1080p/5s bounds have passed selected **desktop ST and isolated MT** full-size scenarios, but **not physical-device G2**. Android repeated-use, three-repeat MT stress, reliable memory measurements, audio listening and a permanent GPL source bundle are outstanding; iPhone tests are deferred.
+**Development status: v0.7.0 Mobile UX / Save Flow (Draft; G2 remains OPEN; not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The 720p/10s and 1080p/5s bounds have passed selected **desktop ST and isolated MT** full-size scenarios, but **not physical-device G2**. Android repeated-use, three-repeat MT stress, reliable memory measurements, audio listening and a permanent GPL source bundle are outstanding; iPhone tests are deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
@@ -23,7 +23,7 @@ user-reported regression; exact device information, individual
 three-repeat timing and other G2 scenarios remain unverified.
 See [G2](docs/feasibility/G2.md).
 
-## Mobile Video / Edit / Result flow (v0.7 preparation, v0.6.0 development)
+## Mobile Video / Edit / Result flow (v0.7.0 development)
 
 On small screens (600px or below), a three-step navigation keeps the
 current task visible: **Video → Edit → Result**. Choose or capture
@@ -59,11 +59,26 @@ rendered resolution, FPS, output duration and file size and an editable
 MP4 filename. **Save MP4 initiates a browser download; the app cannot
 confirm where the operating system finally stores it.**
 
-This is **UI work toward v0.7.0**, not a v0.7.0 release or a pass of
-Gate G2. Additional Android on-device keyboard/file-provider checks,
+The app is now in **v0.7.0 development** at the owner's direction.
+This is not a v0.7.0 release or a pass of Gate G2. Additional Android on-device keyboard/file-provider checks,
 audio listening, memory and the source-file whole-copy exception still
 need acceptance; iPhone is
 deferred. See [mobile flow acceptance](docs/feasibility/V070_MOBILE_FLOW.md).
+
+## Why v0.7 development proceeds while G2 remains open
+
+The original G2 requires Android **and iPhone** hardware tests for
+720p10s/1080p5s Reverse/Ping-pong three times, real audio/cancel/
+performance evidence, and no full original input copies up to 1 GiB.
+iPhone testing is deferred, complete Android evidence is missing, and
+the <=64MiB provider fallback still copies the entire input.
+
+By owner direction, v0.7 **development** begins as an exception to the
+original strict milestone ordering; no formal G2 pass or release
+requirements are waived. A reviewed permanent GPL corresponding-source
+Builder Release is separately required for stable distribution.
+The real Android success so far applied to the older pinned Pages
+v0.6.0 snapshot, not these new Draft v0.7 bytes.
 
 ## Goal
 

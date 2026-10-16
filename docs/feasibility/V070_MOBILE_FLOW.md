@@ -1,10 +1,24 @@
 # v0.7.0 Mobile UX / Save Flow — implementation and acceptance
 
-**State (2026-10-16): Basic Android UX is owner-reported PASS on the pinned
-GitHub Pages candidate (PR #5); the main app is still v0.6.0 Draft PR #2,
-and Gate G2 remains OPEN. No v0.7.0 version bump, tag or release.**
+**State (2026-10-16): v0.7.0 development is now active on Draft PR #2
+by owner-directed exception; Gate G2 remains OPEN / NOT PASSED. The
+earlier v0.6.0 Pages candidate (PR #5) has owner-reported Android basic
+workflow PASS, but was not this new v0.7.0 build. No tag or release.**
 iPhone Safari is explicitly deferred. Windows Chrome/Edge and physical
 Android Chrome are the current target devices.
+
+## 2026-10-16 — owner-directed v0.7.0 development start (G2 stays open)
+
+The user requested moving into v0.7.0 development while G2 remains
+unaccepted. The existing three-step mobile flow and its refinements
+are now the active v0.7 work. This is **not a G2 pass or a stable
+release**. The Android success was on the separately pinned v0.6.0
+Pages test snapshot, not the newer Draft v0.7.0 code.
+
+The Android full HD/repeat and source-provider/keyboard matrix, real
+audio quality and memory issues remain pending, as documented in
+`docs/feasibility/G2.md`. iPhone is deferred. No main/app/Builder
+merges, tag, release or Browser Kitty integration have occurred.
 
 ## 2026-10-16 — physical Android mobile workflow: OWNER-REPORTED PASS
 
@@ -25,8 +39,9 @@ Android Chrome are the current target devices.
   after leaving Result, invalidation on numeric `input`, extra 44px
   targets) **were not in that pinned Pages test snapshot**. They passed
   their own automated Chrome ST/MT regressions, not this Android run.
-- Draft app PR #1/#2 and Builder PR #16 remain unmerged; G2 and full
-  v0.7.0 signoff remain OPEN. iPhone is deferred.
+- Draft app PR #1/#2 and Builder PR #16 remain unmerged. G2 is
+  still OPEN, and v0.7.0 is now a development milestone only,
+  not final UI/G2 acceptance. iPhone is deferred.
 
 ## 2026-10-16 regression and tap-target hardening
 
@@ -81,10 +96,11 @@ diagnostic section. Browser download status says download started,
 not OS save completed. Internal result/diagnostic data still remain
 in memory and are not uploaded.
 
-The real-device Android UI/safe-area/keyboard, actual audio listening,
-source-provider memory fallback and all outstanding G2 items remain
-**PENDING**. iPhone verification is postponed. v0.6.0 stays the
-version; this is not v0.7.0 milestone approval.
+The basic Android mobile flow has owner-reported PASS on the earlier
+pinned Pages version. Device-specific keyboard/safe-area, real audio
+listening, provider fallback and all outstanding G2 items remain
+**PENDING**. iPhone testing is postponed. The app Draft version
+is now **v0.7.0 development**, not a release or G2 approval.
 
 The separate [Pages test-only PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
 has now merged; live isolated MT Chrome checks passed in
@@ -169,8 +185,9 @@ works on PC and Android with Builder 1.10.6, but this does not close
 the broader 720p10s/1080p5s mode matrix, real camera provider
 memory/copy exception, audio listening, cancel/retry, or final GPL
 source-complete permanent Builder Release. iPhone remains deferred.
-Do not mark v0.6.0 complete or call this v0.7.0 released without
-separate explicit Gate G2 review.
+Do not mark v0.6.0/G2 accepted or call v0.7.0 released. The owner
+explicitly authorized **v0.7 development** despite open G2; formal
+acceptance and stable release are separate decisions.
 
 App branch: `feat/reverse-wasm-preview`, [Draft PR #2](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/2)
 (base `feat/reverse-clip-feasibility-v0.1`).
