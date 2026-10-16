@@ -81,11 +81,16 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
     assert page.locator("#workspaceTitle").evaluate("(el) => document.activeElement === el"), prefix
     assert page.locator("#flowResultButton").get_attribute("aria-current") == "step"
     # Automatic focus should be visible below the sticky page header.
-    assert page.evaluate("""() => {
+    heading_geometry=page.evaluate("""() => {
         const r=document.querySelector('#workspaceTitle').getBoundingClientRect();
-        const header=document.querySelector('.app-header').getBoundingClientRect();
-        return r.top >= header.bottom - 2 && r.bottom <= innerHeight;
-    }"""), ("hidden step heading", prefix)
+        const h=document.querySelector('.app-header').getBoundingClientRect();
+        return {top:r.top,bottom:r.bottom,headerBottom:h.bottom,
+                viewport:innerHeight,scrollY:scrollY,
+                maxScroll:document.documentElement.scrollHeight-innerHeight};
+    }""")
+    assert (heading_geometry["top"] >= heading_geometry["headerBottom"] - 2 and
+            heading_geometry["bottom"] <= heading_geometry["viewport"]), (
+                "hidden step heading", prefix, heading_geometry)
     page.wait_for_function("() => !document.querySelector('#flowVideoButton').disabled")
     assert page.locator("#workspaceTitle").inner_text() in ("結果を確認・保存", "Preview and save result")
     assert page.locator("#resultDimensions").is_visible()
