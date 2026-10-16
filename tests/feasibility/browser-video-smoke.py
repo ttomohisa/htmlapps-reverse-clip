@@ -186,8 +186,10 @@ def capture_rc_result_screenshots(page, output_path):
         # The compatibility section was opened by the test for source
         # constraints; close it for a normal first-use screen.
         disclosure=page.locator("#sourceCompatibilityDetails")
-        if disclosure.evaluate("(el) => el.open"):
-            disclosure.locator("summary").click()
+        # On a mobile Result step, the Edit page/summary is hidden.
+        # A synthetic click would hang waiting for visibility. Reset
+        # the purely presentational disclosure directly in the test.
+        disclosure.evaluate("(el) => { el.open=false; }")
         for mode,width,height in (("desktop",1360,900),("mobile",390,844)):
             page.set_viewport_size({"width":width,"height":height})
             assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
