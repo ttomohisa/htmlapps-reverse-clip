@@ -9,9 +9,12 @@
 The current development milestone focuses on real files and explicit
 failure states. A decodable video shorter than **0.5 seconds** now
 shows a localized minimum-length explanation rather than being called
-corrupt. Actual H.264 30fps/60fps input checks are being added to
-the ST and isolated MT Chrome suites; these are **output at 15fps**,
-not preservation of the input frame rate.
+corrupt. Actual H.264 30fps/60fps files **PASS** real ST and isolated MT Chrome
+[CI #38853679777](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679777), each exported to a
+15-frame/1-second H.264 MP4 at **15fps** (not source-fps preservation).
+The same CI distinguishes valid ~0.27s MP4s with the accurate
+minimum-duration JA/EN error. The [PR preview](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679768) also
+passed.
 
 The Edit step provides collapsed **source format and color limitations**:
 the app does not reliably identify or guarantee HDR/10-bit color

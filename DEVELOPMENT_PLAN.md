@@ -23,9 +23,11 @@ detected or guaranteed**, 30/60fps is resampled to 15fps rather than
 preserved, and multi-track audio selection is not implemented.
 No new codec, media network connection or WASM dependency is added.
 
-A real ST/isolated MT browser regression now generates 0.27-second,
-30fps and 60fps H.264 fixtures locally in CI and checks correct
-short-input rejection and actual 15-frame 1-second H.264 exports.
+[Actual ST/isolated MT Chrome CI #38853679777](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679777)
+**ALL SUCCESS**: locally generated 0.27-second H.264 rejected with
+the correct translated message, genuine 30fps and 60fps H.264 inputs
+each output as 15-frame, 1-second H.264 MP4 verified by ffprobe.
+[PR preview #38853679768](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679768) also PASS.
 Testing of genuine HDR/10-bit color, HEVC MOV, physical-device rotation,
 multi-audio-track selection and iPhone Safari is still **OPEN**;
 a disclosure is not color-fidelity validation. See
