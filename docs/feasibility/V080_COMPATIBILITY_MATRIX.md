@@ -11,10 +11,12 @@
 | H.264 input at 60fps | Output explicitly 15fps, 1s = 15 frames | **PASS real ST/isolated MT Chrome #38853679777**: generated 60fps H.264, saved & probed 15-frame/1s H.264 MP4 |
 | Playable source shorter than 0.5s | Reject as *too short*, not as corrupt codec; preserve localized error across language switch | **PASS real ST/isolated MT Chrome #38853679777**, 4-frame 15fps (~0.27s) H.264; JA/EN and stale result checks |
 | VFR / ~1fps source | Exact frame grid, no missing/duplicate frames | Desktop ST/MT and user-specific Android/PC regression **PASS** on earlier snapshots; not exhaustive VFR acceptance |
-| Portrait and 90° rotation metadata in H.264 MOV | Browser presentation orientation matches output MP4; resulting coded dimensions upright with no leftover display rotation | **PASS real ST/isolated MT Chrome #38857118532**: 160×90 coded input with 90° display matrix appears 90×160 in browser; output MP4 coded 90×160, no residual rotation metadata. Other angles and actual phone footage remain unverified |
+| H.264 MOV 90°/180°/270° display rotation | Browser presentation orientation and content match output; coded MP4 upright without residual rotation | **PASS desktop Chrome ST/isolated MT #38863445237**. For 180°/270°, asymmetric red/green/blue pixel markers compared to FFmpeg autorotated source decoded frame with mean RGB absolute error **0.46** on both ST/MT. 180°: upright coded 160×90, 270°: 90×160; 90° geometry previously PASS. Physical phone camera footage and HDR color still untested |
 | H.264 in QuickTime MOV (without rotation) | Parse, preview, reverse, output valid H.264 MP4 with same orientation | **PASS real ST/isolated MT Chrome #38857118532**: 160×90 H.264 MOV → 15-frame/1s MP4, same presented dimensions |
-| HEVC/H.265 MOV from iPhone | Preview, rotate and MP4 export or actionable unsupported state | **DEFERRED / UNVERIFIED** on physical iPhone; do not advertise iPhone HEVC support |
-| HDR, 10-bit, BT.2020/PQ/HLG | Detect/preserve color or reject/explicitly warn | **LIMITATION DISCLOSED, NOT VERIFIED**. No reliable HDR/10-bit detection or preserved colors claimed; a successful preview alone is insufficient |
+| HEVC 8-bit H.265 MOV (hvc1), synthetic desktop fixture | If unsupported, explicitly fail source preview and block Result/Save | **PASS fail-closed desktop Chrome ST/isolated MT #38863445237**: HEVC video preview rejected and no partial download. **Not a claim of HEVC decoding support**; hardware/OS results may differ |
+| HEVC 10-bit BT.2020/PQ MOV (hvc1), synthetic desktop fixture | If unsupported, fail closed; if accepted, do not claim HDR color fidelity | **PASS fail-closed desktop Chrome ST/isolated MT #38863445237**: native FFmpeg fixture confirmed 10-bit PQ/BT.2020 tags; browser preview rejected; no Result/Save. No HDR fidelity claim |
+| HEVC/H.265 MOV from iPhone | Preview, rotate and MP4 export or actionable unsupported state | **DEFERRED / UNVERIFIED** on physical iPhone. Synthetic Linux desktop Chrome rejection is not predictive of iOS codec support; do not advertise iPhone HEVC support |
+| HDR, 10-bit, BT.2020/PQ/HLG | Detect/preserve color or reject/explicitly warn | **LIMITATION DISCLOSED, NOT VERIFIED**. 10-bit BT.2020/PQ HEVC MOV rejected in one desktop Chrome build; no successful color conversion or fidelity test. HLG and other browser/OS decoding not tested |
 | Two AAC audio tracks in source | In default silent mode, do not accidentally mux either audio track; no unsupported track picker | **PASS real ST/isolated MT Chrome #38857118532**: verified synthetic source has exactly two AAC streams; selected default silent Reverse yields real MP4 with one H.264 video stream and **zero audio streams**. Selecting/reversing one of multiple source tracks remains unverified/unsupported as a selectable feature |
 | Silent source | AAC option disabled, H.264-only export | **PASS in prior real ST/MT Chrome suites** |
 | Supported AAC audio source | Reverse/ping-pong AAC with expected time and channels | **PASS in prior real ST/MT Chrome suites**; device seam listening still pending |
@@ -82,6 +84,38 @@ test media or user videos are used.
 The specific rotation and MOV result is **desktop Chrome + synthetic
 H.264**, not evidence of HEVC support, accurate HDR color, physical
 Android camera orientation or iPhone Safari. G2 remains NOT PASSED.
+
+## 2026-10-16 — 180°/270° pixel orientation and HEVC fail-closed tests
+
+[App ST/MT CI #38863445237](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445237)
+**ALL SUCCESS**; [PR preview #38863445204](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445204)
+**SUCCESS**. Synthetic local fixture generation and checks included:
+
+- Actual QuickTime display-matrix 180° and 270° H.264 MOV sources
+  with asymmetrical color markers; actual Chrome source preview,
+  verified encoded H.264 output and FFmpeg auto-rotated reference were
+  compared at pixel level. Both orientations matched, mean absolute
+  RGB channel error **0.46** on both real ST and isolated MT runs.
+  The original 90° fixture also remained PASS. Saved MP4s contain
+  upright coded pixels and no residual display rotation.
+- Valid synthetic HEVC **8-bit** MOV and **10-bit BT.2020/PQ** MOV
+  confirmed by ffprobe. On this Linux Chrome environment, both
+  resulted in decoder/source preview errors, with **no stale result
+  or download** in either ST or MT. These are **safe rejection**
+  results, not successful HEVC transcoding or HDR color validation.
+  The UI already states that HDR/10-bit detection/preservation is
+  not guaranteed, and iPhone HEVC remains out of scope for hardware QA.
+- Existing H.264 30/60fps, low-fps VFR, AAC, multi-track default
+  silent behavior, missing/corrupt source, cancellation, output MP4
+  verification, local ST file:// and network isolation all remained
+  in the successful regression suite. High-resolution MT endurance
+  remains opt-in and SKIPPED in the ordinary CI.
+
+**Still unverified:** physical Android camera color/rotation,
+HEVC/iPhone hardware, 10-bit HDR tone mapping, BT.2020/PQ/HLG
+fidelity, selectable input audio tracks and G2 high-resolution memory
+and multiple-run acceptance. No corresponding-source GPL permanent
+Builder release or stable publication was performed.
 
 ## Acceptance and release policy
 

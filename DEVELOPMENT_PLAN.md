@@ -5,6 +5,27 @@
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
 
+## 2026-10-16 — v0.8 extended rotation and HEVC fail-closed QA
+
+[Real ST/isolated MT Chrome CI #38863445237](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445237)
+ALL SUCCESS, [PR preview #38863445204](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445204)
+SUCCESS. The v0.8 test matrix now covers 180°/270° QuickTime
+display rotation with actual asymmetric color-marker pixels matching
+autorotated source reference (mean RGB MAE 0.46 in each ST/MT
+fixture), in addition to the previous 90° case. The MP4 outputs
+have upright coded frames and no residual display-matrix tag.
+
+Native generated HEVC/H.265 8-bit and PQ/BT.2020-tagged 10-bit MOV
+are both refused by this desktop Chrome build's preview decoder
+without enabling stale MP4 downloads. This is expected safe
+failure on one browser configuration, **not HEVC/HDR support**.
+
+Physical Android/iPhone source compatibility, HDR color fidelity,
+input audio track selection, original G2 RAM/no-copy and full-HD
+endurance, and a durable matching GPL Builder corresponding-source
+Release remain OPEN. Do not mark v0.8 accepted yet or advance to
+v0.9 RC; do not merge Draft PRs, tag or publish.
+
 ## 2026-10-16 — H.264 MOV / 90° rotation / corrupt MP4 / dual AAC QA
 
 [CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532) and

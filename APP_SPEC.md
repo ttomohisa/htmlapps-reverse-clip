@@ -8,6 +8,22 @@
 > **新規リポジトリ候補:** `ttomohisa/htmlapps-reverse-clip`（GitHub上で作成済み、2026-10-11確認）  
 > **関連資料:** [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md)
 
+## 2026-10-16 — v0.8.0 回転映像とHEVCの異常系検証
+
+[ST/MTの実Chrome CI #38863445237](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445237)
+で、180度・270度の表示回転付きMOVを検証した。非対称の
+色マーカーを使い、動画の回転後のピクセルと出力MP4のピクセルを
+比較し、平均RGB誤差0.46で一致した。元から検証済みの90度も
+引き続き正常。完成MP4は実際に正しい向きの画素を持ち、
+回転メタデータに依存せず再生できる。
+
+HEVC 8-bit MOVと、10-bit BT.2020/PQタグ付きHEVC MOVも
+生成して検証したが、今回のデスクトップChromeでは両方とも
+プレビューできず、結果・保存を無効にしたまま安全に失敗した。
+**HEVC変換対応やHDRの色精度を証明したわけではない。**
+Android/iPhoneの実機、G2の高画質反復やメモリ、恒久的な
+GPL対応ソース付きBuilder配布は未受入のまま維持する。
+
 ## 2026-10-16 — H.264 MOV・90度回転・破損MP4・複数音声の回帰検証
 
 [ST/MT実Chrome CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532)で、

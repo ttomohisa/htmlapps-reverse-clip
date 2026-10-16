@@ -4,6 +4,23 @@
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
+## v0.8.0 — rotation pixels and HEVC rejection (desktop QA)
+
+[Real Chrome ST/MT CI #38863445237](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445237)
+tested H.264 MOV with **180° and 270° display matrices** using
+asymmetric colored markers. The generated MP4 orientation was checked
+against decoded, autorotated input pixels, not dimensions alone;
+both modes matched (mean RGB error 0.46). The prior 90° case
+continues to pass.
+
+Synthetic **HEVC 8-bit and HDR-tagged 10-bit BT.2020/PQ MOV** sources
+were created and validated. This desktop Chrome build could not
+preview either: the app rejected them without exposing Result/Save.
+This shows safe failure, **not HEVC conversion support**. HDR color
+accuracy, real-world iPhone/Android decoding and full device rotation
+remain unverified. [Compatibility matrix](docs/feasibility/V080_COMPATIBILITY_MATRIX.md)
+records these distinctions.
+
 ## v0.8.0 — additional tested media compatibility
 
 [Real ST and isolated MT Chrome CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532) now

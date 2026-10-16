@@ -4,6 +4,22 @@
 
 [製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [G2受入状況](docs/feasibility/G2.md) · [MTの実測](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md) · [English README](README.md)
 
+## v0.8.0 — 180度・270度の映像方向とHEVCの安全な拒否
+
+[ST/MT実Chrome CI #38863445237](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445237)
+で、180度・270度の回転情報付きH.264 MOVを検証しました。
+非対称の赤・緑・青の色マーカーを使い、元動画の正しい回転表示と
+完成MP4の**実際のピクセル配置**を比較しました。ST・MTともに
+合致し、RGB値の平均絶対誤差は0.46でした。従来の90度も継続成功。
+
+さらにHEVCの8-bit MOVと、10-bit・BT.2020/PQ情報を持つMOVを
+作成して確認しました。今回のデスクトップChrome環境では両方とも
+プレビュー非対応で、**不完全な結果・保存操作を残さず拒否**できました。
+HEVCが変換可能になったという意味ではありません。
+HDR/10-bitの正しい色再現、iPhone実機やAndroidカメラ素材は
+引き続き未検証です。[互換性QA表](docs/feasibility/V080_COMPATIBILITY_MATRIX.md)
+に事実を分けて記録しています。
+
 ## v0.8.0 — MOV・回転・破損入力・複数音声の実ファイル検証
 
 [実Chrome ST/MT CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532)で、H.264の
@@ -20,8 +36,9 @@ H.264 MOVは逆再生MP4へ変換でき、90度回転MOVは横長160×90の
 [PRプレビュー](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118536)も成功しています。
 
 今回確認したのは合成H.264素材を使ったChrome環境であり、
-iPhoneのHEVC MOV、180/270度回転、HDR/10-bitの色再現や
-実機カメラ動画の全パターンに対応したことにはなりません。
+iPhoneのHEVC MOV、HDR/10-bitの色再現や実機カメラ動画の
+全パターンに対応したことにはなりません。180度・270度の回転は
+合成H.264を用いたChrome環境で検証しました。
 詳細は[互換性QA表](docs/feasibility/V080_COMPATIBILITY_MATRIX.md)。
 
 ## v0.8.0 — 入力形式・異常系の検証
