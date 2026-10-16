@@ -1,6 +1,6 @@
 # Reverse Clip — Offline & Standalone Verification
 
-**Status:** Experimental v0.1.3, Gate G1 pending. Passing these checks is required before claiming complete local/offline operation for a release.
+**Current status (2026-10-16):** v0.9.0 RC PREPARATION, **Gate G2 / Gate G3 still NOT PASSED**. Prior real Chrome `file://` ST readable+self-extract MP4 smoke PASS ([CI #38864099711](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38864099711)); this does not establish Windows Edge, Android physical acceptance or iPhone Safari. MT requires COOP/COEP from a web server and must not be advertised as direct file://. Refer to [current RC checklist](docs/release/RC_CHECKLIST.md) for release signoff. Older version references below are historical regression instructions, not current status.
 
 ## Build & compare output
 
