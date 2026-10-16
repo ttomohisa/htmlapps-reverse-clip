@@ -16,7 +16,7 @@ import subprocess
 import tempfile
 import time
 
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
 ROOT = Path(__file__).resolve().parents[2]
 DIST = ROOT / "dist"
@@ -103,6 +103,38 @@ def create_compat_sources(workdir):
     corrupt.write_bytes(results["fps30"].read_bytes()[:128])
     assert corrupt.stat().st_size==128
     results["truncated"]=corrupt
+
+    # HEVC support varies by browser, OS and build. Generate an 8-bit
+    # H.265 MOV and a 10-bit PQ/BT.2020-tagged MOV when the runner has
+    # libx265. Treat browser decode or export outcomes as observations,
+    # never as proof of accurate HDR color retention or phone support.
+    encoders=run("ffmpeg","-hide_banner","-encoders").decode("utf-8","replace")
+    if "libx265" in encoders:
+        for depth in (8,10):
+            pix="yuv420p" if depth==8 else "yuv420p10le"
+            target=workdir/f"hevc-{depth}bit.mov"
+            cmd=["ffmpeg","-hide_banner","-loglevel","error","-y",
+                "-f","lavfi","-i","testsrc2=size=160x90:rate=15:duration=1.2",
+                "-frames:v","18","-threads","1",
+                "-c:v","libx265","-preset","ultrafast",
+                "-x265-params","pools=none:frame-threads=1:log-level=error",
+                "-pix_fmt",pix,"-tag:v","hvc1"]
+            if depth==10:
+                cmd+=["-color_primaries","bt2020","-color_trc","smpte2084",
+                      "-colorspace","bt2020nc"]
+            subprocess.run([*cmd,str(target)],check=True,
+                stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            meta=json.loads(run("ffprobe","-v","error","-select_streams","v:0",
+                "-show_entries","stream=codec_name,pix_fmt,color_primaries,color_transfer",
+                "-of","json",str(target)))["streams"][0]
+            assert meta["codec_name"]=="hevc" and meta["pix_fmt"]==pix,meta
+            if depth==10:
+                assert meta.get("color_primaries")=="bt2020",meta
+                assert meta.get("color_transfer")=="smpte2084",meta
+            results[f"hevc-{depth}"]=target
+    else:
+        print("[SKIP] native libx265 encoder unavailable; HEVC source cases not run",
+              flush=True)
     return results
 
 def inspect_video_shape(path):
@@ -691,6 +723,73 @@ def main():
                             print(f"[PASS] {name} H.264 MOV + 90/180/270° MOV decoded/exported; "
                                   "truncated plausible MP4 refused without stale Save",
                                   flush=True)
+
+                            # HEVC MOV (including tagged 10-bit HDR) may or may
+                            # not preview in this exact Chrome environment.
+                            # Either way, no stale result/download is allowed.
+                            # A valid browser MP4 is optional: color accuracy
+                            # is NOT implied even if H.264 export succeeds.
+                            for label in ("hevc-8","hevc-10"):
+                                if label not in compat:
+                                    continue
+                                page.locator("#flowVideoButton").click()
+                                page.locator("#sourceInput").set_input_files(
+                                    str(compat[label]))
+                                phase=None
+                                try:
+                                    page.wait_for_function("""() =>
+                                        ['ready','error'].includes(
+                                          document.querySelector('#loadStatus').dataset.phase)""",
+                                        timeout=12000)
+                                    phase=page.locator("#loadStatus").get_attribute(
+                                        "data-phase")
+                                except PlaywrightTimeoutError:
+                                    assert page.locator("#cancelLoadButton").is_visible()
+                                    page.locator("#cancelLoadButton").click()
+                                    assert page.locator("#resultArea").is_hidden()
+                                    assert page.locator("#flowResultButton").is_disabled()
+                                    print(f"[OBSERVE] {name} {label}: browser metadata slow,"
+                                          " user can cancel; HEVC compatibility UNVERIFIED",
+                                          flush=True)
+                                    continue
+                                if phase=="error":
+                                    assert page.locator("#resultArea").is_hidden()
+                                    assert page.locator("#flowResultButton").is_disabled()
+                                    assert page.locator("#saveReverseButton").is_hidden()
+                                    print(f"[OBSERVE] {name} {label}: Chrome rejected "
+                                          "HEVC preview, no partial download",
+                                          flush=True)
+                                    continue
+                                assert phase=="ready",phase
+                                page.locator("#flowEditButton").click()
+                                page.locator("#sourceCompatibilityDetails > summary").click()
+                                warning=page.locator("#sourceCompatibilityDetails").inner_text()
+                                assert ("HDR" in warning and "15fps" in warning),warning
+                                page.locator("#rangeStart").fill("0")
+                                page.locator("#rangeEnd").fill("1")
+                                assert page.locator("#reverseButton").is_enabled()
+                                page.locator("#reverseButton").click()
+                                page.wait_for_function("""() =>
+                                    !document.querySelector('#resultArea').hidden ||
+                                    !document.querySelector('#reverseErrorDetails').hidden""",
+                                    timeout=120000)
+                                if page.locator("#reverseErrorDetails").is_visible():
+                                    assert page.locator("#resultArea").is_hidden()
+                                    assert page.locator("#flowResultButton").is_disabled()
+                                    print(f"[OBSERVE] {name} {label}: Chrome preview "
+                                          "accepted, embedded FFmpeg conversion "
+                                          "rejected; no download; HDR fidelity UNVERIFIED",
+                                          flush=True)
+                                else:
+                                    with page.expect_download(timeout=15000) as download:
+                                        page.locator("#saveReverseButton").click()
+                                    out_file=temp/f"{name}-{label}-output.mp4"
+                                    download.value.save_as(out_file)
+                                    inspect_compat_mp4(out_file)
+                                    print(f"[OBSERVE] {name} {label}: 15fps H.264 "
+                                          "conversion worked; HDR/10-bit color "
+                                          "fidelity NOT validated",
+                                          flush=True)
                         if name == "single-thread":
                             # Responsive keyboard/tap/long filename regression.
                             # Replacing a source after export must invalidate the
