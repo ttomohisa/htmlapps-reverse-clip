@@ -17,6 +17,11 @@ test('v0.9 RC preparation is not an approved release or passed gate',()=>{
 test('all 14 specified acceptance IDs are present with explicit blockers',()=>{
   for(let i=1;i<=14;i++)assert.ok(rc.includes('| A-'+String(i).padStart(2,'0')+' |'),'A-'+i);
   assert.match(rc,/KNOWN G2 DEVIATION/);
+  assert.match(rc,/P0 — mandatory/);
+  assert.match(rc,/P1 \/ P2 — not unconditional initial-release blockers/);
+  assert.match(rc,/initial Windows Chrome\/Android Chrome|Android Chrome H\.264/);
+  assert.match(rc,/720p10s \/ 1080p5s/);
+  assert.match(read('docs/release/REVISED_ACCEPTANCE_SCOPE.md'),/P0/);
   assert.match(rc,/Actual screenshots/);
   assert.match(rc,/DEFERRED \/ NOT VERIFIED/);
 });

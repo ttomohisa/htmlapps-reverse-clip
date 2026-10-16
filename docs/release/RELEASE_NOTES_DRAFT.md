@@ -9,3 +9,6 @@ Validated only in desktop Chrome ST / isolated MT: marked H.264 frame order, AAC
 Limits: HEVC/HDR color fidelity not guaranteed; unsupported synthetic HEVC 8/10-bit rejected in the tested desktop Chrome. Multiple source audio tracks cannot be selected. Android input providers may trigger <=64MiB whole-source fallback copy, conflicting with original G2. Higher quality and long export remain experimental. Download initiation does not prove OS save completion. iPhone deferred.
 
 See [RC_CHECKLIST.md](RC_CHECKLIST.md). No tag, release, merge or Browser Kitty integration until actual Android QA, source-complete immutable GPL Builder distribution, supported-platform scope and Gate G2/G3 acceptance are resolved.
+
+
+**2026-10-17 review:** For the proposed initial Windows Chrome/Android Chrome short H.264 scope, remove unconditional iPhone/HD 3×/precise RAM requirements from P0; do not weaken valid output, local processing, critical error handling, core Android smoke or license requirements. Do not advertise HD/HEVC/HDR as fully supported.

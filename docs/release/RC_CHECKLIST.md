@@ -1,49 +1,63 @@
 # Reverse Clip v0.9.0 — RCチェックリスト / Release Candidate acceptance
 
-**Status: PREPARATION / NOT APPROVED (2026-10-16).** Version 0.9.0 is a development milestone, NOT a signed-off RC, Gate G2 pass or Gate G3 pass. All PRs stay Draft and unmerged, and no release, tag or Browser Kitty main-site update is authorized. iPhone Safari is deferred, not marked as passed.
+**2026-10-17: PREPARATION / NOT APPROVED. Gate G3 NOT PASSED.**
+The RC is not a published release; PR #2, PR #1 and Builder PR #16 remain open Drafts. The user requested **less excessive testing while keeping real safeguards**. Refer to [revised initial-release scope](REVISED_ACCEPTANCE_SCOPE.md) for the proposed P0/P1/P2 criteria. These revised criteria are a proposal applied to RC planning, **not** a retrospective PASS of the original G2 or authorization to publish.
 
-Authoritative acceptance: [APP_SPEC.md](../../APP_SPEC.md) A-01–A-14; [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md) Gates G1–G3; [G2 evidence](../feasibility/G2.md); [v0.8 source compatibility](../feasibility/V080_COMPATIBILITY_MATRIX.md).
+References: [APP_SPEC.md A-01–A-14](../../APP_SPEC.md), [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md), [historical G2 evidence](../feasibility/G2.md), [v0.8 compatibility matrix](../feasibility/V080_COMPATIBILITY_MATRIX.md).
 
-## Individual acceptance cases
+## P0 — mandatory for proposed initial scope
 
-| Case | Requirement | Evidence and limits | Result |
-| --- | --- | --- | --- |
-| A-01 | Correct reverse frame order | Actual desktop Chrome ST/isolated MT 10-second reverse H.264 full-frame fixture [CI #38864099711](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38864099711) | **PASS desktop** |
-| A-02 | Ping-pong turn no noticeable missing/duplicate/black frames | Actual Chrome frame & join test PASS; physical-device viewing pending | **PARTIAL** |
-| A-03 | Accurate start/end trim | Fractional, .5s, end boundary MP4 regression PASS; expanded device frame-difference evidence pending | **PARTIAL** |
-| A-04 | Correct silent/AAC and ~150ms audio sync | Desktop Chrome reversed/ping-pong AAC decoded PCM mono/stereo PASS; actual phone listening and explicit ±150ms not accepted | **PARTIAL** |
-| A-05 | Portrait MOV, 90/180/270° orientation, VFR | Synthetic H.264 MOV orientation verified against pixels; real phone HEVC/HDR/VFR unknown | **PARTIAL** |
-| A-06 | MP4 playback on target device player | Browser preview/ffprobe PASS; Android Downloads/Photos OS player for current version and iPhone pending | **PARTIAL** |
-| A-07 | No stale result on change/cancel/taps/reload | Source generation and Abort, actual Chrome lifecycle tests PASS; physical device suspend/retry pending | **PARTIAL** |
-| A-08 | Distinguishable empty/running/success/error/unsupported | Localized Chrome states and safe corruption/HEVC rejection PASS; human device review pending | **PARTIAL** |
-| A-09 | Mobile widths, long filename, short view, modal/soft keyboard | Browser 320×420, 320×568, 360/390px PASS; physical Android soft keyboard pending | **PARTIAL** |
-| A-10 | Japanese and English UI/help/errors | Automated toggling and locale error tests PASS; human JA/EN screenshot/review pending | **PARTIAL** |
-| A-11 | No runtime data upload or external dependency | CSP connect-src 'none' and ST/MT real Chrome network tests PASS; distribution bytes not released | **PARTIAL** |
-| A-12 | Normal and self-extract ST file://, CSP/Worker/WASM/save | Both direct file:// ST standalone variants generated/saved MP4 on desktop Chrome; hosted MT needs COOP/COEP, Windows Edge manual QA pending | **PARTIAL** |
-| A-13 | README JA/EN, changelog, licenses, favicon, JA/EN screenshots and CI | Docs/lock/favicon exist. **Real screenshots absent, permanent source-complete GPL Builder distribution missing** | **PENDING** |
-| A-14 | Correct source/settings/result/filename correspondence | Chrome confirms stale MP4 invalidation, replacement confirmation, filename and no partial download; physical input providers pending | **PARTIAL** |
-
-## Release blockers
-
-| Gate or item | Status | Required action |
+| Requirement | Evidence and action | Status |
 | --- | --- | --- |
-| Gate G2 actual Android 720p10s/1080p5s Reverse+Ping-pong ×3 | **OPEN / NOT PASSED** | Real device/browser/source, RAM, timing, files from gallery/Downloads, cancellation, speaker audio and sync |
-| Android <=64MiB file-provider fallback | **KNOWN G2 DEVIATION** | Source entire file may be copied in memory after WorkerFS failure. Remove or obtain explicit revised G2 acceptance; do not silently waive |
-| Gate G3 | **NOT PASSED** | Confirm every A-01–A-14 item, supported platform scope and final build/license/screenshot readiness |
-| iPhone Safari / HEVC MOV | **DEFERRED / NOT VERIFIED** | Owner postponed iPhone; must decide formal release target/platform claims before stable version |
-| Runtime source license and permanence | **BLOCKED** | `reverse-runtime.lock.json` remains `temporary-not-release`, Builder 1.10.6 action artifact 11914029733 with documented Oct 21 2026 expiry; need reviewed immutable GPL corresponding-source Release |
-| Actual screenshots | **PENDING** | Capture actual rendered JA and EN application screenshots (result, not just empty state) without mockups |
-| Windows Edge and current Android phone | **PENDING** | Capture exact version/OS/device, real camera, picker/cloud, keyboard, performance and save results |
+| ST and MT actual H.264 Reverse + Ping-pong, bounded trim and playable MP4 | Desktop Chrome source/MP4 frame-order tests PASS [CI #38866625722](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38866625722). Verify release candidate bytes on next build | **AUTOMATED PASS** |
+| Actual Android Chrome H.264 5s Reverse at long edge ≤720px and 1–3s Ping-pong, one run **each** | Record device/version, source, input provider, save destination and MP4 playback on latest v0.9 RC HTML. No mandatory triple repetitions | **PENDING — PHYSICAL DEVICE** |
+| Android cancellation/retry and one supported audio listening check | One cancel→retry and one short AAC Reverse (when supported); no obvious click/no-audio/large A/V desync. Automated PCM/AAC tests PASS but latest phone run PENDING | **PENDING — PHYSICAL DEVICE** |
+| Incorrect output prevention and privacy | Reject truncated/unsupported input, no stale/partial MP4, verify original+output association, no runtime uploads/external dependencies, truthful saving, bounded fallback behavior. Actual ST/MT Chrome PASS; final distribution review still needed | **PARTIAL** |
+| Final artifact and GPL distribution | Reproducible pinned ST single HTML direct `file://` and hosted isolated MT; fixed hashes, third-party notices, reviewed **permanent source-complete GPL Builder distribution**, full JA/EN README and actual screenshots | **PENDING — DISTRIBUTION** |
+| Critical bugs in **claimed** core features | 0 known P0 failures (data leak, broken output, normal supported input unable to save); no claim of unverified formats/phones | **PENDING — FINAL REVIEW** |
 
-## Feature freeze and verification
+The 64MiB Android provider fallback is a **KNOWN G2 DEVIATION** from the original strict zero-copy requirement. For this revised initial-release scope, the proposed P0 safety rule permits a **conditional local whole-file copy only when direct reads fail and file size ≤64MiB**, with clear error and no large-file silent copy. **This is not a historical G2 pass** and still requires code/phone acceptance under the scoped RC review.
 
-No new codecs or features in RC preparation. Keep existing source guards, silent default, 15fps, bounded segments, ST file://, MT isolation, privacy and all v0.7/v0.8 tested functionality.
+## P1 / P2 — not unconditional initial-release blockers
 
-- [x] v0.9 development version (not tagged)
-- [x] Earlier ST/MT real browser media regressions and source compatibility
-- [ ] Final `0.9.0` head CI, offline ST and real MT browser PASS
-- [ ] Current Android G2 evidence, no-copy mitigation/revised acceptance, audible joins and measured resource usage
-- [ ] Permanent source-complete GPL distribution, JA/EN screenshots, manual Edge/Android UI
-- [ ] Separate Gate G2 and Gate G3 final signoff and user-approved merge/publication
+- **P1 useful spot checks:** Windows Edge 1 workflow, extra Android phone or input provider, different H.264 source, a11y/help/keyboard manual review. Required only if that browser/source is *advertised* as fully supported.
+- **P2 experimental stress:** Android and iPhone **720p10s / 1080p5s, Reverse and Ping-pong ×3 each**, detailed peak RAM benchmark, exhaustive 90/180/270° with real HEVC/HDR/VFR combinations, sample-rate matrices and an unconditional **no-whole-input-copy up to 1 GiB**. Useful for promoting the pilot quality options, not a base-scope requirement.
+- If high quality or HEVC/other browsers remain in the UI, they must be **clearly experimental/unsupported and fail safely**. A defect affecting core P0 output, users' data or privacy can never be downgraded to P2.
 
-**Gate G3 NOT PASSED.** A version number is not release approval.
+## APP_SPEC A-01–A-14 traceability (all reviewed, evidence scoped)
+
+| ID | Acceptance | Source of evidence / remaining check | Classification |
+| --- | --- | --- | --- |
+| A-01 | Reverse frame order | ST/MT real H.264 Chrome 10s frame markers CI #38866625722 | **P0 automated PASS** |
+| A-02 | Ping-pong order/turn | ST/MT Chrome full-frame and join checks PASS; Android one short case PENDING | **P0 pending device** |
+| A-03 | Trim boundaries | Chrome half-frame/fractional source trim PASS; exhaustive all-device frame-difference report **P2** | **P0 automated PASS** |
+| A-04 | Silent, AAC, A/V synchronization | Chrome PCM/AAC tests PASS; one human audible Android check PENDING. Exact ≤150ms hardware measurement **P2** unless a defect is found | **P0 pending device** |
+| A-05 | Portrait MOV/rotation/VFR | Synthetic H.264 MOV 90/180/270° + VFR Chrome PASS. Real HEVC/HDR/mobile combination **P2** outside claimed supported input | **P0 for claimed format; P2 others** |
+| A-06 | Actual MP4 playable | Desktop Chrome and ffprobe PASS; latest Android Downloads/player playback PENDING | **P0 pending device** |
+| A-07 | No stale output after cancellation/change | Chrome generation+Abort, source changes/retry PASS; one Android cancellation PENDING | **P0 pending device** |
+| A-08 | Empty/loading/completion/error/unsupported | Localized Chrome flow and broken/HEVC fail-closed PASS; real device representative error PENDING | **P0 automated / manual** |
+| A-09 | 320/360/390, long names, small height, dialogs | Browser 320×420, 320×568, 360/390px PASS. Full real keyboard matrix **P1**; one Android flow **P0** | **P0 automated / manual** |
+| A-10 | JA and EN UI/help/errors | Automated toggle, error messages PASS. Editorial review and actual screenshots PENDING | **P0 pending docs** |
+| A-11 | No upload or runtime external dependency | `connect-src 'none'`, real ST/MT no unexpected network on Chrome PASS; verify final exact distribution | **P0 pending final build** |
+| A-12 | Standalone ST/self-extract file:// | Real desktop Chrome standalone MP4 PASS; MT hosted isolation validated. Windows Edge direct manual **P1** | **P0 automated PASS** |
+| A-13 | README JA/EN, licenses, favicon, real screenshots, CI | Docs/brand available; original screen captures and source-complete immutable GPL release missing | **P0 pending assets/license** |
+| A-14 | Source/settings/result/filename linked | Confirmation/invalidation/filename, no partial MP4 browser tests PASS; one Android saved file verification PENDING | **P0 pending device** |
+
+## Five-minute Android smoke form (one representative handset; no unnecessary matrix)
+
+Capture: device and Android/Chrome versions, whether testing ST or isolated MT, H.264 source dimensions and provider (Camera/Gallery/Downloads), selected range/quality/mode and observed result.
+
+- [ ] **Reverse:** choose one local H.264 MP4, select ~0–5 s, long edge 360px or 720px, generate, save and replay the MP4 in the phone's player.
+- [ ] **Ping-pong:** same video, choose ~0–2 s, verify turn direction and saved MP4 playback.
+- [ ] **Cancel/retry:** stop one conversion, restart and confirm no stale/partial MP4 is available.
+- [ ] **Audio if source supported:** select reverse-audio once, listen for obvious noise, silence or gross A/V misalignment. No laboratory millisecond measurement.
+- [ ] **Input/provider and save:** verify chosen source appears correctly, user-editable output filename and file destination are understandable. If a provider cannot be read, report error and memory fallback rather than force high-resolution repetitions.
+
+No certification from the owner's earlier Android v0.6 Pages smoke carries over automatically to the latest v0.9 bytes. Record real QA before marking the device P0 PASS.
+
+## RC exit decision
+
+- P0 evidence all complete, no known severe core bug; exact claimed platform/source compatibility clearly stated.
+- Permanent corresponding-source FFmpeg/x264/Emscripten GPL distribution and asset hashes reviewed.
+- **G3 NOT PASSED** until final checklist, device proof and explicit approval. Historical G2 remains **NOT PASSED**, with separate revised release acceptance documented.
+- No automatic merge or release. User merges after review; Browser Kitty main site is a separate future task.
