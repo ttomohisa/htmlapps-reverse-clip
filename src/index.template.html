@@ -508,6 +508,7 @@
       /* All ordinary mobile action buttons need an adequate tap area,
          including load/cancel/convert/save and optional diagnostics. */
       .button{min-height:44px}
+      #rcWorkflow{scroll-margin-top:var(--header-height)}
       .rc-flow-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
         position:sticky;top:var(--header-height);z-index:20;
         margin:0 -14px 14px;padding:8px 14px 10px;background:var(--surface);
@@ -1381,6 +1382,9 @@
       }
       function updateFlowNavigation() {
         const canEdit = state.sourcePhase === 'ready';
+        // A conversion may take minutes on a phone. Do not allow Video
+        // navigation to hide its progress and Cancel controls mid-job.
+        const busy=Boolean(conversionController);
         const canResult = canEdit && flowResultReady();
         if (flowStep === 'edit' && !canEdit) flowStep='video';
         if (flowStep === 'result' && !canResult) flowStep=canEdit?'edit':'video';
@@ -1392,7 +1396,7 @@
           'workspaceBody':flowStep==='edit'?'flowEditBody':'flowResultBody');
         for (const step of flowSteps) {
           const button=flowButtons[step];
-          button.disabled=step==='edit'?!canEdit:step==='result'?!canResult:false;
+          button.disabled=step==='video'?busy:step==='edit'?!canEdit:!canResult;
           if(step===flowStep) button.setAttribute('aria-current','step');
           else button.removeAttribute('aria-current');
         }
@@ -1409,6 +1413,7 @@
       }
       function setFlowStep(step,{scroll=true,focus=false}={}) {
         if(!flowSteps.includes(step))return false;
+        if(step==='video'&&conversionController)return false;
         if(step==='edit'&&!state.ready)return false;
         if(step==='result'&&!flowResultReady())return false;
         if(flowStep==='edit'&&step!=='edit'){
@@ -1428,7 +1433,10 @@
         // Automatic transitions must not strand keyboard focus in a hidden
         // panel. Manual nav taps leave focus on the visible nav button.
         if(onMobile&&focus)$('#workspaceTitle').focus({preventScroll:true});
-        if(scroll&&onMobile)$('#rcFlowNav').scrollIntoView({block:'start',behavior:'auto'});
+        // The focused heading must stay visible beneath the sticky header.
+        // Scrolling the nav itself to the header hides that heading above it.
+        if(scroll&&onMobile)(focus?$('#rcWorkflow'):$('#rcFlowNav'))
+          .scrollIntoView({block:'start',behavior:'auto'});
         return true;
       }
       // A slow cloud/photo provider or a media decoder that never returns
@@ -2303,6 +2311,7 @@
         const generation=state.generation, job=++conversionEpoch, file=state.file;
         const controller=new AbortController();
         conversionController=controller;
+        updateFlowNavigation();
         $('#reverseButton').disabled=true;
         $('#cancelReverseButton').hidden=false;
         $('#reverseProgress').hidden=false;
@@ -2585,6 +2594,7 @@
           }
           if(job===conversionEpoch){
             conversionController=null;
+            updateFlowNavigation();
             $('#cancelReverseButton').hidden=true;
             $('#reverseProgress').hidden=true;
             rangeInfo();
