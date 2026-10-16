@@ -11,10 +11,10 @@ Do not mistake this temporary CI artifact for durable README screenshots.
 
 | Generated file | Resolution | SHA-256 |
 | --- | --- | --- |
-| `reverse-clip-desktop-ja.png` | 1360×900 | `6cfd0fb9fa83b4e065b124a58431ff80c2824ad80e4aa9df5138089fe340f9e1` |
-| `reverse-clip-desktop-en.png` | 1360×900 | `5120f7c71dc8aa6f36ae68f43930294f616bad9242df560e44247059b72d4b57` |
-| `reverse-clip-mobile-ja.png` | 390×844 | `3324d87cbd461822532c16c15e74eac586b3c620b8173569c5443be6bd46c969` |
-| `reverse-clip-mobile-en.png` | 390×844 | `d5ba342a16b1739cffca039c9713c6a5aa2e0d34e47fa3905771d6b2da9eaab2e` |
+| `reverse-clip-desktop-ja.png` | 1360×900 | `6cfd0fb9fa836d10d76828ce832e26d2a475d414fd83a061587b83006aa1a95f` |
+| `reverse-clip-desktop-en.png` | 1360×900 | `5120f7c71dc8be9ed2dba704463d85e3c2d3b149d4c0f678d885e87691d33546` |
+| `reverse-clip-mobile-ja.png` | 390×844 | `3324d87cbd4665d3407be1a4eed462ee78e209176115854a5cea582e4f50787c` |
+| `reverse-clip-mobile-en.png` | 390×844 | `d5ba342a16b1112b28b67ea291d8d3321c92d01190421308b537c144ed73ad67` |
 
 These screenshots are from real Chrome rendering of the verified
 MP4 Result step, generated from a synthetic 30fps H.264 fixture
@@ -22,7 +22,7 @@ and reverse-exported to a 15-frame/1s H.264 MP4. There is no
 customer video or personal data. The shooting code is
 `tests/feasibility/browser-video-smoke.py` with
 `RC_CAPTURE_SCREENSHOTS=1`; normal source and output semantics
-are unchanged. The actual screenshots were inspected locally:
+are unchanged. Manifest SHA-256 values above were transcribed from the downloaded\nverified screenshot archive's manifest. The actual screenshots were inspected locally:
 Japanese glyphs rendered correctly, result headings/video were
 inside the viewport and saving was available.
 
