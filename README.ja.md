@@ -1,8 +1,29 @@
 # Reverse Clip / 動画逆再生
 
-**開発状況：v0.8.0 形式互換性・異常系強化の開発版（Draft、G2未合格・正式版未公開）。** v0.5.0のデスクトップChrome ST/MTで音声付き逆再生・往復再生MP4を検証済み。720p級10秒・1080p級5秒の分割負荷制御を追加し、デスクトップSTおよび一部のMT実変換で成功しましたが、実機G2合格ではありません。Android連続動作・音声試聴・GPL恒久配布は未完了、iPhoneは検証延期中です。
+**開発状況：v0.9.0 公開前RC準備版（Draft、G2・G3未合格、正式版未公開）。** v0.5.0のデスクトップChrome ST/MTで音声付き逆再生・往復再生MP4を検証済み。720p級10秒・1080p級5秒の分割負荷制御を追加し、デスクトップSTおよび一部のMT実変換で成功しましたが、実機G2合格ではありません。Android連続動作・音声試聴・GPL恒久配布は未完了、iPhoneは検証延期中です。
 
 [製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [G2受入状況](docs/feasibility/G2.md) · [MTの実測](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md) · [English README](README.md)
+
+## v0.9.0 — RCの公開前チェックを開始
+
+既存[Draft PR #2](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/2)上で
+開発版数を**v0.9.0**に進めました。これは
+**Release Candidateの準備着手**で、G2/G3の合格や正式公開を
+意味しません。新しい機能は追加せず、既存の逆再生・往復再生・
+AAC・完全ローカル処理・出力15fps・単一HTMLを維持します。
+
+[RCチェックリスト](docs/release/RC_CHECKLIST.md)では、
+`APP_SPEC.md` A-01〜A-14を個別に評価し、
+デスクトップChromeの自動試験で確認した範囲と、
+最新Android実機、Windows Edge、iPhone（延期）の
+未受入項目を区別しています。実画面の日本語・英語
+スクリーンショット、Androidの高解像度・RAM測定、
+64MiB以下の元動画全量コピー例外、音声の実機聞き取り、
+GPL対応ソース付き恒久WASM配布も残っています。
+
+[公開ノート案](docs/release/RELEASE_NOTES_DRAFT.md)はDRAFTで、
+PRのマージ・タグ・正式公開・Browser Kitty本体への追加を
+行ったものではありません。
 
 ## v0.8.0 — 180度・270度の映像方向とHEVCの安全な拒否
 

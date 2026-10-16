@@ -1,12 +1,32 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
-> **Status:** v0.8.0 Compatibility / Hardening development（G1/G2の正式合格は未取得、リリース未実施）  
+> **Status:** v0.9.0 RC準備中（Gate G2/G3未合格、PR未マージ、タグ・正式リリース未実施）  
 > **作成日:** 2026-10-11  
 > **目標版:** v1.0.0  
 > **アプリ名:** Reverse Clip / 動画逆再生（仮称）  
 > **アプリslug:** `reverse-clip`（仮）  
 > **新規リポジトリ候補:** `ttomohisa/htmlapps-reverse-clip`（GitHub上で作成済み、2026-10-11確認）  
 > **関連資料:** [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md)
+
+## 2026-10-16 — v0.9.0 RC準備と機能凍結
+
+ユーザーの継続開発指示および版数進行の確認により、
+**開発版数のみv0.9.0**へ進める。製品Gate G2と
+公開受入Gate G3は未合格のままで、RCの正式合格や
+v1.0.0リリースを表明しない。
+
+RC準備では新機能を凍結し、既存のST/MT、逆再生、
+往復再生、音声なし初期値とAAC、15fps、入力／出力上限、
+Worker/WASMの後片付け、元動画のローカル処理を維持する。
+日本語／英語、スクリーンショット、CSP・単一HTML・
+ファイル保存、Android実機、ライセンス／FFmpeg Builderの
+恒久的な対応ソース配布を点検する。
+
+`docs/release/RC_CHECKLIST.md`で受入項目A-01〜A-14と
+実機未確認を明示。Android高負荷×3／RAM、
+64MiB以下元動画全量コピー例外、音声聴取、iPhone延期、
+実画面スクリーンショット、恒久GPL配布は残件。
+Draft PRをマージせず、正式公開・Browser Kitty変更をしない。
 
 ## 2026-10-16 — v0.8.0 回転映像とHEVCの異常系検証
 

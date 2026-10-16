@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.9.0] — RC PREPARATION (development only, 2026-10-16; not released)
+
+- Advance the development version on existing unmerged Draft PR #2; **not** a signed-off RC or Gate G2/G3 PASS, no tag, release or Browser Kitty integration.
+- Freeze new features. Preserve the verified H.264/AAC Reverse/Ping-pong, mobile Video→Edit→Result, 15fps limits, local-only privacy and standalone ST/isolated MT behavior.
+- Create `docs/release/RC_CHECKLIST.md` with explicit A-01–A-14 PASS/PARTIAL/PENDING evidence, platform limits, Android no-whole-copy G2 deviation, immutable GPL Builder source-distribution blocker, true screenshots and manual acceptance.
+- Create `docs/release/RELEASE_NOTES_DRAFT.md`, and run `tests/feasibility/rc-readiness.test.mjs` in Windows validation to prevent a version bump from being misrepresented as release acceptance.
+- Keep actual Android high-resolution hardware/RAM/audio tests, iPhone scope (deferred), Edge manual QA, JA/EN rendered screenshots and permanent GPL corresponding-source distribution unresolved.
+
 ## [0.8.0] — Compatibility / Hardening (development started 2026-10-16; not released)
 
 - **180° and 270° actual visual rotation:** [real ST/MT Chrome CI #38863445237](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445237) ALL SUCCESS. Asymmetric RGB markers verify that actual decoded output matches autorotated source pixels for both display-matrix angles (mean RGB MAE 0.46), not simply matching resolution. Existing 90° case remains PASS; output is upright H.264 MP4 with no display rotation tag.

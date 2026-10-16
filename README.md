@@ -1,8 +1,29 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.8.0 Compatibility / Hardening (Draft; G2 remains OPEN; not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The 720p/10s and 1080p/5s bounds have passed selected **desktop ST and isolated MT** full-size scenarios, but **not physical-device G2**. Android repeated-use, three-repeat MT stress, reliable memory measurements, audio listening and a permanent GPL source bundle are outstanding; iPhone tests are deferred.
+**Development status: v0.9.0 RC PREPARATION (Draft, G2 and G3 OPEN; not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The 720p/10s and 1080p/5s bounds have passed selected **desktop ST and isolated MT** full-size scenarios, but **not physical-device G2**. Android repeated-use, three-repeat MT stress, reliable memory measurements, audio listening and a permanent GPL source bundle are outstanding; iPhone tests are deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
+
+## v0.9.0 RC preparation / pre-release checks
+
+The app's **development version** has advanced to `0.9.0` on the
+existing [unmerged Draft PR #2](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/2).
+This starts a feature-frozen release-readiness review; it is
+**not** proof of release quality or permission to publish.
+[RC acceptance matrix A-01–A-14](docs/release/RC_CHECKLIST.md)
+records desktop Chrome evidence, unresolved physical Android testing,
+and the explicitly deferred iPhone Safari/HEVC scope.
+
+The FFmpeg/x264 WASM lock still points to a **temporary Actions artifact**,
+not a reviewed permanent GPL corresponding-source release. Original
+Gate G2 criteria, including the <=64MiB whole-file memory-copy exception
+and 720p10s/1080p5s hardware repetitions, remain OPEN. Gate G3 also
+remains NOT PASSED. Actual Japanese/English result screenshots,
+Windows Edge and up-to-date physical Android acceptance are pending.
+
+Existing silent-by-default H.264 Reverse/Ping-pong, supported optional
+AAC, local-only processing, 15fps limits and ST `file://` standalone
+behavior are unchanged. [Release notes remain DRAFT](docs/release/RELEASE_NOTES_DRAFT.md).
 
 ## v0.8.0 — rotation pixels and HEVC rejection (desktop QA)
 
