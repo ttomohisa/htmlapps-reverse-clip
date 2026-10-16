@@ -44,8 +44,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           repository: ttomohisa/htmlapps-reverse-clip
-          run-id: 38618083612
-          name: standalone-html-41f01893b2f60bde296467ab3d148b3170f990fb
+          run-id: 38688780206
+          name: standalone-html-e5f66428c501090513b6fa0da925b1d1bffbbfb8
           github-token: ${{ github.token }}
           path: .
 
@@ -56,8 +56,8 @@ jobs:
           from pathlib import Path
           import hashlib
           expected = {
-              "pages-dist/index.html": "7d7311175780be05283827bc0e472ef1a21194e333c952c0396abc2c020f417e",
-              "pages-dist/mt/index.html": "91928728f296c677d26790a54e544759c83e91dc2cdc642750182498b6f98657",
+              "pages-dist/index.html": "faf805b7fa73ee5a387ac16aa92314a09640c349d95f0e9dcfacff766ac2f7bb",
+              "pages-dist/mt/index.html": "9b4021179806f58a5add10d43d41c653e8783e8ff85e8f14412b38720848fe7a",
               "pages-dist/mt/coi-serviceworker.js": "e97bbac6017322d48aa54a5bc7ce473c725a4b7376ff245002e0ba71c3dcdd7e",
           }
           for file, digest in expected.items():
@@ -75,6 +75,11 @@ jobs:
           assert "window.coi" in mt
           assert "connect-src 'none'" in st and "connect-src 'none'" in mt
           assert "v0.6.0" in st and "v0.6.0" in mt
+          for html in (st, mt):
+              assert 'id="rcFlowNav"' in html
+              assert 'id="diagnosticsDetails"' in html
+              assert 'id="developmentDetails"' in html
+              assert 'id="flowSaveHint"' in html
           assert "8e60da7cf9de644ce3f6cce9c007b17e6a385c53" in st
           assert "8e60da7cf9de644ce3f6cce9c007b17e6a385c53" in mt
           Path("pages-dist/.nojekyll").write_bytes(b"")

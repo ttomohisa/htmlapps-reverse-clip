@@ -60,6 +60,7 @@ def main():
                 print("[PASS] Published root serves non-isolated ST", flush=True)
 
                 mt = context.new_page()
+                mt.set_viewport_size({"width": 390, "height": 844})
                 mt.on("request", lambda r: external.append(r.url)
                       if r.url.startswith(("https://", "http://")) and
                       urlparse(r.url).netloc != u.netloc else None)
@@ -80,9 +81,17 @@ def main():
                 assert mt_is_ready(mt), "Live GitHub Pages /mt/ lacks service-worker isolation/SAB"
                 assert "MT" in mt.locator("#runtimeModeLabel").text_content()
                 print("[PASS] Published /mt/ has COI service worker, SAB, MT runtime", flush=True)
+                assert mt.locator("#rcWorkflow").get_attribute("data-flow-step") == "video"
+                assert mt.locator("#flowEditButton").is_disabled()
+                assert mt.locator("#flowResultButton").is_disabled()
+                assert not mt.evaluate("document.documentElement.scrollWidth > innerWidth")
+                assert not mt.locator("#diagnosticsDetails").evaluate("el => el.open")
+                assert not mt.locator("#developmentDetails").evaluate("el => el.open")
 
                 mt.locator("#sourceInput").set_input_files(str(source))
                 mt.locator("#reversePanel").wait_for(state="visible", timeout=30000)
+                assert mt.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
+                assert mt.locator("#flowResultButton").is_disabled()
                 mt.locator("#rangeStart").fill("0")
                 mt.locator("#rangeStart").dispatch_event("change")
                 mt.locator("#rangeEnd").fill("1")
@@ -97,8 +106,11 @@ def main():
                 """, timeout=150000)
                 if mt.locator("#reverseErrorDetails").is_visible():
                     raise AssertionError(mt.locator("#reverseErrorDetail").inner_text())
+                assert mt.locator("#rcWorkflow").get_attribute("data-flow-step") == "result"
+                assert mt.locator("#resultDimensions").is_visible()
                 with mt.expect_download(timeout=15000) as dl:
                     mt.locator("#saveReverseButton").click()
+                assert mt.locator("#flowSaveHint").is_visible()
                 output = Path(tmp) / "published-mt-output.mp4"
                 dl.value.save_as(output)
                 probe = json.loads(subprocess.check_output([
@@ -123,6 +135,8 @@ def main():
                 sparse = make_presentation_vfr_fixture(Path(tmp), "320x180")
                 mt.locator("#sourceInput").set_input_files(str(sparse))
                 mt.locator("#reversePanel").wait_for(state="visible", timeout=30000)
+                assert mt.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
+                assert mt.locator("#flowResultButton").is_disabled()
                 mt.locator("#qualityInput").select_option("360")
                 mt.locator("#modeInput").select_option("pingpong")
                 mt.locator("#rangeStart").fill("0")
@@ -139,6 +153,7 @@ def main():
                     raise AssertionError("Published MT sparse-VFR regression: " +
                                          mt.locator("#reverseErrorDetail").inner_text())
                 assert mt.locator("#resultArea").is_visible()
+                assert mt.locator("#rcWorkflow").get_attribute("data-flow-step") == "result"
                 with mt.expect_download(timeout=15000) as sparse_dl:
                     mt.locator("#saveReverseButton").click()
                 sparse_out = Path(tmp) / "published-mt-sparse-pingpong.mp4"
@@ -164,8 +179,13 @@ def main():
                 # Verify the same page can create a longer 10-second
                 # low-fps ping-pong immediately after the 2s case. This
                 # catches some per-segment/shared-WASM memory exhaustion.
+                # Reopening Edit alone retains the old result; editing
+                # invalidates it and must disable the Result destination.
+                mt.locator("#flowEditButton").click()
+                assert mt.locator("#flowResultButton").is_enabled()
                 mt.locator("#rangeEnd").fill("10")
                 mt.locator("#rangeEnd").dispatch_event("change")
+                assert mt.locator("#flowResultButton").is_disabled()
                 assert mt.locator("#reverseButton").is_enabled()
                 mt.locator("#reverseButton").click()
                 mt.wait_for_function("""() =>
@@ -175,6 +195,8 @@ def main():
                 if mt.locator("#reverseErrorDetails").is_visible():
                     raise AssertionError("Published 10s MT sparse-video failure: "
                                          + mt.locator("#reverseErrorDetail").inner_text())
+                assert mt.locator("#rcWorkflow").get_attribute("data-flow-step") == "result"
+                assert mt.locator("#resultDimensions").is_visible()
                 with mt.expect_download(timeout=15000) as dl_long:
                     mt.locator("#saveReverseButton").click()
                 long_out = Path(tmp) / "published-mt-sparse-10s.mp4"
@@ -197,6 +219,15 @@ def main():
                 print("[PASS] Published genuine MT 10s sparse slide pingpong:"
                       " 298 H.264 frames fully decoded after 2s output", flush=True)
 
+                # Remains responsive at narrow widths and supports explicit
+                # language switching without invalidating the saved result.
+                mt.locator("#flowVideoButton").click()
+                assert mt.locator("#selectedSourceSummary").is_visible()
+                mt.locator("#languageButton").click()
+                assert mt.locator("#flowEditButton").inner_text() in ("Edit", "編集")
+                assert mt.locator("#flowResultButton").is_enabled()
+                assert not mt.evaluate("document.documentElement.scrollWidth > innerWidth")
+                print("[PASS] Published mobile Video/Edit/Result and download feedback", flush=True)
                 root.reload(wait_until="domcontentloaded", timeout=30000)
                 assert root.evaluate("globalThis.crossOriginIsolated") is False, "MT worker isolation leaked to ST root"
             finally:
