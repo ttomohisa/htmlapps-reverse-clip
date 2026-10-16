@@ -56,7 +56,7 @@ def inspect_mp4(output, frames, duration):
         "Frame order increased across a reverse segment boundary", colors[:20], colors[-20:])
     return hashlib.sha256(output.read_bytes()).hexdigest()
 
-def test_conversion(page, workdir, prefix, start, end, frames):
+def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=True):
     # A successful conversion lands on Result. Return to Edit for the
     # next selection without losing or reusing stale generated output.
     assert page.locator("#flowEditButton").is_enabled()
@@ -109,15 +109,17 @@ def test_conversion(page, workdir, prefix, start, end, frames):
     assert page.locator("#saveReverseButton").is_enabled(), prefix
     result_video.evaluate("(video) => { video.loop = false; }")
 
-    # Editing numbers must immediately invalidate old output, even if
-    # the input has not yet committed a change/blur event.
-    page.locator("#flowEditButton").click()
-    page.locator("#rangeEnd").evaluate("""field => {
-        field.value = '0.9';
-        field.dispatchEvent(new Event('input', {bubbles:true}));
-    }""")
-    assert page.locator("#flowResultButton").is_disabled(), prefix
-    assert page.locator("#resultArea").is_hidden(), prefix
+    # Android file-provider scenarios inspect the completed conversion
+    # diagnostics later; preserve their state until after that assertion.
+    # Other scenarios check input-before-blur invalidation here.
+    if invalidate_after:
+        page.locator("#flowEditButton").click()
+        page.locator("#rangeEnd").evaluate("""field => {
+            field.value = '0.9';
+            field.dispatchEvent(new Event('input', {bubbles:true}));
+        }""")
+        assert page.locator("#flowResultButton").is_disabled(), prefix
+        assert page.locator("#resultArea").evaluate("(el) => el.hidden"), prefix
     print(f"PASS {prefix}: {frames} frames / {expected_seconds:.3f}s "
           f"SHA-256={checksum} elapsed={time.monotonic()-began:.2f}s", flush=True)
     return checksum
@@ -223,7 +225,8 @@ def main():
                         initial_frames = 15 if name == "st-mobile-provider-fallback" else 150
                         initial_seconds = 1 if name == "st-mobile-provider-fallback" else 10
                         first = test_conversion(page, temp, f"{name}-first",
-                                                0, initial_seconds, initial_frames)
+                                                0, initial_seconds, initial_frames,
+                                                invalidate_after=name in ("single-thread", "multi-thread"))
                         if name in ("single-thread", "multi-thread"):
                             # Both runtime variants must successfully decode,
                             # re-encode and save a second 10s job in the SAME tab.
