@@ -1,0 +1,78 @@
+name: Import SHA-verified Reverse Clip screenshots
+
+on:
+  push:
+    branches:
+      - feat/reverse-wasm-preview
+    paths:
+      - .github/workflows/import-rc-screenshots.yml
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: feat/reverse-wasm-preview
+          persist-credentials: true
+      - name: Download screenshot evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 38944766865 -R "$GITHUB_REPOSITORY" -n 'reverse-clip-v090-real-ui-dd627de191133496c1ff10b2ed4d76247af0e4f9' -D /tmp/rc-screenshots
+      - name: Verify exact source and PNG SHA-256 before copying
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,pathlib,shutil,struct
+          p=pathlib.Path("/tmp/rc-screenshots")
+          m=json.loads((p/"manifest.json").read_text(encoding="utf-8"))
+          assert m["source"]=="local deterministic 384x216 30fps 2s motion sample; genuine Chrome H.264 reverse"
+          assert m["runtime"]=="single-thread Chrome (not Android/iPhone QA)"
+          assert m["source_sha256"]=="76d3d8c72810764faef29ee576e3dccfc479235dd844ea56ad4159b6a96f3651"
+          assert m["output_sha256"]=="0b00e7896652331379e6ee62cc98263e4b874987653c05b64bd1828796a057da"
+          expected={
+            "reverse-clip-desktop-ja.png":("screenshot.png",1360,900,"489d574f1ebcc5015640b2d5ce689b30b42dfd9f529d3c08f05838bad2f04088"),
+            "reverse-clip-desktop-en.png":("screenshot-en.png",1360,900,"0905b451ef8fa4ab6c6a3f93eec733b735d26b914730746eed878871d77628de"),
+            "reverse-clip-mobile-ja.png":("screenshot-mobile.png",390,844,"279d28b0ec3a33c259df42eb81312aad0e9149a23d28d71668dddb49ca49830f"),
+            "reverse-clip-mobile-en.png":("screenshot-mobile-en.png",390,844,"78cddab46404e30db2d76aaa2ef64350ea1dd4edc262ce46ebd8531332df257c")
+          }
+          entries={x["file"]:x for x in m["screenshots"]}
+          assert set(entries)==set(expected)
+          out=pathlib.Path("assets")
+          out.mkdir(exist_ok=True)
+          for original,(name,w,h,digest) in expected.items():
+              data=(p/original).read_bytes()
+              assert data.startswith(bytes.fromhex("89504e470d0a1a0a"))
+              assert struct.unpack(">II",data[16:24])==(w,h)
+              assert hashlib.sha256(data).hexdigest()==digest
+              assert entries[original]["sha256"]==digest
+              assert entries[original]["bytes"]==len(data)
+              target=out/name
+              assert not target.exists(),f"Refusing overwrite: {target}"
+              target.write_bytes(data)
+              print(f"VERIFIED {original} => {target} {digest}")
+          evidence=pathlib.Path("docs/release/RC_SCREENSHOT_ASSET_MANIFEST.json")
+          assert not evidence.exists()
+          evidence.write_text(json.dumps({
+              "artifact_run_id":38944766865,
+              "artifact_name":"reverse-clip-v090-real-ui-dd627de191133496c1ff10b2ed4d76247af0e4f9",
+              "note":"Real Chrome desktop/mobile viewport screenshots; NOT Android physical-device QA",
+              "evidence":m
+          },indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
+          PY
+      - name: Commit verified images to Draft branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/screenshot.png assets/screenshot-en.png assets/screenshot-mobile.png assets/screenshot-mobile-en.png docs/release/RC_SCREENSHOT_ASSET_MANIFEST.json
+          git diff --cached --check
+          git diff --cached --quiet && exit 1
+          git commit -m "docs(rc): check in verified Japanese and English result screenshots"
+          git push origin HEAD:refs/heads/feat/reverse-wasm-preview
