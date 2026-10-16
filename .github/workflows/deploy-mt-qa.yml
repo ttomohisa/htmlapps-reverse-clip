@@ -1,0 +1,78 @@
+name: Deploy isolated MT QA (temporary separate Worker)
+
+# Dedicated temporary Workers.dev QA, NOT a formal release or site import.
+on:
+  pull_request:
+    branches:
+      - feat/reverse-clip-feasibility-v0.1
+    paths:
+      - ".github/workflows/deploy-mt-qa.yml"
+      - "wrangler.mt-qa.jsonc"
+      - "scripts/preview-mt-worker.mjs"
+      - "src/**"
+      - "reverse-runtime.lock.json"
+      - "build-standalone.ps1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reverse-clip-mt-qa-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  mt-qa:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Verify the selective MT isolation logic
+        run: node --test tests/feasibility/preview-mt-worker.test.mjs
+      - name: Require Cloudflare QA deployment credentials
+        shell: bash
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+      - name: Build pinned release candidate without changing runtime lock
+        shell: pwsh
+        run: ./scripts/check-repository.ps1
+      - name: Deploy separate temporary Workers.dev QA service
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.135.0 deploy --config wrangler.mt-qa.jsonc --name rc-reverse-clip-mt-qa
+      - name: Install Chrome and smoke dependencies
+        id: chrome
+        uses: browser-actions/setup-chrome@v2.2.0
+      - name: Install test requirements
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright
+          command -v ffmpeg >/dev/null && command -v ffprobe >/dev/null || {
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          }
+      - name: Validate live ST and isolated MT response, SharedArrayBuffer and saved MP4
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+          PREVIEW_URL: https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev
+        run: python3 tests/feasibility/cloudflare-preview-mt-smoke.py
+      - name: Document exact QA endpoint and unreleased scope
+        shell: bash
+        run: |
+          {
+            echo '## Reverse Clip v0.9.0 — temporary MT test endpoint'
+            echo
+            echo '[MT QA (isolated Chrome)](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/index.mt.html)'
+            echo
+            echo "- Git SHA: $GITHUB_SHA"
+            echo '- This is a temporary testing Worker, not the official Browser Kitty site or a permanent GPL release.'
+            echo '- Desktop Chrome COOP/COEP/SAB and actual H.264 MP4 are checked; Android physical acceptance is separate.'
+          } >> "$GITHUB_STEP_SUMMARY"
