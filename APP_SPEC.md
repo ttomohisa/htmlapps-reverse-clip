@@ -1,128 +1,296 @@
-# APP_SPEC.md
+# Reverse Clip / 動画逆再生 — APP_SPEC.md
 
-This file is the product contract for the application created from this template. Replace the starter specification below before asking an LLM to build a new product.
+> **Status:** Feasibility in progress / G1 pending（検証中・G1未合格）  
+> **作成日:** 2026-10-11  
+> **目標版:** v1.0.0  
+> **アプリ名:** Reverse Clip / 動画逆再生（仮称）  
+> **アプリslug:** `reverse-clip`（仮）  
+> **新規リポジトリ候補:** `ttomohisa/htmlapps-reverse-clip`（GitHub上で作成済み、2026-10-11確認）  
+> **関連資料:** [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md)
 
-## 1. Product identity
+## 1. 製品定義
 
-- **Working name:** Single HTML App Starter
-- **One-sentence purpose:** Demonstrate the template's local-first, responsive, bilingual, single-file application foundation.
-- **Primary users:** Developers and LLM coding agents starting a new browser utility.
-- **Release artifacts:** `dist/index.html`, `dist/index.self-extract.html`, and a repository-root copy of the readable build named from `repository.name` with a leading `htmlapps-` removed
+### 1.1 一文で説明する目的
 
-## 2. Problem and outcome
+スマートフォンなどで撮影した動画の**必要な短い区間**を選び、**逆再生**または**通常再生→逆再生（往復再生）**したMP4動画を、ファイルをサーバーへアップロードせずに作成・保存する。
 
-The starter must make the repository's constraints visible and testable without pretending to be a finished end-user product. A user can enter text, see basic counts, copy it, save it, and persist it locally.
+### 1.2 解決する問題
 
-A successful replacement app should state here:
+- 写真アプリで撮影した動画を逆再生にしたいだけなのに、動画編集アプリのインストールや操作の習得が必要になる。
+- 既存のオンライン逆再生サービスでは、手元の動画をアップロードする場合がある。
+- 長い動画から数秒だけ逆再生したい場合、動画全体を編集・変換するのは煩雑である。
+- スマートフォンのメモリでは、逆再生対象の全フレームを保持する方式が失敗しやすい。
 
-- What concrete problem it solves.
-- Who experiences the problem.
-- What result the user gets in one session.
-- Why a local single-HTML implementation is useful.
+### 1.3 対象ユーザー・代表シナリオ
 
-## 3. Core user flow
+- 家庭・日常：積み木が崩れる、水を注ぐ、ボールが飛ぶ等の動作を逆方向にして見せたい。
+- SNS向けの短い素材：数秒の動きを逆再生／往復再生してMP4として取り出したい。
+- 教育・説明：手元の簡単な動作を逆方向から確認したい。
 
-1. Open the page locally or through GitHub Pages.
-2. Enter or paste text.
-3. See character, word, and line counts update immediately.
-4. Edit the suggested output filename, then copy or download the text.
-5. Use Clear or Restore sample and undo the reversible change from the toast when needed.
-6. Reload and recover the locally saved text.
+**成功状態:** 初めての人が、動画選択→区間指定→モード選択→作成→MP4保存を、外部アカウントや外部アップロードなしで完了できる。
 
-## 4. Functional requirements
+### 1.4 方針・差別化
 
-- Provide a responsive text area.
-- Calculate Unicode-aware character count.
-- Calculate approximate word and line counts.
-- Copy text with a compatibility fallback.
-- Download UTF-8 plain text with a user-editable output filename and a predictable `.txt` extension.
-- Save the current text in local storage when available.
-- Use the reusable `AppToast.show()` Undo pattern for reversible Clear / Restore sample operations. Reserve `AppConfirm.ask()` for irreversible or high-risk actions.
-- Switch Japanese and English without reloading.
-- Use a light-only interface; do not add a dark-mode or theme switcher.
-- Expose build version, generation timestamp, and embedded dependency count.
+- スマホで短い動画を処理するための**専用工具**。汎用動画エディタにしない。
+- 一般ユーザーにFFmpeg、WASM、エンコード設定などの技術用語を必要以上に表示しない。
+- 入力元と保存結果を明確に分け、元動画を一切変更しない。
+- 処理能力の限界は隠さず、使える解像度・長さ・形式を説明する。
+- **スマートフォンで安全に処理できることが採用条件。** 技術検証に失敗した場合は開発を停止する。
 
-## 5. Data and privacy
+## 2. v1.0.0のスコープ
 
-- Input text remains in browser memory and local storage.
-- The app performs no runtime network request.
-- There is no server-side storage, login, analytics, telemetry, or tracking.
-- Download occurs only after a user action.
+### 2.1 必須
 
-## 6. Non-goals
+| ID | 機能 | 要件 |
+|---|---|---|
+| F-01 | 動画取込 | 1ファイルの選択、ドラッグ&ドロップ。対応端末では動画撮影からの取込も提供。 |
+| F-02 | プレビューと区間指定 | 元動画を再生・シークでき、開始・終了時刻を選択可能。 |
+| F-03 | 逆再生 | 選択区間だけを時間逆順にしてMP4化する。 |
+| F-04 | 往復再生 | 選択区間を通常方向に再生し、その後に逆方向へ戻すMP4を作る。 |
+| F-05 | 音声 | 初期値は「音なし」。入力に音声があれば「音声も逆再生」を選択できる。 |
+| F-06 | 品質選択 | 標準720p、高画質1080p。拡大補間はせず、端末・対象長の制約を明示する。 |
+| F-07 | 変換中表示 | 処理段階・経過を表示し、キャンセル・再試行が可能。 |
+| F-08 | 結果確認と保存 | 完成MP4の再生、情報確認、編集可能なファイル名、明示的な保存操作。 |
+| F-09 | ローカル処理 | ユーザー動画の外部送信なし。配布用単一HTMLに必要な実行資産を内包。 |
+| F-10 | モバイル・日英・アクセシビリティ | スマホで迷わず使える手順、日英UI、キーボード／スクリーンリーダー対応。 |
 
-- Collaborative editing.
-- Cloud synchronization.
-- Rich text formatting.
-- Server-side conversion.
-- Account management.
+### 2.2 対象外（v1.0.0に入れない）
 
-## 7. UX and accessibility
+複数動画の一括処理、SNSへの直接投稿、GIF/WebP書き出し、手動BGM追加、テロップ、字幕、フィルター、トランジション、クロップ、動画速度変更、クラウド保存、ユーザー登録、編集プロジェクトの永続化、4Kでの書き出し、任意の長時間映像の逆再生。
 
-- Mobile-first responsive layout from 320px upward.
-- All controls have visible labels or accessible names.
-- Keyboard focus is visible.
-- Motion respects `prefers-reduced-motion`.
-- Reversible changes provide a visible Undo action in the reusable toast.
-- Irreversible or high-risk destructive actions use the reusable confirmation component, centered on desktop and presented as a safe-area-aware bottom sheet on smartphones.
-- Status messages use an `aria-live` region.
-- If the finished app needs persistent smartphone access to 3-5 sections or workflow actions, reuse `components/mobile-bottom-bar.html` rather than inventing another fixed bottom bar. For long multi-section tools, prefer its mobile page-tab mode (`data-mobile-page-target`) so tapping a bottom tab shows only that group on smartphones while desktop still shows all sections. Keep unavailable actions disabled until their prerequisites exist.
+> 「逆再生の速度変更」は既存のVideo Speed Changerと領域が重なるため、差別化目的で安易に追加しない。
 
-## 8. Performance expectations
+## 3. ユーザーフロー
 
-- Initial UI should become interactive without network access.
-- Input updates should remain smooth for at least 100,000 characters on a typical desktop browser.
-- Avoid rebuilding large DOM sections on every keystroke.
+1. 初期画面で「動画を選ぶ」を選択。対応するモバイル端末では「撮影して取り込む」も表示する。
+2. ファイルを読み込む。動画のサムネイル／プレビュー、ファイル名、元の長さ、表示サイズ、音声有無を確認する。
+3. 再生バーの範囲ハンドル、または開始・終了の時刻入力で対象区間を指定する。
+4. 「逆再生」「往復再生」を選択する。音声と品質は必要時だけ変更する。
+5. 「MP4を作成」を実行する。進行表示に切り替わり、いつでもキャンセル可能。
+6. 完了後、**実際に生成されたMP4**をブラウザでプレビューし、ファイル名を確認して「MP4を保存」する。
+7. 元の範囲や設定を変更し、必要なら別の結果を作成する。
 
-## 9. Browser target
+**重要:** 変換前のプレビューはあくまで元動画。逆再生した結果の厳密なプレビューは**変換完了後**に表示する。負の `video.playbackRate` に依存して「事前に逆再生プレビューできる」と誤認させない。
 
-Current stable desktop and mobile versions of Chromium, Firefox, and Safari. Direct `file://` opening is required.
+## 4. ファイル仕様と制限
 
-## 10. Acceptance criteria
+### 4.1 入力
 
-- `build-standalone.ps1` produces the readable HTML, a gzip self-extracting variant, and an exact repository-root copy named from `repository.name` with a leading `htmlapps-` removed (for example `htmlapps-tap-counter` → `tap-counter.html`).
-- Embedded asset bytes are Base64-encoded exactly once; the complete asset-bundle JSON is not wrapped in a second Base64 layer.
-- Assets configured with `gzip` / `auto` can be read through the async embedded-asset API, and the build writes `build-size-report.json`.
-- `scripts/verify-standalone.ps1` passes.
-- The self-extract loader is ASCII-only, inherits the embedded favicon from the readable HTML, and restores the source HTML byte-for-byte.
-- The generated HTML contains no unresolved build placeholder.
-- The generated HTML contains no external script, stylesheet, frame, module import, or CSS asset URL.
-- Runtime CSP includes `connect-src 'none'`.
-- The full core user flow works after opening either generated HTML directly.
-- No data leaves the page.
-- Japanese and English copy both fit at 360px width.
-- Clear happens immediately but offers Undo for long enough to recover the previous text.
-- The output filename can be edited before download; invalid filename characters are sanitized and an empty name falls back to the app slug.
+- **同時に扱うファイルは1つ。** 新しい元動画を読み込むと、進行中処理を無効化し、以前の結果を破棄する（必要に応じて確認）。
+- 主対象形式：`.mp4`（H.264/AVC + AAC または無音）、`.mov` / `.mp4`（HEVC/H.265 + AAC または無音）。
+- iPhone実機で撮影したMOV/HEVCとAndroid実機で撮影したMP4/H.264を必須テストケースとする。**対応を名乗るのは実機・実ファイルで成功した組合せだけ。**
+- ファイル拡張子・MIME文字列のみで合格とせず、実際のコンテナ／コーデック情報を検査する。
+- **入力1ファイル上限：1 GiB**（採用前の提案値。v0.1.0で入力経路・メタデータ読取の実機検証を行い、必要なら仕様変更する）。
+- 元動画の総再生時間は主な処理制限ではない。長い元動画でも後述の短い区間だけを対象とし、動画全体を配列バッファへ読み込まない。
+- 音声複数トラックは初期対応しない。実装で特定できた主要音声トラックのみを使用し、複数音声の扱いを明示する。
+- DRM付き、破損、不正なメディア、非対応コーデックは理由と回復手段を表示する。
+- HDR、Dolby Vision、特殊な10-bit色処理は**品質保証対象外**。検出して注意喚起し、色が正しく扱えない場合は誤った色の動画を黙って出力せず明示的に非対応とする。
 
-## 11. Open decisions for a new app
+### 4.2 対象区間
 
-Replace these with explicit decisions before implementation:
+- 時刻指定は秒単位の小数第1位を基本とし、スライダーに加えて数値／時刻入力で調整可能。
+- 最短 **0.5秒**、標準品質の最長 **10.0秒**。
+- 高画質1080pの最長 **5.0秒**をv1.0.0の安全側の基本仕様とする。実機で安定する場合だけ最大10.0秒への引き上げを別途承認・記録する。
+- 最初に選択される範囲は先頭から最大5.0秒（元動画が5秒未満なら全体、ただし0.5秒未満なら処理不可）。
+- 範囲は `[開始, 終了)` の時間区間として扱い、終端を越えず、区間長によって制限を判定する。
+- ユーザーが品質を変更して制限を超えた場合、**自動的に区間を縮めない**。明示的なメッセージで修正を促す。
+- 可変フレームレート(VFR)、非整数fps、表示回転付き動画でも出力の時間軸と画面向きを破綻させない。
 
-- Maximum accepted input size.
-- Supported input file types.
-- Export file formats, default filename, editable filename behavior, sanitization, and extension rules.
-- Persistence strategy and reset behavior.
-- Undo/redo scope.
-- Error and recovery behavior, including stale async-result invalidation when inputs can change during processing.
-- Explicit async phases (`empty`, `ready`, `loading-runtime` if needed, `processing`, `result`, `error`) for heavy processing apps.
-- Mobile relationship between previews and their directly related controls.
-- Smartphone navigation model: bottom-tab page switching, section-scrolling bottom bar, workflow-action bar, or no fixed bottom bar.
-- Media coordinate/orientation strategy when drawing overlays.
-- Required third-party libraries.
-- Whether the app intentionally needs peer-to-peer WebRTC. If so, decide whether the fully serverless same-LAN QR pairing component is appropriate, what DataChannels are required, and how paired-device data is described to users.
-- Whether bilingual UI is required.
+### 4.3 変換モード
 
-## In-app help
+- `reverse`：指定区間の映像フレームを逆順で出力する。
+- `pingpong`：指定区間を正方向に再生後、逆方向に戻す（1往復を作成）。往復の折返し点で同じ最終フレームが不要に二重挿入され、停止して見えないようにする。
+- 往復の末尾は逆方向に開始点まで戻る。一般的なプレイヤーでループ再生したときに、目立つ停止や黒フレームを挟まないこと。
+- 動画に繰返し再生の指示を埋め込むだけではなく、**正方向・逆方向を実際のフレームとして書き込む**。
 
-The upper-right header includes a compact help button. It opens a bilingual “使い方と注意事項” dialog containing:
+### 4.4 音声
 
-- the real user workflow,
-- privacy and local-processing behavior,
-- limitations and data-loss risks,
-- any browser or device constraints relevant to the app.
+- 既定：**音声なし**。映像だけのMP4を出力する。
+- 「音声も逆再生」を選ぶと、`reverse` では対象区間の音を逆順にする。`pingpong` では正方向の音の後に逆方向の音が続く。
+- 音声がない入力では音声設定を無効化し、「この動画に音声はありません」を表示する。
+- 音声長は映像に合わせ、折返し部や終端で明らかなブツ切れ／クリック音を出さないようにする。
+- 「音声をそのまま維持」「音楽を追加」は非対応。
 
-Acceptance criteria: help content is updated together with each user-facing behavior change, contains no leftover starter instructions, and remains fully scrollable at narrow smartphone widths / short viewport heights so the final item and close control are always reachable.
+### 4.5 出力
 
-## WebRTC readiness requirement
+- `.mp4`、H.264/AVC、音声を選んだ場合のみAAC。通常のスマホ・PCで再生可能なプロファイルを使用する。
+- 標準画質：**最大720p**、高画質：**最大1080p**。縦長動画は短辺に対応する上限で縦横比を保持する。元動画より拡大しない。
+- フレームレートは最大30fpsを基本とする。30fpsを超える元動画を変換する場合、フレームレート変更を事前に表示する。VFRの扱いは実装で明示的に正規化し、出力は一貫したタイムスタンプにする。
+- 90/180/270度等の表示回転情報は出力映像へ正しく反映する。画面が横倒しにならないこと。
+- 書き出し時にはGPSや撮影位置等の不要な入力メタデータをコピーしない。
+- 出力時間の目安は、逆再生なら選択区間長、往復ならその約2倍（折返しのフレーム境界調整により若干短くなる場合がある）。
+- 出力前にファイル名を編集可能。既定は `<元ファイル名>-reverse.mp4` または `<元ファイル名>-pingpong.mp4`。危険な文字はサニタイズし、拡張子`.mp4`はUI側で固定する。
+- 作成結果のプレビュー、時間、サイズ、解像度を表示した後、ユーザーの操作で保存する。
+- iOSでは保存先・写真アプリへの移動はブラウザ／OSの動作に依存する。「直接写真アプリに保存される」とは説明しない。
 
-When an app uses peer-to-peer WebRTC DataChannels, define which reliable channel represents application readiness. Custom channel layouts must set `readyChannelLabel`; do not define application-ready from ICE/PeerConnection `connected` alone.
+## 5. 画面とUI/UX
+
+### 5.1 共通デザイン
+
+- Browser Kitty標準のライトテーマ、主色 `#16624F`、SVGアイコン。
+- 初期画面に「動画を選ぶ」導線と「動画はアップロードしません」という事実ベースの説明を表示。
+- 技術情報（WASM、コーデック、FPS詳細）は必要に応じて「詳細」に収める。
+- UIは日本語／英語を切替可能。選んだファイルを再読込せずに切り替える。
+- 処理完了の誤認を防ぐ。「MP4を作成」→処理中→「MP4を保存」を明確に区別する。
+
+### 5.2 スマートフォン
+
+- 画面幅320pxから確認。進行に応じて `動画` → `編集` → `結果` の3つの主画面を使う。結果画面は結果未生成時に「まだ動画がありません」と次の操作を説明する。
+- ボトムナビはテンプレートのモバイル用コンポーネントを利用。セーフエリアを確保し、固定バーが内容を隠さない。
+- 編集画面は**元動画プレビューのすぐ下に区間指定UI**を置き、モード／音声／品質を続ける。関連操作を遠い位置に離さない。
+- 再生・範囲ハンドル・保存のタップ領域を十分確保（目安44px以上）。長い動画名は折り返しまたは省略し、全文を確認可能にする。
+- 撮影ボタンは `input type=file` の `accept=video/*` と必要に応じた `capture` を使う。**カメラ起動方法はOS・ブラウザ依存**なので、撮影を強制できると約束しない。非対応時はファイル選択を案内する。
+- ファイルを選ぶまではカメラ／マイク権限を要求しない。
+
+### 5.3 PC
+
+- 動画ドラッグ&ドロップ、ファイル選択、キーボードによる再生／一時停止／時刻調整に対応。
+- 元動画と主要設定、完成結果が理解しやすい2カラム前後のレイアウト。スマホ画面を単に縮小したものにしない。
+
+### 5.4 アクセシビリティ
+
+- ボタンには文字またはアクセシブル名を設定。操作の有効／無効、選択状態は色以外でも判別可能。
+- フォーカスリング、Tab順、Escで閉じるダイアログ、ARIAライブリージョン、キーボードでの時刻入力。
+- 処理中のアニメーションは `prefers-reduced-motion` に配慮。
+- 失敗理由と回復方法を読める文章で示す。
+
+## 6. 実行状態・キャンセル・データ整合性
+
+| 状態 | 表示・許される操作 |
+|---|---|
+| `empty` | 元動画未選択。ファイル選択／撮影のみ。 |
+| `inspecting` | 元動画の形式・時間・向きを調査。進行中を明示。 |
+| `ready` | 元動画プレビュー、区間、モード、音声、品質を編集。 |
+| `loading-runtime` | 初回の処理エンジンを端末内で準備していることを表示。 |
+| `processing` | 対象区間／処理段階、進捗（信頼できる場合だけ百分率）／経過、キャンセル。 |
+| `result` | 作成動画のプレビュー、情報、ファイル名、保存／作り直す。 |
+| `error` | 何に失敗したかを明示。設定を残して再試行可能。 |
+| `cancelled` | 処理停止を明示。元動画と編集設定を保持。 |
+
+- 処理には入力ファイル世代IDと設定スナップショットIDを付ける。完了コールバックが古い世代だった場合はUIへ反映しない。
+- **元動画を置換した場合**は実行中処理を中断し、古い結果、古いオブジェクトURL、エラーを片付ける。
+- **同じ元動画で再変換**する場合、前回成功した結果は新たな変換が成功するまで保持してよい。ただし「前回の結果」と表示して現在の設定と混同させない。
+- 処理のキャンセルはWorkerの停止を含めて後片付けし、再変換できる状態に戻す。処理途中の不完全MP4を保存可能にしない。
+- 変換失敗やキャンセルでユーザーの選択範囲・モード・ファイル名を消さない。
+- オブジェクトURL、Worker、WASM仮想FS内の一時ファイルを、元動画の置換・再実行・終了時に可能な範囲で解放する。
+- リロード時に元動画を復元したように見せない。メディア本体や編集プロジェクトは永続保存しない。
+
+## 7. エラーと警告
+
+- **非対応ファイル**：使用可能な形式を表示し、別ファイルを選べる。
+- **読み取れない動画**：破損またはコーデック非対応の可能性を説明。
+- **長すぎる区間**：何秒まで可能か明示し、区間を勝手に変更しない。
+- **対象の端末では処理できない**：推奨する短縮・720pへの切替を案内。自動降格しない。
+- **メモリ不足・処理停止**：理由を推定として説明し、別設定で再試行可能。ブラウザが強制終了するより事前予防を優先。
+- **映像プレビュー不可**：メタデータが取れる場合は区間の数値入力を試せるが、正確なプレビューなしでの操作であることを明示する。入力自体が読めないなら処理を開始しない。
+- **保存不可**：結果を保持できている限りファイル名変更・再保存を案内。
+- **HDR等の未保証素材**：色が変わる可能性を事前に表示し、確実な変換ができない場合は実行を制限。
+
+## 8. 技術設計と採用条件
+
+### 8.1 実装基盤
+
+- 実装開始時点の [`ttomohisa/htmlapps-template`](https://github.com/ttomohisa/htmlapps-template) `main` を確認し、`AGENTS.md`、`APP_SPEC.md`、ビルド／検証規約に従う。
+- **FFmpeg WASM Builder** の現行プロファイルは`reverse`・`areverse`を有効化していないことを2026-10-11に確認済み。既存の速度変更APIへ非対応フィルターを渡して使えると想定しない。
+- まず [`ttomohisa/htmlapps-ffmpeg-wasm-builder`](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder) で専用の `video-reverse` プロファイル追加可能性を検証する。FFmpeg本家CLIを必要としない、既存Builder方針に沿った**public libav API runner**とする。
+- 最低限 `reverse` / `areverse`、trim／時間軸調整、縦横回転補正、scale、H.264/AACエンコード、MP4書出し、必要な分岐・結合処理を検討する。実際のビルドフラグとライブラリはPoCで確定する。
+- 入力は `File` / `Blob` を丸ごとコピーせず、可能な範囲でWORKERFSなどのランダムアクセス可能な読込を使う。
+- 長尺の区間を単純な `reverse` フィルターに一括投入しない。短い区間から検証し、必要に応じて**時間区間分割→区間内反転→逆順結合**を採用する。区切りに重複／欠落フレームを生まないことが前提。
+- ブラウザ内で動く単一スレッド（ST）版を基本とし、`file://`でも使用可能にする。SharedArrayBuffer必須のMT版はv1.0.0の必須条件にしない。
+- 依存はビルド時に固定したGitHub Release等から取り込み、asset名／SHA-256／ライセンスをロックし、HTML内へ埋め込む。実行時CDNを使わない。
+- 実際の動画レンダリングはWorkerへ移し、メインスレッドを長時間ブロックしない。
+
+### 8.2 通信・プライバシー
+
+- HTMLを取得する初回のHTTP(S)通信を除き、アプリ実行時に入力動画／内容を外部へ送らない。
+- アプリに`fetch`、XHR、WebSocket、外部CSS／font／script、分析SDK、テレメトリを追加しない。
+- 完全ローカル処理と表示するのは、公開ビルドおよび`file://`で通信検査を通過した後だけ。
+- CSPは原則`connect-src 'none'`、必要な `blob:` / WASM権限のみを限定的に許可。過剰な `https:` / `*` 許可はしない。
+- 元動画はサーバー、LocalStorage、IndexedDB、Service Worker Cacheへ保存しない。処理中の端末メモリとユーザー操作によるMP4書出しだけを利用する。
+- FFmpeg・x264等の第三者ライセンス、ビルド資産、対応ソースの関係を `THIRD_PARTY_NOTICES.md` 等に記載し検証する。
+
+### 8.3 性能・負荷制御
+
+- 逆再生用フレームの最大同時保持を抑えた方式を採用し、特にスマホのWebAssembly線形メモリ／ヒープに配慮する。
+- 想定端末・動画特性・区間長・品質によって実行可否を事前判定し、重すぎる設定は実行前に分かりやすく警告または制限。
+- 720p/5秒で処理時間90秒以内、1080p/5秒で180秒以内を**代表的な実機における暫定的な製品判断基準**とする。実測結果を記録し、著しい超過時は改善または開発中止を判断する。ユーザーへの保証時間ではない。
+- 進捗率が推定不能な処理フェーズで架空の百分率を出さない。
+- 変換完了後は元映像の必要な参照だけ保持し、不要な中間データを削除する。
+
+## 9. 品質・受入基準
+
+### 9.1 必須実機マトリクス
+
+| 環境 | 必須ケース | v1.0.0への条件 |
+|---|---|---|
+| Windows PC / Chrome・Edge | H.264/AAC MP4 720p 10秒、1080p 5秒 | 両モード生成、再生、保存可能 |
+| Android実機 / Chrome | 実機撮影H.264 MP4 720p 10秒、1080p 5秒 | 連続3回失敗・クラッシュなし |
+| iPhone実機 / Safari | 実機撮影HEVC MOVとH.264 MOV/MP4 720p 10秒、1080p 5秒 | 対応対象について連続3回失敗・クラッシュなし |
+| PC・モバイル / `file://` | 読込、変換、MP4保存 | ランタイム外部通信不要で完結 |
+
+- 「720p 10秒」は選択区間の長さ。元動画の動画長は異なる試験パターンを使用。
+- 720p/1080pは**出力の上限**。入力デコード負荷も別途記録し、入力4Kの高負荷を無視しない。
+- 実機構成（OS、ブラウザ、端末、入力映像形式、結果）を受入記録へ残す。PCシミュレーションだけでスマホ動作の合格としない。
+- 1080p 10秒は追加試験項目。安全性が立証されなければv1.0.0では上限5秒のまま。
+
+### 9.2 挙動検証
+
+| ID | 判定項目 |
+|---|---|
+| A-01 | ソースのフレーム番号・色を識別できるテスト動画で、逆再生出力の並びが逆順になっている。 |
+| A-02 | 往復再生で折返しの停止／黒フレーム／欠落が目立たない。 |
+| A-03 | 切出しの先頭・終端が指定範囲から大きく逸脱しない。フレーム単位の差分をテストレポート化する。 |
+| A-04 | 音声あり／なしで仕様どおりに出力。逆転時、映像とのずれが概ね150ms以下。 |
+| A-05 | 縦長MOV、90/180/270度回転、VFR素材で向きと時間軸が破綻しない。 |
+| A-06 | 完成MP4を対象端末の標準動画プレイヤー／ブラウザで再生できる。 |
+| A-07 | 元動画置換、キャンセル、連打、リロードを行っても古い変換結果が現れない。 |
+| A-08 | 実行中・完了・失敗・未選択・非対応を視覚／文言で区別できる。 |
+| A-09 | 320/360/390pxスマホ幅、長いファイル名、狭い高さ、モーダル、ソフトキーボードで操作を妨げない。 |
+| A-10 | 日本語／英語のUI・ヘルプ・失敗表示に不自然な省略・未翻訳がない。 |
+| A-11 | 実際の配布ビルドで動画アップロード・実行時外部依存がないことを通信検査で確認。 |
+| A-12 | 通常単一HTMLと自己展開版がそれぞれ`file://`で動作し、CSP・WASM・Worker・保存を確認できる。 |
+| A-13 | README、README日本語、CHANGELOG、第三者ライセンス、favicon、日英スクリーンショット、ビルド・CI検証が整っている。 |
+| A-14 | 既存結果の保持／破棄と編集設定の対応関係が常に明確。誤ったファイル名・内容を保存させない。 |
+
+### 9.3 受入失敗時のルール
+
+- v0.1.0で最低限の逆再生MP4がAndroid・iPhone実機で動かなければ、v0.2.0以降には着手しない。
+- v0.6.0で720p/10秒と1080p/5秒の安定処理を成立させられなければ、仕様範囲の見直しを明示的に提案し、当初仕様のまま「完了」としない。
+- 色変化・音ズレ・フレーム欠落を黙って許容してリリースしない。
+
+## 10. 開発・リリース運用
+
+- GitHubリポジトリとブランチが新規に用意された場合、実装開始時点で**その実際の状態**を確認する。
+- 初期はテンプレート準拠、`APP_SPEC.md`と`AGENTS.md`の契約を実装優先とし、検証ごとに仕様差分を更新する。
+- Builder側の新プロファイルはBuilderリポジトリ内の変更として切り分け、独立したリリースと実ブラウザSmoke testを行う。
+- アプリ側は固定済みのビルド資産を取り込み、同じ動画に対する結果が再現可能な状態とする。
+- Pull Requestの作成・更新は可能。**マージはユーザー本人が行い、アシスタントはマージしない。**
+- v1.0.0タグは受入条件をすべて満たす検証済みコミットで付ける。
+- v1.0.0以前にBrowser Kitty本体への登録やトップページ文章の変更は行わない。
+
+## 11. 実装前の確認事項と仕様変更管理
+
+以下はリリース時に未確定のまま放置しない。実測／PoCに基づき本書へ確定値を反映する。
+
+1. FFmpeg WASMの専用 `video-reverse` プロファイルで`reverse`／`areverse`／往復連結が実行できるか。
+2. 全区間反転をメモリ上限内で扱えるか。扱えなければ分割反転方式でフレーム境界・音声を正しく結合できるか。
+3. iPhone実機HEVC MOVからの読込・縦横回転・書出しが可能か。
+4. Android/iPhoneの720p10秒、1080p5秒のメモリ・速度の合格判定。
+5. 標準出力のH.264 profile、AAC、fps・画質設定の最終値。
+6. HDR素材の検出・警告・変換不可の判定方法。
+
+変更が必要な場合は、`DEVELOPMENT_PLAN.md`のGate記録に理由・測定値・影響する受入項目・次の判断を残す。
+
+## 12. 参照資料（2026-10-11に確認）
+
+- Browser Kitty Guide（プロジェクトの共通設計原則）
+- テンプレート: https://github.com/ttomohisa/htmlapps-template
+- FFmpeg WASM Builder: https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder
+- 既存 Video Speed Changer: https://github.com/ttomohisa/htmlapps-video-speed-changer
+- FFmpeg `reverse` / `areverse` 公式ドキュメント: https://ffmpeg.org/ffmpeg-filters.html
+- `HTMLMediaElement.playbackRate` の逆方向サポート: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/playbackRate
+- モバイル `capture` 属性の互換性: https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/capture
+
+---
+
+**この仕様は実装の約束ではなく、Go/No-Go付きの開発契約である。** v0.1.0 / v0.6.0の技術Gateに合格したことを確認するまで、v1.0.0の完成可能性を保証しない。
