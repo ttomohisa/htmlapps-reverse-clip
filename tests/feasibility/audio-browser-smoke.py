@@ -68,7 +68,20 @@ def generate_sources(directory:Path):
         "-map","0:v:0","-map","[stereo]","-c:v","libx264",
         "-preset","ultrafast","-crf","25","-pix_fmt","yuv420p",
         "-c:a","aac","-ac","2","-b:a","128k",str(stereo)],check=True)
-    return voiced,silent,stereo
+    # Input contains two distinct AAC streams, not two channels. The
+    # app has no track picker; silent mode must remain deterministic
+    # and export precisely one H.264 video with no accidental AAC.
+    multiple=directory/"two-audio-tracks.mp4"
+    subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+        "-i",str(voiced),"-f","lavfi",
+        "-i","sine=frequency=660:sample_rate=48000:duration=1",
+        "-map","0:v:0","-map","0:a:0","-map","1:a:0",
+        "-c:v","copy","-c:a","aac","-t","1",str(multiple)],check=True)
+    source=json.loads(subprocess.check_output([
+        "ffprobe","-v","error","-show_entries",
+        "stream=codec_type,codec_name","-of","json",str(multiple)],text=True))
+    assert len([s for s in source["streams"] if s["codec_type"]=="audio"])==2,source
+    return voiced,silent,stereo,multiple
 
 
 def mp4_info(path:Path, frames:int, audio:bool, duration:float, channels=None):
@@ -247,7 +260,7 @@ def export(page,directory:Path,mode:str,with_audio:bool,
 def main():
     with tempfile.TemporaryDirectory(prefix="reverse-v05-audio-") as temp:
         directory=Path(temp)
-        voiced,silent,stereo=generate_sources(directory)
+        voiced,silent,stereo,multiple=generate_sources(directory)
         server=ThreadingHTTPServer(("127.0.0.1",0),Handler)
         threading.Thread(target=server.serve_forever,daemon=True).start()
         base=f"http://127.0.0.1:{server.server_port}"
@@ -312,6 +325,26 @@ def main():
                         assert page.locator("#audioReverseOption").is_disabled()
                         assert page.locator("#audioInput").input_value()=="none"
                         export(page,directory,"reverse",False)
+
+                        # v0.8 multi-audio compatibility: preserving the
+                        # default silent mode is supported; choosing one of
+                        # several source audio streams is NOT a feature.
+                        page.locator("#sourceInput").set_input_files(str(multiple))
+                        page.locator("#reversePanel").wait_for(state="visible",timeout=10000)
+                        assert page.locator("#audioInput").input_value()=="none"
+                        # Do not claim that a stream can be selected, nor that
+                        # both audio tracks are present in the output.
+                        page.locator("#sourceCompatibilityDetails > summary").click()
+                        notes=page.locator("#sourceCompatibilityDetails").inner_text()
+                        assert ("音声トラック" in notes or "audio tracks" in notes),notes
+                        output=export(page,directory,"reverse",False,
+                                      filename_suffix="-two-source-audio")
+                        info=json.loads(subprocess.check_output([
+                            "ffprobe","-v","error","-show_entries",
+                            "stream=codec_type","-of","json",str(output)],text=True))
+                        assert [x["codec_type"] for x in info["streams"]]==["video"],info
+                        print(f"[PASS] {mode}: two AAC source tracks -> "
+                              "default silent reverse H.264 MP4, no track picker",flush=True)
 
                         # Invalidated output cannot be saved after a new job.
                         page.locator("#flowEditButton").click()
