@@ -508,7 +508,7 @@
       /* All ordinary mobile action buttons need an adequate tap area,
          including load/cancel/convert/save and optional diagnostics. */
       .button{min-height:44px}
-      #rcWorkflow{scroll-margin-top:var(--header-height)}
+      #workspaceTitle{scroll-margin-top:calc(var(--header-height) + 14px)}
       .rc-flow-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
         position:sticky;top:var(--header-height);z-index:20;
         margin:0 -14px 14px;padding:8px 14px 10px;background:var(--surface);
@@ -1433,9 +1433,10 @@
         // Automatic transitions must not strand keyboard focus in a hidden
         // panel. Manual nav taps leave focus on the visible nav button.
         if(onMobile&&focus)$('#workspaceTitle').focus({preventScroll:true});
-        // The focused heading must stay visible beneath the sticky header.
-        // Scrolling the nav itself to the header hides that heading above it.
-        if(scroll&&onMobile)(focus?$('#rcWorkflow'):$('#rcFlowNav'))
+        // Bring the focused heading itself below the sticky app header.
+        // Scrolling the taller workflow container may align a hidden
+        // descendant above the viewport as the Result layout shrinks.
+        if(scroll&&onMobile)(focus?$('#workspaceTitle'):$('#rcFlowNav'))
           .scrollIntoView({block:'start',behavior:'auto'});
         return true;
       }
