@@ -42,7 +42,7 @@ jobs:
 
       - name: Reverse timeline tests
         shell: pwsh
-        run: node --test ./tests/feasibility/reverse-chunk-plan.test.mjs
+        run: node --test ./tests/feasibility/reverse-chunk-plan.test.mjs ./tests/feasibility/preview-mt-worker.test.mjs
 
       - name: Validate PowerShell syntax and encoding
         shell: powershell
@@ -232,7 +232,7 @@ jobs:
           if ($mtSupported) {
             Write-Host "MT response headers present; running the real Chrome MT smoke job."
           } else {
-            Write-Host "::notice::Cloudflare Preview does not isolate MT. Use the GitHub Pages /mt/ endpoint for real multi-thread tests."
+            Write-Host "::warning::Cloudflare Preview MT failed isolation check; DO NOT use MT URL for phone acceptance."
           }
 
       - name: Comment Preview URL
@@ -242,14 +242,20 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PREVIEW_URL: ${{ steps.preview.outputs.preview_url }}
           PREVIEW_NAME: ${{ steps.preview.outputs.preview_name }}
+          MT_SUPPORTED: ${{ steps.verify-headers.outputs.mt_supported }}
         run: |
+          if ($env:MT_SUPPORTED -eq 'true') {
+            $mtStatus = "**[最新版MT Previewを開く]($env:PREVIEW_URL/index.mt.html)** — COOP/COEP/CORP応答ヘッダーの確認済み。実際のMT動画変換は別のCIジョブで検証します。"
+          } else {
+            $mtStatus = "**MT Previewは未検証です。** ヘッダー確認に失敗したため、MT版の実機確認には使用しないでください。"
+          }
+
           $body = @"
           ## Browser Kitty PR Preview
 
           **[ST Previewを開く]($env:PREVIEW_URL)**
 
-          **MT（マルチスレッド）の実機確認は [GitHub Pages版](https://ttomohisa.github.io/htmlapps-reverse-clip/mt/) を使用してください。**
-          CloudflareのPR PreviewではMTに必要なCOOP/COEPが付かないことがあるため、MT対応URLとして案内しません。
+          $mtStatus
 
           - Preview: ``$env:PREVIEW_NAME``
           - Commit: ``${{ github.event.pull_request.head.sha }}``
