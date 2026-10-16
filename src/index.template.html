@@ -1505,6 +1505,9 @@
         return true;
       }
       function releaseSource() {
+        // Source-specific disclosures must not accidentally carry their
+        // expanded state over to the next (potentially different) video.
+        $('#sourceCompatibilityDetails').open=false;
         // Invalidate pending asynchronous source-replacement dialogs.
         sourceSelectionSequence+=1;
         previewSelectionActive=false;
