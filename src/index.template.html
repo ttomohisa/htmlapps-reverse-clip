@@ -611,7 +611,7 @@
     <button id="flowGoEditButton" class="button primary" type="button" disabled data-i18n="flowGoEdit">区間を編集する</button>
   </div>
   <div id="videoArea" hidden>
-    <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" aria-label="Source video"></video>
+    <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" data-i18n-aria-label="sourceVideoLabel" aria-label="元動画のプレビュー"></video>
     <div class="rc-trim" id="trimControls" aria-labelledby="trimTitle">
       <div class="rc-trim-head">
         <strong id="trimTitle" data-i18n="trimTitle">逆再生する区間</strong>
@@ -654,12 +654,12 @@
       <button id="reverseButton" class="button primary" type="button" disabled data-i18n="reverseButton">逆再生MP4を作成</button>
       <button id="cancelReverseButton" class="button" type="button" hidden data-i18n="cancelReverse">処理を中止</button>
     </div>
-    <progress id="reverseProgress" max="100" value="0" hidden aria-label="Conversion progress"></progress>
+    <progress id="reverseProgress" max="100" value="0" hidden data-i18n-aria-label="conversionProgressLabel" aria-label="MP4変換の進行状況"></progress>
     <details id="reverseErrorDetails" hidden><summary data-i18n="errorDetailTitle">エラー詳細</summary><pre id="reverseErrorDetail" class="rc-report"></pre></details>
     <button id="openDiagnosticsButton" class="button" type="button" hidden data-i18n="openDiagnostics">診断ログを保存する</button>
     <div id="resultArea" hidden>
       <h4 id="resultTitle" data-i18n="resultTitle">逆再生の結果</h4>
-      <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="Reversed result MP4"></video>
+      <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="逆再生MP4のプレビュー"></video>
       <p id="resultInfo" class="rc-hint"></p>
       <p id="resultDimensions" class="rc-hint"></p>
       <div class="rc-save">
@@ -896,6 +896,10 @@
     "introTitle": "動画の逆再生・往復再生（実験版）",
     "lead": "動画から最大10秒の区間を選んで逆再生・往復再生MP4に。音声付きは対応動画で選べます。実機検証中です。",
     "localBadge": "完全ローカル処理",
+    "sourceVideoLabel": "元動画のプレビュー",
+    "resultReverseVideoLabel": "逆再生MP4のプレビュー",
+    "resultPingpongVideoLabel": "往復再生MP4のプレビュー",
+    "conversionProgressLabel": "MP4変換の進行状況",
     "flowNavigation": "作業の進行",
     "flowVideo": "動画",
     "flowEdit": "編集",
@@ -1075,6 +1079,10 @@
     "introTitle": "Reverse & ping-pong video (experimental)",
     "lead": "Turn up to 10 seconds of video into a reversed or forward-and-back MP4. Audio is optional for supported sources; phone support is experimental.",
     "localBadge": "Fully local processing",
+    "sourceVideoLabel": "Source video preview",
+    "resultReverseVideoLabel": "Reversed MP4 preview",
+    "resultPingpongVideoLabel": "Ping-pong MP4 preview",
+    "conversionProgressLabel": "MP4 conversion progress",
     "flowNavigation": "Video editing steps",
     "flowVideo": "Video",
     "flowEdit": "Edit",
@@ -2089,6 +2097,8 @@
         $('#reverseTitle').textContent=translate(isPingpong?'pingpongTitle':'reverseTitle');
         $('#reverseDescription').textContent=translate(isPingpong?'pingpongDescription':'reverseDescription');
         $('#resultTitle').textContent=translate(isPingpong?'pingpongResultTitle':'resultTitle');
+        $('#resultVideo').setAttribute('aria-label',
+          translate(isPingpong?'resultPingpongVideoLabel':'resultReverseVideoLabel'));
         $('#modeInput').setAttribute('aria-label',translate('modeLabel'));
         const canUseAudio=Boolean(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent);
         $('#audioInput').disabled=!state.ready || !canUseAudio;
@@ -2113,6 +2123,8 @@
         if(!result?.ok)return;
         const isPingpong=result.mode==='pingpong', withAudio=result.audio==='reverse';
         $('#resultTitle').textContent=translate(isPingpong?'pingpongResultTitle':'resultTitle');
+        $('#resultVideo').setAttribute('aria-label',
+          translate(isPingpong?'resultPingpongVideoLabel':'resultReverseVideoLabel'));
         $('#resultInfo').textContent=format(withAudio?
           (isPingpong?'pingpongResultAudio':'reverseResultAudio'):
           (isPingpong?'pingpongResultInfo':'resultInfo'),{
@@ -2605,6 +2617,17 @@
           $('#reverseStatus').textContent=translate(failureKey);
           if(flowStep==='result')setFlowStep('edit');
           else updateFlowNavigation();
+          // A failed export must not leave keyboard focus on the now
+          // disabled Create button or a hidden Cancel control. Offer the
+          // expanded error details as the next reachable mobile action.
+          if(window.matchMedia?.('(max-width:600px)').matches){
+            const summary=$('#reverseErrorDetails > summary');
+            summary.focus({preventScroll:true});
+            const root=document.documentElement, previous=root.style.scrollBehavior;
+            root.style.scrollBehavior='auto';
+            try{summary.scrollIntoView({block:'nearest',behavior:'auto'});}
+            finally{root.style.scrollBehavior=previous;}
+          }
           showToast(translate(failureKey));
         }finally{
           // Dispose only this job's runner. resetConversion() may already have
