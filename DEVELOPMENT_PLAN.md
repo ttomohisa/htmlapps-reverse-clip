@@ -1,9 +1,29 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status (2026-10-16):** v0.8.0 Compatibility / Hardening development started at the owner's request following v0.7.0 UX implementation and real ST/MT Chrome PASS; G2/hardware remains OPEN, no release. The earlier Pages mobile UI candidate has an owner-reported Android basic UX PASS. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
+> **Status (2026-10-16):** v0.9.0 RC PREPARATION started after successful v0.8.0 real ST/MT compatibility regression tests. Gate G2 hardware and Gate G3 release acceptance remain OPEN; no merge, tag or release. The earlier Pages mobile UI candidate has an owner-reported Android basic UX PASS. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-16 — v0.9.0 RC preparation (G2/G3 stay OPEN)
+
+The owner asked why the version had not advanced and approved continuing.
+Advance the **development version** to v0.9.0 and begin collecting
+release-candidate evidence. This is NOT an RC pass or release
+authorization; Android v0.9 device QA, original Gate G2, Gate G3,
+GPL corresponding-source permanence and deferred iPhone scope are
+still incomplete. The milestone sequencing exception applies to
+development only.
+
+**Feature freeze:** preserve ST/MT H.264/AAC Reverse/Ping-pong,
+mobile Video/Edit/Result, fail-closed invalid MP4, local-only
+connect-src 'none', 15fps and experimental size/duration limits.
+Do not introduce codecs or changes that undermine file://.
+Review all APP_SPEC A-01–A-14 and mark evidence PASS/PARTIAL/PENDING
+by exact environment; desktop Chrome does not certify Android/Edge.
+Record in `docs/release/RC_CHECKLIST.md` and keep release notes
+as DRAFT. No app/Builder PR merge, tag, GitHub Release or Browser
+Kitty main repository change.
 
 ## 2026-10-16 — v0.8 extended rotation and HEVC fail-closed QA
 

@@ -8,10 +8,10 @@ const html=read('src/index.template.html');
 const icon=read('assets/favicon.svg');
 const config=JSON.parse(read('app.config.json'));
 
-test('v0.8 development starts without claiming Gate G2 acceptance or stable release',()=>{
-  assert.equal(config.version,'0.8.0');
-  assert.match(config.description,/v0\.8\.0.*development.*G2/);
-  assert.match(config.descriptionJa,/G2・iPhone・GPL恒久配布は未完了/);
+test('v0.9 RC preparation does not imply G2/G3 signoff or a release',()=>{
+  assert.equal(config.version,'0.9.0');
+  assert.match(config.description,/v0\.9\.0.*PREPARATION.*G2.*G3/);
+  assert.match(config.descriptionJa,/G2と公開前G3は未合格/);
   assert.match(read('DEVELOPMENT_PLAN.md'),/v0\.7\.0 development approved by owner; G2 carried forward/);
   assert.match(read('docs/feasibility/G2.md'),/G2 NOT PASSED/);
   assert.match(read('CHANGELOG.md'),/\[0\.7\.0\].*not released/);
