@@ -96,6 +96,13 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
     assert page.locator("#resultDimensions").is_visible()
     assert "15fps" in page.locator("#resultDimensions").inner_text()
     assert page.locator("#flowSaveHint").is_hidden()
+    initial_lang=page.locator("html").get_attribute("lang")
+    assert page.locator("#sourceVideo").get_attribute("aria-label") == (
+        "元動画のプレビュー" if initial_lang=="ja" else "Source video preview")
+    assert page.locator("#resultVideo").get_attribute("aria-label") == (
+        "逆再生MP4のプレビュー" if initial_lang=="ja" else "Reversed MP4 preview")
+    assert page.locator("#reverseProgress").get_attribute("aria-label") == (
+        "MP4変換の進行状況" if initial_lang=="ja" else "MP4 conversion progress")
     if prefix in ("single-thread-first", "multi-thread-first"):
         # Switching JA/EN after real MP4 generation must re-render the
         # completed result's mode/audio/bytes, preserving the same Blob.
@@ -111,6 +118,9 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
         else:
             assert "映像のみ" in switched_summary, switched_summary
         assert page.locator("#resultVideo").evaluate("(v) => v.currentSrc") == original_url
+        assert page.locator("#resultVideo").get_attribute("aria-label") == (
+            "逆再生MP4のプレビュー" if page.locator("html").get_attribute("lang")=="ja"
+            else "Reversed MP4 preview")
         assert page.locator("#flowResultButton").is_enabled()
         page.locator("#languageButton").click()
         assert page.locator("#resultInfo").inner_text() == original_summary
@@ -332,6 +342,8 @@ def main():
                                 page.wait_for_function("""() =>
                                     !document.querySelector('#flowVideoButton').disabled""")
                                 assert page.locator("#reverseErrorDetails").evaluate("(el) => el.open")
+                                assert page.locator("#reverseErrorDetails > summary").evaluate(
+                                    "(el) => document.activeElement === el")
                                 assert page.locator("#flowResultButton").is_disabled()
                                 assert page.locator("#resultArea").is_hidden()
                                 status = page.locator("#reverseStatus").inner_text()
