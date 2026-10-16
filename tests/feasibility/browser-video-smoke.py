@@ -17,6 +17,7 @@ import tempfile
 import time
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from rc_demo_media import make_rc_demo_video
 
 ROOT = Path(__file__).resolve().parents[2]
 DIST = ROOT / "dist"
@@ -173,6 +174,32 @@ def capture_rc_result_screenshots(page, output_path):
     """
     if os.getenv("RC_CAPTURE_SCREENSHOTS") != "1":
         return
+
+    # The codec regression uses FFmpeg testsrc2. That garish calibration
+    # pattern is useful for tests but poor as a README screenshot. Make a
+    # separate, deterministic motion clip, convert it through the *actual*
+    # app, and only photograph the exported result after ffprobe passes.
+    demo=make_rc_demo_video(output_path.parent/"rc-demo-source.mp4")
+    page.locator("#flowVideoButton").click()
+    page.locator("#sourceInput").set_input_files(str(demo))
+    page.locator("#reversePanel").wait_for(state="visible",timeout=30000)
+    page.locator("#flowEditButton").click()
+    page.locator("#rangeStart").fill("0")
+    page.locator("#rangeEnd").fill("2")
+    assert page.locator("#reverseButton").is_enabled()
+    page.locator("#reverseButton").click()
+    page.wait_for_function("""() =>
+        !document.querySelector('#resultArea').hidden ||
+        !document.querySelector('#reverseErrorDetails').hidden""",timeout=120000)
+    if page.locator("#reverseErrorDetails").is_visible():
+        raise AssertionError("RC demo conversion failed: "+
+                             page.locator("#reverseErrorDetail").text_content())
+    with page.expect_download(timeout=15000) as saved:
+        page.locator("#saveReverseButton").click()
+    presentation_output=output_path.parent/"rc-demo-reversed.mp4"
+    saved.value.save_as(presentation_output)
+    inspect_compat_mp4(presentation_output,expected_frames=30)
+
     evidence=ROOT/"rc-evidence"/"screenshots"
     evidence.mkdir(parents=True,exist_ok=True)
     assert page.locator("#resultArea").is_visible()
@@ -211,7 +238,7 @@ def capture_rc_result_screenshots(page, output_path):
                   // rect must not be used to calculate document scrollY;
                   // align the real Result heading instead.
                   const result=document.querySelector('#resultArea');
-                  const desired=innerWidth<=600?140:95;
+                  const desired=innerWidth<=600?140:130;
                   const rect=result.getBoundingClientRect();
                   window.scrollTo({top:Math.max(0,window.scrollY+
                     rect.top-desired),behavior:'instant'});
@@ -246,10 +273,11 @@ def capture_rc_result_screenshots(page, output_path):
         if page.locator("html").get_attribute("lang") != locale_before:
             page.locator("#languageButton").click()
     (evidence/"manifest.json").write_text(json.dumps({
-       "source":"synthetic H.264 fps30; generated and verified in real Chrome",
+       "source":"local deterministic 384x216 30fps 2s motion sample; genuine Chrome H.264 reverse",
        "app":"Reverse Clip v0.9.0 RC preparation, NOT released",
        "runtime":"single-thread Chrome (not Android/iPhone QA)",
-       "output_sha256":hashlib.sha256(output_path.read_bytes()).hexdigest(),
+       "source_sha256":hashlib.sha256(demo.read_bytes()).hexdigest(),
+       "output_sha256":hashlib.sha256(presentation_output.read_bytes()).hexdigest(),
        "screenshots":captures
     },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     print("[PASS] actual Reverse MP4 Result JA/EN desktop+mobile "
