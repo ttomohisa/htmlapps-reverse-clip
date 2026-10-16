@@ -3,7 +3,13 @@
 **2026-10-17: PREPARATION / NOT APPROVED. Gate G3 NOT PASSED.**
 The RC is not a published release; PR #2, PR #1 and Builder PR #16 remain open Drafts. The user requested **less excessive testing while keeping real safeguards**. Refer to [revised initial-release scope](REVISED_ACCEPTANCE_SCOPE.md) for the proposed P0/P1/P2 criteria. These revised criteria are a proposal applied to RC planning, **not** a retrospective PASS of the original G2 or authorization to publish.
 
-References: [APP_SPEC.md A-01–A-14](../../APP_SPEC.md), [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md), [historical G2 evidence](../feasibility/G2.md), [v0.8 compatibility matrix](../feasibility/V080_COMPATIBILITY_MATRIX.md), [2026-10-17 Android ST owner smoke](ANDROID_ST_RC_OWNER_SMOKE.md).
+References: [APP_SPEC.md A-01–A-14](../../APP_SPEC.md), [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md), [historical G2 evidence](../feasibility/G2.md), [v0.8 compatibility matrix](../feasibility/V080_COMPATIBILITY_MATRIX.md), [2026-10-17 Android ST owner smoke](ANDROID_ST_RC_OWNER_SMOKE.md), [latest MT test deployment](MT_QA_BROWSER_EVIDENCE.md).
+
+## 2026-10-17 — latest MT hosted browser proof (NOT Android device acceptance)
+
+[Temporary QA deployment / build CI #38954969819](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38954969819) **SUCCESS** using branch `8c263294`. The exact current MT standalone was rebuilt on Windows, staged under [`/mt/`](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/) with the existing pinned COI Service Worker, and a **real remote Chrome test** confirmed cross-origin isolation, SharedArrayBuffer, conversion and saving of a 1-second H.264 reversed MP4. ST at root stayed non-isolated even after registration. The standard Wrangler Preview's response headers still did not provide direct COOP/COEP, so do not use its `/index.mt.html` as an MT acceptance URL.
+
+**MT Chrome-hosted CI PASS; Android phone MT P0 still PENDING.** The QA URL is temporary, not Browser Kitty and not a versioned GPL release; no Android RAM/audio hardware metrics were measured. [Evidence and exact scope](MT_QA_BROWSER_EVIDENCE.md).
 
 ## P0 — mandatory for proposed initial scope
 

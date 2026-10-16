@@ -8,6 +8,10 @@
 
 The owner replied **“4つともOK” (all four OK)** after testing the [v0.9.0 Cloudflare PR #2 **ST Preview**](https://r1414006067-pr-2-bk-previews.ttomohisa.workers.dev) against four requested workflows: short Reverse MP4 save/replay, short Ping-pong MP4 save/replay, cancellation/retry and audible reversed audio. This is a **user-reported phone smoke PASS**, not an independent device/media log. The device, OS/Chrome version, source codec/provider, precise settings, output hashes and RAM/timing were not supplied. **The current Android MT variant is not yet phone-accepted**; permanent source-complete GPL distribution and G3 approval remain outstanding. [Evidence/limitations](docs/release/ANDROID_ST_RC_OWNER_SMOKE.md).
 
+## Temporary MT Android QA page — 2026-10-17
+
+The [temporary MT QA entrypoint](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/) hosts the latest v0.9.0 with the existing SHA-256-pinned same-origin COI Service Worker. Cloudflare's normal PR Preview did not preserve the required isolation headers. The [real remote desktop Chrome CI #38954969819](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38954969819) confirmed isolation, SharedArrayBuffer and an actual reversed H.264 MP4 download; this **does not certify Android hardware**. It is a temporary testing site, not a permanent GPL runtime release. [Exact evidence](docs/release/MT_QA_BROWSER_EVIDENCE.md).
+
 ## Screenshots — actual Chrome MP4 output
 
 The following screenshots show **actual exported and verified H.264 MP4 result screens** from Chrome with a locally generated motion sample. The desktop (1360×900) and mobile-size (390×844) screenshots are **desktop Chrome viewport captures, not physical Android device certification**. This is the unreleased v0.9.0 development branch.

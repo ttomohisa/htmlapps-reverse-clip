@@ -8,6 +8,10 @@
 
 v0.9.0の[Cloudflare PR #2プレビュー（ST）](https://r1414006067-pr-2-bk-previews.ttomohisa.workers.dev)について、ユーザーから**「4つともOK」**との報告がありました。直前に依頼した、約5秒の逆再生MP4保存・再生、約2秒の往復再生MP4保存・再生、中止→再試行、音声付き逆再生の聞き取りについての**実機ユーザー報告による基本動作PASS**です。端末・OS・Chromeのバージョン、実際の入力形式・画質、保存されたMP4のハッシュ、詳細な性能は未収集です。**MT版の最新版Android実機確認ではありません**。元のG2およびG3は未合格、GPL対応ソースの恒久公開も未完了です。[確認結果と未確認事項](docs/release/ANDROID_ST_RC_OWNER_SMOKE.md)。
 
+## MT版の一時的な実機確認環境（2026-10-17）
+
+[MT版の一時QAページ](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/)は、最新v0.9.0を配布用ST版と分けて試すためのページです。Cloudflareの通常プレビューは隔離ヘッダーが落ちるため、このQAサイトでは既存のSHA-256固定Service Workerを使用します。[CI #38954969819](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38954969819)で、PCの実Chromeからページを開き、隔離・逆再生MP4生成・ダウンロードが成功しました。**Android実機でMT版が正常動作する確認はまだ行っていません。** このURLは検証専用であり、恒久的な配布先ではありません。[テスト証跡](docs/release/MT_QA_BROWSER_EVIDENCE.md)。
+
 ## スクリーンショット — 実際のMP4変換結果
 
 ローカル生成したサンプル動画を実際に逆再生し、MP4として保存・検証した結果画面です。PC版Chromeで撮影した1360×900とスマホ幅390×844の画面であり、**Android実機による動作確認を表す画像ではありません**。画像は未公開のv0.9.0開発版です。
