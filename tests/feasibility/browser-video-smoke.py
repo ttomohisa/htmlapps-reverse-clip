@@ -200,6 +200,17 @@ def capture_rc_result_screenshots(page, output_path):
     saved.value.save_as(presentation_output)
     inspect_compat_mp4(presentation_output,expected_frames=30)
 
+    # The initial 0:00 poster can show Chromium's native buffering spinner
+    # over a fully valid MP4. Seek to an actual decoded middle frame and
+    # wait until the video is ready before taking a representative UI shot.
+    page.locator("#resultVideo").evaluate(
+        "(v) => { v.pause(); v.currentTime=0.75; }")
+    page.wait_for_function("""() => {
+        const v=document.querySelector('#resultVideo');
+        return v.readyState>=2 && !v.seeking && v.currentTime>=0.70;
+    }""",timeout=15000)
+    page.wait_for_timeout(500)
+
     evidence=ROOT/"rc-evidence"/"screenshots"
     evidence.mkdir(parents=True,exist_ok=True)
     assert page.locator("#resultArea").is_visible()
