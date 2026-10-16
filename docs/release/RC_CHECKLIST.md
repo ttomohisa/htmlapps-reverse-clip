@@ -40,7 +40,7 @@ The 64MiB Android provider fallback is a **KNOWN G2 DEVIATION** from the origina
 | A-10 | JA and EN UI/help/errors | Automated toggle, error messages PASS. Editorial review and actual screenshots PENDING | **P0 pending docs** |
 | A-11 | No upload or runtime external dependency | `connect-src 'none'`, real ST/MT no unexpected network on Chrome PASS; verify final exact distribution | **P0 pending final build** |
 | A-12 | Standalone ST/self-extract file:// | Real desktop Chrome standalone MP4 PASS; MT hosted isolation validated. Windows Edge direct manual **P1** | **P0 automated PASS** |
-| A-13 | README JA/EN, licenses, favicon, real screenshots, CI | Docs/brand available; original screen captures and source-complete immutable GPL release missing | **P0 pending assets/license** |
+| A-13 | README JA/EN, licenses, favicon, real screenshots, CI | Four genuine Chrome JA/EN desktop/mobile-viewport screenshot PNGs are committed, SHA-256 locked; README links reviewed. Permanent GPL corresponding-source distribution still missing | **P0 partial: screenshots PASS, GPL release PENDING** |
 | A-14 | Source/settings/result/filename linked | Confirmation/invalidation/filename, no partial MP4 browser tests PASS; one Android saved file verification PENDING | **P0 pending device** |
 
 ## Five-minute Android smoke form (one representative handset; no unnecessary matrix)
@@ -71,11 +71,7 @@ all results contained a visible video, heading and Save button).
 They are *synthetic local H.264 media in desktop Chrome viewports*,
 not a physical phone or browser-OS save screenshot.
 
-**Screenshot release status:** EVIDENCE GENERATED / VISUALLY REVIEWED,
-but the images are still a **30-day CI artifact**, not permanent
-checked-in README/asset screenshots. A-13 remains PENDING until chosen
-screenshots are committed and both READMEs updated. This new screenshot
-check does not require expensive MT HD/device stress.
+**Historical screenshot note:** the initial testsrc2/calibration images were not suitable for README use and were intentionally rejected. The later representative-motion screenshots from [CI #38944766865](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38944766865) passed technical checks, were visually reviewed without buffering overlays, and their exact bytes were checked into `assets/` by [one-time checksum-verified import CI #38945924515](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38945924515). Both READMEs now link the image assets. See [image digest manifest](RC_SCREENSHOT_ASSET_MANIFEST.json). **A-13 screenshots PASS but A-13 overall still PENDING permanent GPL source-complete distribution**; these Chrome viewport images are not Android physical proof.
 
 **Matching video-reverse 1.10.6 GPL review package:** independently
 downloaded Builder [review run #38617100332](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38617100332)
