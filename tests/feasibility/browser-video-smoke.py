@@ -90,6 +90,34 @@ def test_conversion(page, workdir, prefix, start, end, frames):
     download.value.save_as(result)
     expected_seconds = frames / 15
     checksum = inspect_mp4(result, frames, expected_seconds)
+
+    # Mobile output (including the AAC variant) must stop playback when
+    # leaving Result. Navigating back should retain the same verified Blob.
+    result_video = page.locator("#resultVideo")
+    output_src = result_video.evaluate("(video) => video.currentSrc")
+    result_video.evaluate("""async video => {
+        video.loop = true;
+        video.muted = true;
+        await video.play();
+    }""")
+    assert not result_video.evaluate("(video) => video.paused"), prefix
+    page.locator("#flowBackToEditButton").click()
+    assert result_video.evaluate("(video) => video.paused"), prefix
+    assert page.locator("#flowResultButton").is_enabled(), prefix
+    page.locator("#flowResultButton").click()
+    assert result_video.evaluate("(video) => video.currentSrc") == output_src, prefix
+    assert page.locator("#saveReverseButton").is_enabled(), prefix
+    result_video.evaluate("(video) => { video.loop = false; }")
+
+    # Editing numbers must immediately invalidate old output, even if
+    # the input has not yet committed a change/blur event.
+    page.locator("#flowEditButton").click()
+    page.locator("#rangeEnd").evaluate("""field => {
+        field.value = '0.9';
+        field.dispatchEvent(new Event('input', {bubbles:true}));
+    }""")
+    assert page.locator("#flowResultButton").is_disabled(), prefix
+    assert page.locator("#resultArea").is_hidden(), prefix
     print(f"PASS {prefix}: {frames} frames / {expected_seconds:.3f}s "
           f"SHA-256={checksum} elapsed={time.monotonic()-began:.2f}s", flush=True)
     return checksum

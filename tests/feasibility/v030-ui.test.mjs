@@ -100,6 +100,13 @@ test('mobile workflow navigation and saved-result step are implemented with nati
   ]) assert.ok(html.includes(marker),marker);
 });
 
+test('mobile result playback pauses when hidden; typed range changes revoke stale MP4 immediately',()=>{
+  assert.ok(html.includes("if(flowStep==='result'&&step!=='result')$('#resultVideo').pause();"));
+  assert.ok(html.includes("$('#'+id).addEventListener('input',onOutputSettingsEdited);"));
+  assert.ok(html.includes("$('#'+id).addEventListener('change',onOutputSettingsEdited);"));
+  assert.ok(html.includes("$('#qualityInput').addEventListener('change',onOutputSettingsEdited);"));
+});
+
 test('responsive step headings follow Video/Edit/Result and recover on desktop resize',()=>{
   assert.ok(html.includes('id="workspaceBody" data-i18n="workspaceBody"'));
   assert.ok(html.includes("'workspaceTitle':flowStep==='edit'?'flowEditTitle':'flowResultTitle'"));

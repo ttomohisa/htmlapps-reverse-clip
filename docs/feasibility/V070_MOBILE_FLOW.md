@@ -62,8 +62,10 @@ external network resources.
    MP4 Blob and the browser loaded its metadata and duration. Show
    resulting video, true output width/height and FPS, duration/size,
    editable filename and explicit MP4 download. A **Back to Edit**
-   action changes the view only: changing a setting/source or
-   cancelling a later job invalidates old MP4/result state.
+   action pauses output playback (also when the MP4 has AAC) and changes
+   the view without discarding the verified Blob. Returning to Result
+   requires no re-encode. Changing a setting/source or cancelling a
+   later job invalidates old MP4/result state.
 
 Desktop (>600px) keeps the existing continuous page. On mobile the
 three-step navigator uses a sticky region just below the existing
@@ -87,7 +89,8 @@ The result MP4 remains available to retry download while unchanged.
 | Source metadata ready | Edit automatically selected, source playable, settings enabled | Automated Chrome PASS; physical Android pending |
 | Source replaced/cancelled/unreadable | Video current, old Result disabled; stale async loads cannot resurface | Automated ST/MT Chrome PASS; provider-specific Android pending |
 | Valid 0.5–10s MP4 | Result current only after fully validated output; Save downloads actual H.264 | Actual ST/MT Chrome MP4 PASS |
-| Back to Edit without changes | Existing MP4 retained; navigating to Result works | Browser PASS |
+| Back to Edit without changes | Output playback pauses while hidden; existing MP4 retained, navigating to Result works without re-encoding | Regression added; CI pending |
+| Typing trim start/end before blur | Old MP4 and Save cleared immediately on input, even before change/blur | Regression added; CI pending |
 | Edit trim/quality/mode/audio after output | Old MP4 and Save cleared, Result disabled | Browser PASS |
 | Abort/error or failed frame count | Stays on Edit and shows error details, never an incomplete MP4 | ST/MT regression PASS; independent Android still pending |
 | Result metadata | Actual MP4 dimensions, FPS, duration, output size; filename editable | Browser PASS |

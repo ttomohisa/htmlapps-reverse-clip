@@ -1402,6 +1402,9 @@
           video.pause();
           $('#trimPreviewNotice').textContent='';
         }
+        // Hide the result only after stopping its playback; AAC audio must
+        // not continue invisibly on Video/Edit. Retain the verified MP4 Blob.
+        if(flowStep==='result'&&step!=='result')$('#resultVideo').pause();
         flowStep=step;
         updateFlowNavigation();
         $('#flowAnnouncement').textContent=format('flowStepAnnouncement',{
@@ -2623,10 +2626,17 @@
       });
       $('#modeInput').addEventListener('change',onConversionModeChanged);
       $('#audioInput').addEventListener('change',onAudioModeChanged);
-      for(const id of ['rangeStart','rangeEnd','qualityInput']) $('#'+id).addEventListener('change',()=>{
+      function onOutputSettingsEdited(){
         previewSelectionActive=false;video.pause();$('#trimPreviewNotice').textContent='';
         resetConversion();rangeInfo();
-      });
+      }
+      // Number fields can change long before blur. Immediately revoke any
+      // previous MP4 instead of exposing output for an outdated selection.
+      for(const id of ['rangeStart','rangeEnd']){
+        $('#'+id).addEventListener('input',onOutputSettingsEdited);
+        $('#'+id).addEventListener('change',onOutputSettingsEdited);
+      }
+      $('#qualityInput').addEventListener('change',onOutputSettingsEdited);
       for(const [id,which] of [['trimStartSlider','start'],['trimEndSlider','end']])
         $('#'+id).addEventListener('input',()=>moveTrimHandle(which));
       $('#previewSelectionButton').addEventListener('click',previewSelectedSource);
