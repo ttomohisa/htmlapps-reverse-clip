@@ -52,7 +52,46 @@ def create_compat_sources(workdir):
             "-frames:v", str(count), "-c:v", "libx264", "-preset", "ultrafast",
             "-pix_fmt", "yuv420p", str(target)], check=True)
         results[label] = target
+    # A genuine H.264 QuickTime .mov container; a codec and a
+    # container are different compatibility dimensions.
+    mov=workdir/"h264.mov"
+    subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+        "-i",str(results["fps30"]),"-map","0:v:0","-c","copy",str(mov)],
+        check=True)
+    results["mov"]=mov
+
+    # A display-matrix rotated MOV is separate from a physically
+    # portrait-encoded video. Its presentation metadata must not be
+    # confused with coded width/height. Record both in the test.
+    rotated=workdir/"h264-rotate90.mov"
+    subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+        "-i",str(mov),"-map","0:v:0","-c","copy",
+        "-metadata:s:v:0","rotate=90",str(rotated)],check=True)
+    results["rotated-mov"]=rotated
+    rotate_info=json.loads(run("ffprobe","-v","error","-select_streams","v:0",
+        "-show_entries","stream_side_data=rotation","-of","json",str(rotated)))
+    rotations=[d.get("rotation") for x in rotate_info.get("streams",[])
+               for d in x.get("side_data_list",[]) if "rotation" in d]
+    assert any(abs(float(x))==90 for x in rotations),rotate_info
+
+    # A plausible ISO BMFF ftyp/mdat prefix but missing moov and media
+    # must pass sniffing and fail later in browser decode, not export.
+    corrupt=workdir/"truncated-h264.mp4"
+    corrupt.write_bytes(results["fps30"].read_bytes()[:128])
+    assert corrupt.stat().st_size==128
+    results["truncated"]=corrupt
     return results
+
+def inspect_video_shape(path):
+    report=json.loads(run("ffprobe","-v","error","-select_streams","v:0",
+        "-show_entries","stream=width,height:stream_side_data=rotation",
+        "-of","json",str(path)))
+    streams=report.get("streams",[])
+    assert len(streams)==1,report
+    v=streams[0]
+    return {"coded":[v["width"],v["height"]],
+            "rotations":[d.get("rotation") for d in v.get("side_data_list",[])
+                         if "rotation" in d]}
 
 def inspect_compat_mp4(output, expected_frames=15):
     report = json.loads(run("ffprobe", "-v", "error",
@@ -536,6 +575,65 @@ def main():
                                 inspect_compat_mp4(out_file)
                                 print(f"[PASS] {name} {label} => 15fps H.264 MP4",
                                       flush=True)
+                        if name in ("single-thread","multi-thread"):
+                            # H.264 in MOV is an ordinary browser-supported
+                            # container in Chrome, not automatic HEVC support.
+                            for label in ("mov","rotated-mov"):
+                                page.locator("#flowVideoButton").click()
+                                page.locator("#sourceInput").set_input_files(
+                                    str(compat[label]))
+                                page.locator("#reversePanel").wait_for(
+                                    state="visible",timeout=10000)
+                                source_shape=page.locator("#sourceVideo").evaluate(
+                                    "(v) => [v.videoWidth,v.videoHeight]")
+                                assert all(dim>0 for dim in source_shape),source_shape
+                                page.locator("#flowEditButton").click()
+                                page.locator("#rangeStart").fill("0")
+                                page.locator("#rangeEnd").fill("1")
+                                assert page.locator("#reverseButton").is_enabled()
+                                page.locator("#reverseButton").click()
+                                page.wait_for_function("""() =>
+                                    !document.querySelector('#resultArea').hidden ||
+                                    !document.querySelector('#reverseErrorDetails').hidden""",
+                                    timeout=120000)
+                                if page.locator("#reverseErrorDetails").is_visible():
+                                    raise AssertionError(
+                                        f"{name} {label}: "+
+                                        page.locator("#reverseErrorDetail").text_content())
+                                with page.expect_download(timeout=15000) as dl:
+                                    page.locator("#saveReverseButton").click()
+                                out_file=temp/f"{name}-{label}-output.mp4"
+                                dl.value.save_as(out_file)
+                                inspect_compat_mp4(out_file)
+                                rendered_shape=page.locator("#resultVideo").evaluate(
+                                    "(v) => [v.videoWidth,v.videoHeight]")
+                                file_shape=inspect_video_shape(out_file)
+                                print(f"[OBSERVE] {name} {label}: source-rendered={source_shape}, "
+                                      f"output-rendered={rendered_shape}, file={file_shape}, "
+                                      f"input={inspect_video_shape(compat[label])}",
+                                      flush=True)
+                                if label=="mov":
+                                    assert rendered_shape==source_shape,(
+                                        "H.264 MOV source/export shape mismatch",
+                                        source_shape,rendered_shape)
+                            # A truncated file with plausible ftyp must fail
+                            # decoder validation and never expose a stale MP4.
+                            page.locator("#flowVideoButton").click()
+                            page.locator("#sourceInput").set_input_files(
+                                str(compat["truncated"]))
+                            page.locator("#loadStatus[data-phase='error']").wait_for(
+                                timeout=10000)
+                            assert page.locator("#resultArea").is_hidden()
+                            assert page.locator("#flowResultButton").is_disabled()
+                            assert page.locator("#reversePanel").is_hidden()
+                            assert page.locator("#loadStatus").inner_text() in (
+                                "動画をプレビューできません。対応していない形式か破損している可能性があります。",
+                                "This video cannot be previewed. The format may be unsupported or the file damaged.",
+                                "MP4/MOVの動画データを確認できません。拡張子だけを変えたファイルは利用できません。",
+                                "This does not have a recognizable MP4/MOV container header. Renaming a file is not a video conversion.")
+                            print(f"[PASS] {name} H.264 MOV + rotated MOV decoded/exported; "
+                                  "truncated plausible MP4 refused without stale Save",
+                                  flush=True)
                         if name == "single-thread":
                             # Responsive keyboard/tap/long filename regression.
                             # Replacing a source after export must invalidate the
