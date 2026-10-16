@@ -207,9 +207,12 @@ def capture_rc_result_screenshots(page, output_path):
         "(v) => { v.pause(); v.currentTime=0.75; }")
     page.wait_for_function("""() => {
         const v=document.querySelector('#resultVideo');
-        return v.readyState>=2 && !v.seeking && v.currentTime>=0.70;
+        return v.readyState>=3 && !v.seeking && v.currentTime>=0.70;
     }""",timeout=15000)
-    page.wait_for_timeout(500)
+    # Chromium's native buffering arc may remain for the first paint even
+    # after seeked/readyState. Give the controls time to settle before the
+    # first desktop capture; later locale/viewport captures reuse the frame.
+    page.wait_for_timeout(2500)
 
     evidence=ROOT/"rc-evidence"/"screenshots"
     evidence.mkdir(parents=True,exist_ok=True)
