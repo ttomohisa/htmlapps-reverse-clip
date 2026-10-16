@@ -1,6 +1,6 @@
 name: Deploy isolated MT QA (temporary separate Worker)
 
-# Dedicated temporary Workers.dev QA, NOT a formal release or site import.
+# Temporary public QA only: no app release, tag, merge or Browser Kitty import.
 on:
   pull_request:
     branches:
@@ -21,8 +21,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  mt-qa:
+  build:
     if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Verify preview MT Worker routing
+        run: node --test tests/feasibility/preview-mt-worker.test.mjs
+      - name: Build and verify locked ST/MT standalones (Windows requirement)
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./scripts/check-repository.ps1
+      - name: Pass exact built HTML to deployment job
+        uses: actions/upload-artifact@v7
+        with:
+          name: isolated-mt-qa-standalone
+          path: dist/**
+          if-no-files-found: error
+          retention-days: 3
+
+  deploy-verify:
+    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -30,27 +54,31 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: isolated-mt-qa-standalone
+          path: dist
+      - name: Verify real built MT HTML exists
+        run: |
+          test -s dist/index.html
+          test -s dist/index.mt.html
+          grep -q 'const RUNTIME_VARIANT = "multi-thread";' dist/index.mt.html
       - uses: actions/setup-node@v6
         with:
           node-version: 24
-      - name: Verify the selective MT isolation logic
-        run: node --test tests/feasibility/preview-mt-worker.test.mjs
-      - name: Require Cloudflare QA deployment credentials
+      - name: Require QA Cloudflare credentials
         shell: bash
         run: |
           test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
-      - name: Build pinned release candidate without changing runtime lock
-        shell: pwsh
-        run: ./scripts/check-repository.ps1
-      - name: Deploy separate temporary Workers.dev QA service
+      - name: Deploy independent Workers.dev QA (not the existing Preview/production Worker)
         shell: bash
         run: |
           set -euo pipefail
           npx --yes wrangler@4.135.0 deploy --config wrangler.mt-qa.jsonc --name rc-reverse-clip-mt-qa
-      - name: Install Chrome and smoke dependencies
+      - name: Install Chrome
         id: chrome
         uses: browser-actions/setup-chrome@v2.2.0
-      - name: Install test requirements
+      - name: Install lightweight browser smoke requirements
         shell: bash
         run: |
           python3 -m pip install --disable-pip-version-check playwright
@@ -58,21 +86,18 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y ffmpeg
           }
-      - name: Validate live ST and isolated MT response, SharedArrayBuffer and saved MP4
+      - name: Check actual live COOP/COEP/SAB, ST isolation and real MT MP4
         shell: bash
         env:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
           PREVIEW_URL: https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev
         run: python3 tests/feasibility/cloudflare-preview-mt-smoke.py
-      - name: Document exact QA endpoint and unreleased scope
+      - name: Record specific test URL, exact commit and non-release status
         shell: bash
         run: |
           {
-            echo '## Reverse Clip v0.9.0 — temporary MT test endpoint'
-            echo
-            echo '[MT QA (isolated Chrome)](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/index.mt.html)'
-            echo
-            echo "- Git SHA: $GITHUB_SHA"
-            echo '- This is a temporary testing Worker, not the official Browser Kitty site or a permanent GPL release.'
-            echo '- Desktop Chrome COOP/COEP/SAB and actual H.264 MP4 are checked; Android physical acceptance is separate.'
+            echo '## Reverse Clip v0.9.0 — temporary MT QA'
+            echo '[MT QA](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/index.mt.html)'
+            echo "- Revision: $GITHUB_SHA"
+            echo '- Not a public app release or Android physical-device proof.'
           } >> "$GITHUB_STEP_SUMMARY"
