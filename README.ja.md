@@ -4,6 +4,18 @@
 
 [製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [G2受入状況](docs/feasibility/G2.md) · [MTの実測](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md) · [English README](README.md)
 
+## スクリーンショット — 実際のMP4変換結果
+
+ローカル生成したサンプル動画を実際に逆再生し、MP4として保存・検証した結果画面です。PC版Chromeで撮影した1360×900とスマホ幅390×844の画面であり、**Android実機による動作確認を表す画像ではありません**。画像は未公開のv0.9.0開発版です。
+
+| PC表示（日本語） | スマホ幅（日本語） |
+| --- | --- |
+| ![Reverse ClipでMP4を作成したPCの結果画面](assets/screenshot.png) | ![Reverse Clipの390px幅での結果画面](assets/screenshot-mobile.png) |
+
+[英語版PC画面](assets/screenshot-en.png) · [英語版スマホ幅画面](assets/screenshot-mobile-en.png) · [画像のSHA-256とCI記録](docs/release/RC_SCREENSHOT_ASSET_MANIFEST.json)
+
+
+
 ## 2026-10-17 — 公開テスト条件を現実的に見直し
 
 元のG2はAndroid・iPhone両方で720p10秒／1080p5秒の
@@ -37,8 +49,7 @@ AAC・完全ローカル処理・出力15fps・単一HTMLを維持します。
 `APP_SPEC.md` A-01〜A-14を個別に評価し、
 デスクトップChromeの自動試験で確認した範囲と、
 最新Android実機、Windows Edge、iPhone（延期）の
-未受入項目を区別しています。実画面の日本語・英語
-スクリーンショット、Androidの高解像度・RAM測定、
+未受入項目を区別しています。実画面の日本語・英語スクリーンショットはCIで取得・リポジトリへ収録済みです。一方、Androidの高解像度・RAM測定、
 64MiB以下の元動画全量コピー例外、音声の実機聞き取り、
 GPL対応ソース付き恒久WASM配布も残っています。
 
