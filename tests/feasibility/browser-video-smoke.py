@@ -96,6 +96,25 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
     assert page.locator("#resultDimensions").is_visible()
     assert "15fps" in page.locator("#resultDimensions").inner_text()
     assert page.locator("#flowSaveHint").is_hidden()
+    if prefix in ("single-thread-first", "multi-thread-first"):
+        # Switching JA/EN after real MP4 generation must re-render the
+        # completed result's mode/audio/bytes, preserving the same Blob.
+        original_lang = page.locator("html").get_attribute("lang")
+        original_summary = page.locator("#resultInfo").inner_text()
+        original_url = page.locator("#resultVideo").evaluate("(v) => v.currentSrc")
+        page.locator("#languageButton").click()
+        assert page.locator("html").get_attribute("lang") != original_lang
+        switched_summary = page.locator("#resultInfo").inner_text()
+        assert switched_summary != original_summary, (original_summary, switched_summary)
+        if page.locator("html").get_attribute("lang") == "en":
+            assert "silent video" in switched_summary, switched_summary
+        else:
+            assert "映像のみ" in switched_summary, switched_summary
+        assert page.locator("#resultVideo").evaluate("(v) => v.currentSrc") == original_url
+        assert page.locator("#flowResultButton").is_enabled()
+        page.locator("#languageButton").click()
+        assert page.locator("#resultInfo").inner_text() == original_summary
+        assert page.locator("html").get_attribute("lang") == original_lang
     if prefix == "single-thread-first":
         # An MP4 that was not downloaded must survive Cancel, including
         # its Blob URL. This is an actual browser dialog, not a JS mock.
@@ -103,6 +122,16 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
         page.locator("#flowVideoButton").click()
         page.locator("#sourceInput").set_input_files(str(workdir / "15-seconds.mp4"))
         page.locator("#appConfirmDialog").wait_for(state="visible")
+        # A short phone/soft-keyboard viewport must not clip its sheet
+        # or make its Cancel/Replace action unreachable.
+        page.set_viewport_size({"width": 320, "height": 420})
+        assert page.evaluate("""() => {
+            const d=document.querySelector('#appConfirmDialog').getBoundingClientRect();
+            return d.left >= -1 && d.right <= innerWidth+1 &&
+                d.top >= -1 && d.bottom <= innerHeight+1;
+        }"""), "confirmation dialog extends past short phone viewport"
+        for selector in ("#appConfirmCancel", "#appConfirmOk"):
+            assert page.locator(selector).bounding_box()["height"] >= 44, selector
         assert page.locator("#flowResultButton").is_enabled()
         page.locator("#appConfirmCancel").click()
         page.wait_for_function("""() =>
@@ -122,9 +151,22 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
         assert page.locator("#resultVideo").evaluate("(video) => video.currentSrc") == old_src
         assert page.locator("#flowResultButton").is_enabled()
         page.evaluate("window.AppToast.dismiss()")
+        # The filename and explicit MP4 action remain reachable even
+        # with little usable height (simulated software keyboard).
+        page.locator("#reverseFilename").fill("完成版.mp4")
+        assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
+        page.locator("#saveReverseButton").scroll_into_view_if_needed()
+        rect = page.locator("#saveReverseButton").bounding_box()
+        assert rect and rect["height"] >= 44 and rect["x"] >= -1
+        assert rect["x"] + rect["width"] <= 321, rect
+        page.set_viewport_size({"width": 390, "height": 800})
     with page.expect_download(timeout=15000) as download:
         page.locator("#saveReverseButton").click()
     assert page.locator("#flowSaveHint").is_visible()
+    hint = page.locator("#flowSaveHint").inner_text()
+    assert ("ダウンロードを開始" in hint or "download started" in hint.lower()), hint
+    if prefix == "single-thread-first":
+        assert download.value.suggested_filename == "完成版.mp4", download.value.suggested_filename
     result = workdir / f"{prefix}.mp4"
     download.value.save_as(result)
     expected_seconds = frames / 15
@@ -269,6 +311,43 @@ def main():
                                                 0, initial_seconds, initial_frames,
                                                 invalidate_after=name in ("single-thread", "multi-thread"))
                         if name in ("single-thread", "multi-thread"):
+                            if name == "single-thread":
+                                # Inject only a failed runner response after a
+                                # successful real MP4. The UI must expose the
+                                # error, keep Save disabled, translate it on
+                                # demand, then recover on a real retry.
+                                page.evaluate("""() => {
+                                    window.__v07RealLoader = window.BrowserFFmpeg.loadEmbedded;
+                                    window.BrowserFFmpeg.loadEmbedded = async () => ({
+                                        run: async () => ({exitCode:1,files:[]}),
+                                        dispose(){}
+                                    });
+                                }""")
+                                page.locator("#flowEditButton").click()
+                                page.locator("#rangeStart").fill("0")
+                                page.locator("#rangeEnd").fill("1")
+                                assert page.locator("#reverseButton").is_enabled()
+                                page.locator("#reverseButton").click()
+                                page.locator("#reverseErrorDetails").wait_for(state="visible", timeout=15000)
+                                page.wait_for_function("""() =>
+                                    !document.querySelector('#flowVideoButton').disabled""")
+                                assert page.locator("#reverseErrorDetails").evaluate("(el) => el.open")
+                                assert page.locator("#flowResultButton").is_disabled()
+                                assert page.locator("#resultArea").is_hidden()
+                                status = page.locator("#reverseStatus").inner_text()
+                                page.locator("#languageButton").click()
+                                translated_status = page.locator("#reverseStatus").inner_text()
+                                assert translated_status != status, (status, translated_status)
+                                assert "MP4" in translated_status
+                                assert page.locator("#reverseErrorDetails").is_visible()
+                                page.locator("#languageButton").click()
+                                assert page.locator("#reverseStatus").inner_text() == status
+                                page.evaluate("""() => {
+                                    window.BrowserFFmpeg.loadEmbedded = window.__v07RealLoader;
+                                    delete window.__v07RealLoader;
+                                }""")
+                                print("[PASS] v0.7 localized failure/diagnostics and real retry readiness",
+                                      flush=True)
                             # Both runtime variants must successfully decode,
                             # re-encode and save a second 10s job in the SAME tab.
                             second = test_conversion(page, temp, f"{name}-10s-repeat", 0, 10, 150)
