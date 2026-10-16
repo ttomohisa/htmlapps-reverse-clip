@@ -78,11 +78,38 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
     if page.locator("#reverseErrorDetails").is_visible():
         raise AssertionError(page.locator("#reverseErrorDetail").inner_text())
     assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "result"
+    assert page.locator("#workspaceTitle").evaluate("(el) => document.activeElement === el"), prefix
     assert page.locator("#flowResultButton").get_attribute("aria-current") == "step"
     assert page.locator("#workspaceTitle").inner_text() in ("結果を確認・保存", "Preview and save result")
     assert page.locator("#resultDimensions").is_visible()
     assert "15fps" in page.locator("#resultDimensions").inner_text()
     assert page.locator("#flowSaveHint").is_hidden()
+    if prefix == "single-thread-first":
+        # An MP4 that was not downloaded must survive Cancel, including
+        # its Blob URL. This is an actual browser dialog, not a JS mock.
+        old_src = page.locator("#resultVideo").evaluate("(video) => video.currentSrc")
+        page.locator("#flowVideoButton").click()
+        page.locator("#sourceInput").set_input_files(str(workdir / "15-seconds.mp4"))
+        page.locator("#appConfirmDialog").wait_for(state="visible")
+        assert page.locator("#flowResultButton").is_enabled()
+        page.locator("#appConfirmCancel").click()
+        page.wait_for_function("""() =>
+            document.querySelector('#rcWorkflow').dataset.flowStep === 'result'""")
+        assert page.locator("#workspaceTitle").evaluate("(el) => document.activeElement === el")
+        assert page.locator("#resultVideo").evaluate("(video) => video.currentSrc") == old_src
+        # A rejected multi-file drop on Video must also keep the MP4.
+        page.locator("#flowVideoButton").click()
+        page.evaluate("""() => {
+            const dt = new DataTransfer();
+            dt.items.add(new File(['one'],'one.mp4',{type:'video/mp4'}));
+            dt.items.add(new File(['two'],'two.mp4',{type:'video/mp4'}));
+            document.querySelector('#dropZone').dispatchEvent(
+                new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:dt}));
+        }""")
+        assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "result"
+        assert page.locator("#resultVideo").evaluate("(video) => video.currentSrc") == old_src
+        assert page.locator("#flowResultButton").is_enabled()
+        page.evaluate("window.AppToast.dismiss()")
     with page.expect_download(timeout=15000) as download:
         page.locator("#saveReverseButton").click()
     assert page.locator("#flowSaveHint").is_visible()
@@ -102,6 +129,7 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
     }""")
     assert not result_video.evaluate("(video) => video.paused"), prefix
     page.locator("#flowBackToEditButton").click()
+    assert page.locator("#workspaceTitle").evaluate("(el) => document.activeElement === el"), prefix
     assert result_video.evaluate("(video) => video.paused"), prefix
     assert page.locator("#flowResultButton").is_enabled(), prefix
     page.locator("#flowResultButton").click()
@@ -211,6 +239,7 @@ def main():
                         page.locator("#sourceInput").set_input_files(str(source))
                         page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
                         assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
+                        assert page.locator("#workspaceTitle").evaluate("(el) => document.activeElement === el")
                         assert page.locator("#workspaceTitle").inner_text() in ("区間と出力を編集", "Edit section and output")
                         assert page.locator("#dropZone").is_hidden()
                         assert page.locator("#flowResultButton").is_disabled()
@@ -239,6 +268,30 @@ def main():
                             # Tests the 2s chunk boundaries from a non-zero start.
                             test_conversion(page, temp, f"{name}-fractional", .1, 9.87, 146)
                             test_conversion(page, temp, f"{name}-5s", 0, 5, 75)
+                            if name == "single-thread":
+                                # Accepting a replacement after generating a
+                                # *new* undownloaded MP4 must invalidate it.
+                                page.locator("#flowEditButton").click()
+                                page.locator("#rangeStart").fill("0")
+                                page.locator("#rangeEnd").fill("1")
+                                page.locator("#rangeEnd").dispatch_event("change")
+                                assert page.locator("#reverseButton").is_enabled()
+                                page.locator("#reverseButton").click()
+                                page.wait_for_function("""() =>
+                                    !document.querySelector('#resultArea').hidden ||
+                                    !document.querySelector('#reverseErrorDetails').hidden""",
+                                    timeout=120000)
+                                assert page.locator("#resultArea").is_visible()
+                                page.locator("#flowVideoButton").click()
+                                page.locator("#sourceInput").set_input_files(str(source))
+                                page.locator("#appConfirmDialog").wait_for(state="visible")
+                                page.locator("#appConfirmOk").click()
+                                page.locator("#reversePanel").wait_for(state="visible", timeout=30000)
+                                assert page.locator("#flowResultButton").is_disabled()
+                                assert page.locator("#resultArea").is_hidden()
+                                assert page.locator("#sourceName").inner_text() == source.name
+                                print("[PASS] unsaved MP4 replace-confirm cancel/approve and stale result clearing",
+                                      flush=True)
                             # Cancel before starting a new job or shortly after
                             # its first chunk; no previous output may be retained.
                             # The 160x90 test fixture can finish before
