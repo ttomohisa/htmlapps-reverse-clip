@@ -1,8 +1,25 @@
 # Reverse Clip v0.2.0 — Android physical-device acceptance matrix
 
-**Status (2026-10-15): historical v0.2 matrix mostly unaccepted; a targeted later v0.6 regression was USER-REPORTED PASS on real Android.** v0.2.0 App Foundation exists in [Draft PR #2](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/2). Neither passing a Linux Chrome emulator nor using an Android user-agent counts as physical Android proof.
+**Status (2026-10-16): historical v0.2 matrix mostly unaccepted; targeted v0.6 low-FPS and v0.7-preparation basic workflow were USER-REPORTED PASS on real Android.** v0.2.0 App Foundation exists in [Draft PR #2](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/2). Neither passing a Linux Chrome emulator nor using an Android user-agent counts as physical Android proof.
 
 Use the current PR preview's **ST page** and **MT page** (configured with cross-origin isolation). These are temporary PR previews; do not confuse them with unmerged public GitHub Pages. The Builder's current assets are a temporary Actions artifact. Do not merge PRs or import into Browser Kitty solely because this matrix exists.
+
+## 2026-10-16 Android workflow — user-reported basic UX PASS
+
+Following the owner merge of [Pages PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5),
+[public deployment #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219) passed live
+isolated MT Chrome MP4 tests. When asked to exercise the Android
+Video → Edit → Result → MP4 download journey, the owner confirmed
+**"androidもOK"**. This is **physical-device user-reported basic
+workflow PASS** for the pinned Pages candidate, not a formal pass
+for every historical v0.2 case A20-01…A20-12 or the G2 memory,
+source-provider, high-resolution, cancellation and audio matrix.
+Device/browser version, selected footage, output profile, repeat
+count, RAM and file provider were not independently recorded.
+
+The follow-up Oct 16 Draft app UI changes are absent from the
+Pages-pinned snapshot. Android iPhone/HEVC claims remain unverified;
+iPhone hardware acceptance is deferred.
 
 ## 2026-10-15 real Android result — specific v0.6 regression only
 

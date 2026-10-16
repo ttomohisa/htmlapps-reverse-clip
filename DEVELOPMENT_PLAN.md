@@ -1,9 +1,16 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status (2026-10-15):** v0.6.0 development. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
+> **Status (2026-10-16):** v0.6.0 development; the publicly deployed mobile UI candidate is owner-reported Android basic UX PASS. The full G2 is still OPEN. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-16 — Pages実公開・Android操作のユーザー確認
+
+- [Pages専用PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)はユーザーがマージ済み。 [デプロイ／公開実Chrome検証 #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219)の準備・公開・本番MT実変換はすべて成功。
+- ユーザーは求められたAndroidの**動画選択→区間編集→結果の確認・MP4保存**について「androidもOK」と報告。**公開テスト版の基本UXは実機ユーザー報告でPASS**とするが、機種・ブラウザー詳細、ファイル提供元、品質・所要時間・RAM・音声・3回連続等の個別データは未確認。
+- 公開されたHTMLはアプリコミット`e5f66428c501090513b6fa0da925b1d1bffbbfb8`から固定生成したもの。後続の10月16日修正（結果再生の停止、数値編集中の旧結果失効、44pxボタン拡張）はDraft PR #2側のCIでPASSしているが、このAndroid結果の対象ではない。
+- G2本体は継続して未合格。iPhone実機は延期。バージョンはv0.6.0のまま、Draft PRやBuilderのマージ・Release・Browser Kittyへの導入なし。
 
 ## 2026-10-15 — スマホ導線・診断折りたたみの実ブラウザ回帰完了
 

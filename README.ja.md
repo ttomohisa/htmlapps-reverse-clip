@@ -20,7 +20,7 @@
 
 通常操作では「動作テスト」「開発中の機能と制限」は閉じた折りたたみとして表示し、必要なときだけ開けます。変換失敗時は「診断ログを保存する」から直接確認でき、動画の内容やファイル名を外部へ送信しません。
 
-[ST・MT実Chrome回帰CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206)が全ジョブ成功。320／360／390px、長い日本語ファイル名、JA/EN、音声・キャンセル・MP4保存を検証済みです。[GitHub Pagesの新UIテストPR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)はユーザーマージ後にAndroid実機で確認します。これは実機UIの合格ではありません。
+[ST・MT実Chrome回帰CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206)が全ジョブ成功。320／360／390px、長い日本語ファイル名、JA/EN、音声・キャンセル・MP4保存を検証済みです。[GitHub Pagesの新UIテストPR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)はユーザーがマージし、[実公開CI #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219)の準備・公開・MT動画変換がすべて成功しました。続いてユーザーから、依頼していたAndroidの**動画→編集→結果→MP4保存**について「androidもOK」と報告があり、**公開テスト版の基本操作を実機ユーザー報告でPASS**と記録します。端末名・入力元・画質・処理時間・音声・連続試験は未確認です。10月16日の後続UI改善はこの公開版には含まず、Draft PR #2の自動テストのみ合格しています。
 
 上部のナビはヘッダー直下に固定表示（Sticky）し、各ボタンは最低44pxを確保。
 下部固定バーは設けず、結果には完成MP4の寸法・fps・長さ・サイズ、ファイル名・保存操作を表示します。
@@ -28,7 +28,7 @@
 PCでは従来の連続画面のままです。
 
 これは**v0.7.0のための先行UI実装**であり、版数やGate G2の合格を意味しません。
-Android実機の操作・ファイル提供元・処理時メモリ・音声と恒久GPL配布は引き続き確認対象です。
+Android実機の基本操作はユーザー報告で確認済みですが、ファイル提供元・処理時メモリ・音声・詳細UXと恒久GPL配布は引き続き確認対象です。
 iPhoneは検証を延期しています。詳細は[モバイル導線受入表](docs/feasibility/V070_MOBILE_FLOW.md)。
 
 ## 目的

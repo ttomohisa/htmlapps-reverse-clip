@@ -42,9 +42,15 @@ manual download; no user media is included.
 [Mobile regression CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206)
 PASS on real ST/MT browser conversion, frame integrity, AAC,
 return/cancel flow, JA/EN, long filenames and 320/360/390px widths.
-A separate [Pages UI test PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
-will enable physical Android review after owner merge. This CI is
-not a physical Android UX approval.
+[Pages UI test PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5) is now merged and
+[live Pages ST/MT CI #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219) fully passed.
+The owner subsequently reported **"androidもOK"** for the requested
+Android Video → Edit → Result → MP4 download workflow: **user-reported
+basic Android UX PASS** on that pinned Pages test snapshot. No device
+model, input provider, quality, repeated-stress or audio data was
+supplied. Subsequent Oct 16 Draft PR UI refinements passed ST/MT
+automated Chrome CI but were not present in this phone-tested Pages
+snapshot.
 
 The navigation is sticky beneath the header and uses at least 44px
 tap targets; no fixed bottom bar hides the save area. On desktop the
@@ -54,8 +60,9 @@ MP4 filename. **Save MP4 initiates a browser download; the app cannot
 confirm where the operating system finally stores it.**
 
 This is **UI work toward v0.7.0**, not a v0.7.0 release or a pass of
-Gate G2. Android on-device layout, audio listening, memory and the
-source-file whole-copy exception still need acceptance; iPhone is
+Gate G2. Additional Android on-device keyboard/file-provider checks,
+audio listening, memory and the source-file whole-copy exception still
+need acceptance; iPhone is
 deferred. See [mobile flow acceptance](docs/feasibility/V070_MOBILE_FLOW.md).
 
 ## Goal

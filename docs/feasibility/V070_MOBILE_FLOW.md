@@ -1,9 +1,32 @@
 # v0.7.0 Mobile UX / Save Flow — implementation and acceptance
 
-**State (2026-10-15): UI preparation on Reverse Clip v0.6.0 Draft PR #2.
-Gate G2 remains OPEN. No v0.7.0 version bump, tag or release has occurred.**
+**State (2026-10-16): Basic Android UX is owner-reported PASS on the pinned
+GitHub Pages candidate (PR #5); the main app is still v0.6.0 Draft PR #2,
+and Gate G2 remains OPEN. No v0.7.0 version bump, tag or release.**
 iPhone Safari is explicitly deferred. Windows Chrome/Edge and physical
 Android Chrome are the current target devices.
+
+## 2026-10-16 — physical Android mobile workflow: OWNER-REPORTED PASS
+
+- The owner merged [test-only GitHub Pages PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5).
+  [Published-site deployment/verification #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219)
+  **SUCCESS** for prepare, deploy and live isolated MT Chrome video export.
+- After being asked to check the Android **Video → Edit → Result → MP4
+  download** journey on the published [MT test page](https://ttomohisa.github.io/htmlapps-reverse-clip/mt/),
+  the owner reported **"androidもOK"**. Record this as a **user-reported
+  basic physical Android UX PASS** for the publicly deployed, SHA-pinned
+  candidate derived from app commit `e5f66428c501090513b6fa0da925b1d1bffbbfb8`.
+  The message did not give device/browser details or measurements.
+- The owner did not separately report a tested source provider, output
+  resolution, repeated high-resolution run count, timing, memory, audio
+  mode/seam listening, cancelled jobs, or the OS download destination.
+  Those remain unaccepted. Do not infer general G2 or G3 acceptance.
+- The app Draft branch's later Oct 16 enhancements (pausing playback
+  after leaving Result, invalidation on numeric `input`, extra 44px
+  targets) **were not in that pinned Pages test snapshot**. They passed
+  their own automated Chrome ST/MT regressions, not this Android run.
+- Draft app PR #1/#2 and Builder PR #16 remain unmerged; G2 and full
+  v0.7.0 signoff remain OPEN. iPhone is deferred.
 
 ## 2026-10-16 regression and tap-target hardening
 
@@ -28,10 +51,10 @@ MT Chrome MP4/AAC, low-FPS/VFR, offline and mobile layout regressions).
 The opt-in HD MT endurance job was not run as part of normal CI.
 
 [Pages-only test PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
-remains an **earlier pinned snapshot**; this development-branch
-follow-up is **not** present in those published-test bytes. It must
-not be claimed as Android hardware validated before a deliberately
-re-pinned deployment and physical review. G2 is still OPEN.
+has now **merged and deployed successfully**. It deliberately pins the
+earlier validated snapshot; this development-branch follow-up is
+**not included in the public Pages bytes** and is not covered by
+the owner's Android report. G2 is still OPEN.
 
 ## 2026-10-15 automated UX acceptance — Chrome/browser PASS
 
@@ -63,11 +86,11 @@ source-provider memory fallback and all outstanding G2 items remain
 **PENDING**. iPhone verification is postponed. v0.6.0 stays the
 version; this is not v0.7.0 milestone approval.
 
-A separate [Pages test-only PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
-pins the exact green build for Android UX review without merging
-this unfinished app development PR. A Pages PR check does not
-establish live mobile behavior until the owner merges it and the
-`verify-live-mt` deployment job passes.
+The separate [Pages test-only PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
+has now merged; live isolated MT Chrome checks passed in
+[deploy #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219), and the owner subsequently
+reported the Android basic workflow works. App Draft PR #2
+remains unmerged.
 
 ## What is implemented
 
@@ -127,16 +150,17 @@ The result MP4 remains available to retry download while unchanged.
 | JA/EN toggling | Current phase and selected output preserved, navigation/metadata translated | Browser PASS |
 | ST and true COI MT | Both generate/download real MP4; source file never uploaded | Browser/CI PASS; phone pending |
 | Foldable diagnostics (initially closed) | Native disclosure retains tests/log export; error button opens diagnostics | Browser and Node PASS; Android pending |
-| Physical Android, keyboard, picker, OS save location | Source and Save workflows remain accessible, safe-area behavior correct | **Pending real device** |
+| Published Pages MT Android basic Video/Edit/Result/Download flow | User can complete the basic journey on a real Android device | **OWNER-REPORTED PASS 2026-10-16**; exact device/browser, keyboard/safe area and final save destination not separately documented |
+| Physical Android keyboard, Photos/cloud picker, OS save location | Source and Save workflows remain accessible, safe-area behavior correct | **Pending detailed real-device checks** |
 | Real high-resolution repeated exports/audio/whole-copy | All G2 performance/privacy/cancel/audio conditions satisfied | **Pending G2**, independent of UX |
 
 The automated tests run in `tests/feasibility/v030-ui.test.mjs` and
 `tests/feasibility/browser-video-smoke.py` on ST + isolated MT using
 actual H.264 output. They do not claim a physical Android acceptance.
-The last known [live Pages MT #38667384368](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38667384368)
-validates the **previous** UI/1.10.6 experimental binaries; the
-updated navigation lives **only in unmerged Draft PR #2** until a
-deliberate subsequent Pages test update.
+The updated mobile-navigation Pages candidate passed live isolated MT
+Chrome in [deploy #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219) and has an
+owner-reported basic Android UX success. It is the pinned Oct 15
+snapshot, **not** the later Oct 16 Draft PR #2 refinements.
 
 ## G2 and release constraints
 
