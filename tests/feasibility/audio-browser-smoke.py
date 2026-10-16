@@ -202,6 +202,11 @@ def export(page,directory:Path,mode:str,with_audio:bool,
         else:
             assert "AAC音声付き" in translated,translated
             if mode=="pingpong": assert "往復再生" in translated,translated
+        expected_video_label=(
+            ("往復再生MP4のプレビュー" if mode=="pingpong" else "逆再生MP4のプレビュー")
+            if page.locator("html").get_attribute("lang")=="ja" else
+            ("Ping-pong MP4 preview" if mode=="pingpong" else "Reversed MP4 preview"))
+        assert page.locator("#resultVideo").get_attribute("aria-label")==expected_video_label
         assert page.locator("#resultVideo").evaluate("(v) => v.currentSrc")==original_url
         assert page.locator("#reverseFilename").input_value()==original_filename
         assert page.locator("#saveReverseButton").is_enabled()
