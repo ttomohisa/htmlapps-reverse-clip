@@ -186,8 +186,38 @@ def export(page,directory:Path,mode:str,with_audio:bool,
         raise AssertionError(
             f"A/V encode failed: mode={mode}, audio={with_audio}, "
             f"range={start}-{end}, status={status}, detail={detail}")
+    if with_audio:
+        # In both Reverse and Ping-pong, a language switch must translate
+        # the AAC result using the verified output's metadata. No re-encode.
+        original_lang=page.locator("html").get_attribute("lang")
+        original_info=page.locator("#resultInfo").inner_text()
+        original_url=page.locator("#resultVideo").evaluate("(v) => v.currentSrc")
+        original_filename=page.locator("#reverseFilename").input_value()
+        page.locator("#languageButton").click()
+        translated=page.locator("#resultInfo").inner_text()
+        assert translated != original_info, (mode,original_info,translated)
+        if page.locator("html").get_attribute("lang")=="en":
+            assert "AAC audio" in translated, translated
+            if mode=="pingpong": assert "Ping-pong" in translated,translated
+        else:
+            assert "AAC音声付き" in translated,translated
+            if mode=="pingpong": assert "往復再生" in translated,translated
+        assert page.locator("#resultVideo").evaluate("(v) => v.currentSrc")==original_url
+        assert page.locator("#reverseFilename").input_value()==original_filename
+        assert page.locator("#saveReverseButton").is_enabled()
+        page.locator("#languageButton").click()
+        assert page.locator("html").get_attribute("lang")==original_lang
+        assert page.locator("#resultInfo").inner_text()==original_info
     with page.expect_download(timeout=15000) as d:
         page.locator("#saveReverseButton").click()
+    if with_audio:
+        # The saved-result hint is also translatable without implying OS save.
+        hint=page.locator("#flowSaveHint").inner_text()
+        page.locator("#languageButton").click()
+        translated_hint=page.locator("#flowSaveHint").inner_text()
+        assert translated_hint != hint and ("MP4" in translated_hint), (hint,translated_hint)
+        page.locator("#languageButton").click()
+        assert page.locator("#flowSaveHint").inner_text()==hint
     target=directory/f"{mode}-{'aac' if with_audio else 'silent'}{filename_suffix}.mp4"
     d.value.save_as(target)
     source_frames=round(end*15)-round(start*15)
