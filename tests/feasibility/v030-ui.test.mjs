@@ -159,16 +159,34 @@ test('JA/EN workflow labels and actual output metadata are present; saving does 
   for(const label of [
     '"flowVideo": "動画"','"flowEdit": "編集"','"flowResult": "結果"',
     '"flowVideo": "Video"','"flowEdit": "Edit"','"flowResult": "Result"',
-    '"flowSaveHint": "保存先はブラウザーのダウンロードから確認してください。',
-    '"flowSaveHint": "Check your browser',
+    '"flowSaveHint": "MP4のダウンロードを開始しました。',
+    '"flowSaveHint": "MP4 download started.',
     '"flowOutputDimensions": "出力：{width} × {height}px・{fps}fps"',
     '"flowOutputDimensions": "Output: {width} × {height}px · {fps}fps"'
   ]) assert.ok(html.includes(label),label);
-  assert.ok(html.includes("state.conversion.outputWidth"));
+  assert.ok(html.includes("width:result.outputWidth,height:result.outputHeight"));
   assert.ok(html.includes("width:resultVideo.videoWidth,height:resultVideo.videoHeight"));
   assert.ok(html.includes('逆再生MP4のダウンロードを開始しました。'));
   assert.ok(html.includes('Ping-pong MP4 download started.'));
   assert.ok(!html.includes('逆再生MP4を保存しました。'));
+});
+
+test('v0.7 result, errors, and save guidance are fully localized without false claims',()=>{
+  assert.ok(html.includes('function renderResultDetails()'));
+  assert.ok(html.includes("const isPingpong=result.mode==='pingpong', withAudio=result.audio==='reverse';"));
+  assert.ok(html.includes("size:humanSize(result.outputBytes),chunks:result.chunkCount"));
+  assert.ok(html.includes("renderResultDetails();"));
+  assert.ok(html.includes("conversionMessageKey=failureKey;"));
+  assert.ok(html.includes("conversionMessageKey='reverseCancelled';"));
+  assert.ok(html.includes("if(conversionMessageKey && !conversionController)"));
+  assert.ok(html.includes("$('#flowAnnouncement').textContent=format('flowStepAnnouncement'"));
+  assert.ok(html.includes('"helpStep3": "Choose Reverse or Ping-pong, output quality and optional reverse audio'));
+  assert.ok(html.includes('"helpNoteBrowser": "Some Android photo/cloud providers cannot be read directly.'));
+  assert.ok(!html.includes('Audio is not yet supported.'));
+  assert.ok(html.includes('"reverseDescription": "15fps · silent by default'));
+  assert.ok(html.includes('"reverseDescription": "15fps・音声なしが既定'));
+  assert.ok(html.includes('"reportSaved": "Diagnostic JSON download started."'));
+  assert.ok(!html.includes('Files up to 64 MiB are copied into local browser memory for conversion'));
 });
 
 test('optional diagnosis and development explanations are collapsed but accessible',()=>{
