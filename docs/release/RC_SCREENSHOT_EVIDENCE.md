@@ -26,10 +26,16 @@ are unchanged. Manifest SHA-256 values above were transcribed from the downloade
 Japanese glyphs rendered correctly, result headings/video were
 inside the viewport and saving was available.
 
-**Before using these in README:** choose whether the synthetic
-video looks appropriate as the representative preview, copy selected
-real PNG files into the repository `assets/` via the normal PR review,
-add them to both README languages and verify them after publishing.
+**Editorial review (2026-10-17):** This first artifact uses FFmpeg's
+color-bar-style `testsrc2` calibration video and is **not suitable as a
+README hero screenshot**, even though its H.264 output and UI are genuine.
+Do not promote the four PNGs above as final marketing screenshots.
+The test harness now generates a separate locally rendered, 2-second
+motion sample (384×216, 30fps), reverses it in the actual app, verifies
+the saved 30-frame H.264 MP4 with ffprobe, and then captures the four
+language/viewport views. That new CI artifact must be downloaded and
+reviewed before selecting and committing images under `assets/`.
+Real device checks remain separate.
 No screenshot is falsely claimed to be from Android hardware.
 
 **Outstanding:** physical Android current v0.9 UX and audible AAC,
