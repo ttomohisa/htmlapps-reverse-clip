@@ -23,7 +23,8 @@ test('all 14 specified acceptance IDs are present with explicit blockers',()=>{
   assert.match(rc,/720p10s \/ 1080p5s/);
   assert.match(read('docs/release/REVISED_ACCEPTANCE_SCOPE.md'),/P0/);
   assert.match(rc,/actual screenshots/i);
-  assert.match(rc,/iPhone.*deferred/i);
+  assert.match(rc,/iPhone/);
+  assert.match(read('docs/release/REVISED_ACCEPTANCE_SCOPE.md'),/iPhoneは今回の公開対象としない/);
   assert.match(rc,/conditional local whole-file copy/);
   assert.match(rc,/64MiB/);
 });
@@ -53,5 +54,5 @@ test('reducing stress does not weaken input memory, privacy or stale-result safe
   assert.match(html,/function flowResultReady\(\)/);
   const policy=read('docs/release/REVISED_ACCEPTANCE_SCOPE.md');
   assert.match(policy,/64MiB以下/);
-  assert.match(policy,/高解像度/);
+  assert.match(policy,/720p10秒/);
 });
