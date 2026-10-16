@@ -206,17 +206,33 @@ def capture_rc_result_screenshots(page, output_path):
                 assert page.locator("#resultInfo").inner_text().strip()
                 # Scroll the genuine Result card into the photographed
                 # viewport. Preserve the fixed app header/navigation.
-                page.evaluate("""() => {
-                  const header=document.querySelector('.app-header');
-                  const isMobile=innerWidth<=600;
-                  const target=document.querySelector(
-                    isMobile?'#rcFlowNav':'#resultArea');
-                  const rect=target.getBoundingClientRect();
-                  const headerHeight=header?.getBoundingClientRect().height||60;
-                  const top=window.scrollY+rect.top-headerHeight-8;
-                  window.scrollTo({top:Math.max(0,top),behavior:'instant'});
+                geometry=page.evaluate("""() => {
+                  // The mobile workflow navigation is sticky. Its viewport
+                  // rect must not be used to calculate document scrollY;
+                  // align the real Result heading instead.
+                  const result=document.querySelector('#resultArea');
+                  const desired=innerWidth<=600?140:95;
+                  const rect=result.getBoundingClientRect();
+                  window.scrollTo({top:Math.max(0,window.scrollY+
+                    rect.top-desired),behavior:'instant'});
+                  const title=document.querySelector('#resultTitle')
+                    .getBoundingClientRect();
+                  const video=document.querySelector('#resultVideo')
+                    .getBoundingClientRect();
+                  return {titleTop:title.top,titleBottom:title.bottom,
+                          videoTop:video.top,videoBottom:video.bottom,
+                          viewport:innerHeight};
                 }""")
                 page.wait_for_timeout(140)
+                assert geometry["titleTop"] >= 60,(
+                    "RC screenshot loses result title above header",
+                    mode,lang,geometry)
+                assert geometry["titleBottom"] <= geometry["viewport"],(
+                    "RC screenshot loses result title below viewport",
+                    mode,lang,geometry)
+                assert geometry["videoTop"] >= 60,(
+                    "RC screenshot crops top of verified MP4 preview",
+                    mode,lang,geometry)
                 dest=evidence/f"reverse-clip-{mode}-{lang}.png"
                 page.screenshot(path=str(dest),full_page=False,
                                 animations="disabled")
