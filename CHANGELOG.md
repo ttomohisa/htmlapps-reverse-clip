@@ -2,6 +2,9 @@
 
 ## [0.7.0] — Mobile UX / Save Flow (development started 2026-10-16; not released)
 
+- **Unsaved result protection:** ask before discarding a generated MP4 when selecting another video before download; cancellation preserves the original result/filename, confirmation revokes it. Accidental multi-file drop also retains an undownloaded output. A download request is never described as guaranteed OS save completion.
+- **Mobile focus recovery:** after auto step transitions and back-to-edit actions, focus the new visible workflow heading; keyboard-focused Cancel returns to the available action. Includes JA/EN help and real-browser regression coverage. FFmpeg assets and encoding are unchanged.
+
 - **Owner-directed milestone:** begin v0.7.0 work while **G2 remains OPEN**. This is not G2 sign-off, stable publication, PR merge, a tag or a Browser Kitty import.
 - Existing three-step mobile Video → Edit → Result, real MP4 result preview/download, truthful save notice, collapsed diagnostics, JA/EN and 44px tap targets now belong to the v0.7 development milestone. Changing typed trim values invalidates old results immediately; navigating away from a result pauses playback without revoking a valid output.
 - Actual ST and cross-origin-isolated MT Chrome regressions passed [CI #38830712274](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38830712274); the prior public Pages UI snapshot [PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5) passed [live CI #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219) and had an owner-reported basic Android UX success. That pinned Pages build was **v0.6.0**, not this new Draft v0.7 version.

@@ -7,6 +7,32 @@ workflow PASS, but was not this new v0.7.0 build. No tag or release.**
 iPhone Safari is explicitly deferred. Windows Chrome/Edge and physical
 Android Chrome are the current target devices.
 
+## 2026-10-16 — unsaved MP4 protection and accessible mobile transitions
+
+The v0.7 Draft PR now protects a verified MP4 when the user selects
+another source **before initiating any browser download**. A localized
+native confirmation dialog asks whether to discard it. Cancelling
+retains the same source, output Blob URL and editable filename; approving
+discards the old output, revokes resources and opens the new source.
+An accidentally rejected multi-file drop also leaves an undownloaded
+MP4 intact. This is not evidence that a previous download was actually
+saved by the operating system.
+
+On phone-sized screens, automatic Video→Edit and Edit→Result transitions,
+manual back-to-edit actions, and failed source recovery focus the visible
+workflow heading instead of an element hidden by the new step.
+Manually selecting one of the navigation buttons keeps that button
+focused. Cancelling conversion restores focus to an available action.
+The workflow still retains no user video across reloads.
+
+Real ST/isolated MT H.264/AAC and mobile browser regression tests cover
+the confirmation cancel/approve paths, multi-drop, verified MP4 retention
+or invalidation and focus movement. **CI result pending** when this text
+was authored; check the associated PR checks for a completed result.
+No FFmpeg/WASM encoding, source-provider memory fallback, CSP, or
+high-resolution experimental caps were changed. Android physical QA
+and G2 remain separate, unfinished acceptance work.
+
 ## 2026-10-16 — owner-directed v0.7.0 development start (G2 stays open)
 
 The user requested moving into v0.7.0 development while G2 remains

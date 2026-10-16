@@ -65,6 +65,22 @@ audio listening, memory and the source-file whole-copy exception still
 need acceptance; iPhone is
 deferred. See [mobile flow acceptance](docs/feasibility/V070_MOBILE_FLOW.md).
 
+## Protecting an MP4 before replacing a video
+
+When a completed MP4 has not yet had its browser download started,
+choosing another video asks whether to discard the result. Cancel
+keeps the original source, settings, filename and output. Confirm
+replaces the source; a two-file drop by mistake does not discard an
+undownloaded MP4. Once a download has been requested, the user can
+choose a new source without another confirmation. The browser cannot
+guarantee final OS save completion.
+
+On smartphones, automatic movement into Edit/Result and returning
+from Result sends keyboard focus to the visible step heading rather
+than leaving it on a hidden control. The same behavior is available
+in Japanese and English. The audio/FFmpeg core and local processing
+policy are unchanged.
+
 ## Why v0.7 development proceeds while G2 remains open
 
 The original G2 requires Android **and iPhone** hardware tests for
