@@ -77,10 +77,14 @@ def main():
     assert (PAGES / "mt/coi-serviceworker.js").is_file(), "COI worker missing"
     with tempfile.TemporaryDirectory(prefix="reverse-pages-coi-") as directory:
         source = fixture(Path(directory))
-        server = ThreadingHTTPServer(("127.0.0.1", 0), PagesHandler)
-        thread = threading.Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        base = f"http://127.0.0.1:{server.server_port}"
+        # Optionally exercise deployed Pages-style files rather than localhost.
+        base = os.environ.get("PAGES_TEST_BASE_URL", "").rstrip("/")
+        server = None
+        if not base:
+            server = ThreadingHTTPServer(("127.0.0.1", 0), PagesHandler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base = f"http://127.0.0.1:{server.server_port}"
         try:
             with sync_playwright() as playwright:
                 args = {"headless": True,
@@ -181,8 +185,9 @@ def main():
                 finally:
                     browser.close()
         finally:
-            server.shutdown()
-            server.server_close()
+            if server is not None:
+                server.shutdown()
+                server.server_close()
 
 
 if __name__ == "__main__":

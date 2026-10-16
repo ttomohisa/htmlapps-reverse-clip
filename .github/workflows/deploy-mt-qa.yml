@@ -37,11 +37,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: ./scripts/check-repository.ps1
-      - name: Pass exact built HTML to deployment job
+      - name: Prepare pinned Pages-style MT isolation fallback
+        shell: pwsh
+        run: |
+          ./scripts/prepare-pages.ps1
+          node --test tests/feasibility/pages-dual-thread.test.mjs
+      - name: Pass exact Pages-ready ST/MT files to deployment job
         uses: actions/upload-artifact@v7
         with:
           name: isolated-mt-qa-standalone
-          path: dist/**
+          path: pages-dist/**
           if-no-files-found: error
           retention-days: 3
 
@@ -57,12 +62,13 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: isolated-mt-qa-standalone
-          path: dist
-      - name: Verify real built MT HTML exists
+          path: pages-dist
+      - name: Verify exact built MT Pages-style entrypoint and pinned COI worker
         run: |
-          test -s dist/index.html
-          test -s dist/index.mt.html
-          grep -q 'const RUNTIME_VARIANT = "multi-thread";' dist/index.mt.html
+          test -s pages-dist/index.html
+          test -s pages-dist/mt/index.html
+          test -s pages-dist/mt/coi-serviceworker.js
+          grep -q 'const RUNTIME_VARIANT = "multi-thread";' pages-dist/mt/index.html
       - uses: actions/setup-node@v6
         with:
           node-version: 24
@@ -80,7 +86,7 @@ jobs:
         run: |
           set -euo pipefail
           curl -fLsS -D /tmp/rc-mt-headers.txt -o /dev/null \
-            https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/index.mt.html
+            https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/
           grep -Ei '^(HTTP/|X-RC-Preview-Worker:|Cross-Origin-Opener-Policy:|Cross-Origin-Embedder-Policy:|Cross-Origin-Resource-Policy:|Content-Type:)' /tmp/rc-mt-headers.txt || true
           if ! grep -Eiq '^X-RC-Preview-Worker:[[:space:]]*active' /tmp/rc-mt-headers.txt; then
             echo '::warning::Temporary QA Worker was bypassed for MT; check static asset routing.'
@@ -96,12 +102,12 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y ffmpeg
           }
-      - name: Check actual live COOP/COEP/SAB, ST isolation and real MT MP4
+      - name: Check live Pages-style SW COI, ST isolation and real MT MP4
         shell: bash
         env:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
-          PREVIEW_URL: https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev
-        run: python3 tests/feasibility/cloudflare-preview-mt-smoke.py
+          PAGES_TEST_BASE_URL: https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev
+        run: python3 tests/feasibility/pages-browser-smoke.py
       - name: Record specific test URL, exact commit and non-release status
         shell: bash
         run: |
