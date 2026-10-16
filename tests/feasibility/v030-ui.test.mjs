@@ -98,8 +98,8 @@ test('mobile workflow navigation and saved-result step are implemented with nati
   for(const marker of [
     "function updateFlowNavigation()","function setFlowStep(step,",
     "if(phase==='ready') updateFlowNavigation()",
-    "setFlowStep('edit');",
-    "if(flowStep==='edit')setFlowStep('result')",
+    "setFlowStep('edit',{focus:true});",
+    "if(flowStep==='edit')setFlowStep('result',{focus:true})",
     "if(step==='result'&&!flowResultReady())return false",
     "if (flowStep === 'result' && !canResult) flowStep=canEdit?'edit':'video",
     "if(step===flowStep) button.setAttribute('aria-current','step')",
@@ -114,6 +114,23 @@ test('mobile result playback pauses when hidden; typed range changes revoke stal
   assert.ok(html.includes("$('#'+id).addEventListener('input',onOutputSettingsEdited);"));
   assert.ok(html.includes("$('#'+id).addEventListener('change',onOutputSettingsEdited);"));
   assert.ok(html.includes("$('#qualityInput').addEventListener('change',onOutputSettingsEdited);"));
+});
+
+test('unsaved results use localized confirmation and automatic transitions restore focus',()=>{
+  assert.ok(html.includes('id="workspaceTitle" tabindex="-1"'));
+  assert.ok(html.includes("function setFlowStep(step,{scroll=true,focus=false}={})"));
+  assert.ok(html.includes("if(onMobile&&focus)$('#workspaceTitle').focus({preventScroll:true});"));
+  for(const key of ['flowReplaceTitle','flowReplaceMessage','flowReplaceConfirm','helpNoteReplace']){
+    assert.equal(html.split('"'+key+'":').length-1,2,'JA/EN key: '+key);
+  }
+  assert.ok(html.includes("if(flowResultReady()&&!resultDownloadStarted){"));
+  assert.ok(html.includes("const approved=await AppConfirm.ask({"));
+  assert.ok(html.includes("if(!approved||attempt!==sourceSelectionSequence){"));
+  assert.ok(html.includes("sourceSelectionSequence+=1;"));
+  assert.ok(html.includes("resultDownloadStarted=true; // Request, not proof of OS save completion."));
+  assert.ok(html.includes("resultDownloadStarted=false;"));
+  assert.ok(html.includes("setFlowStep('result',{focus:true});"));
+  assert.ok(html.includes("$('#flowBackToEditButton').addEventListener('click',()=>setFlowStep('edit',{focus:true}))"));
 });
 
 test('responsive step headings follow Video/Edit/Result and recover on desktop resize',()=>{
