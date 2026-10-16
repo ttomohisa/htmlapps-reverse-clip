@@ -17,20 +17,26 @@ completion, failure, or explicit cancellation the Video navigation
 is available again; output remains restricted to a verified MP4 and
 there is no hidden background job from ordinary mobile navigation.
 
-The mobile heading now stays inside the visible viewport when an
-automatic transition focuses it: focus moves to the workflow heading
-and scrolling brings the containing workflow below the sticky header,
-rather than placing the sticky navigation at the top and pushing the
-focused heading offscreen. Manual nav button taps still focus the
-button as before. Test coverage exercises both true ST and isolated
-MT conversion, interruption, the disabled Video step, and 320px
-width at 568px height. No encoding, CSP, input transport or runtime
-binaries have changed.
+The mobile heading is kept visible after automatic step transitions.
+The first Chrome regression caught the heading offscreen because the
+template's global `html { scroll-behavior: smooth }` made the
+`scrollIntoView({behavior:'auto'})` call **animate**, so the next
+browser assertion ran while the document was still at its prior
+scroll position. The fix temporarily overrides the root's scroll
+behavior to `auto` for this explicit step-navigation scroll only,
+focuses and scrolls the **heading itself** below the sticky app header,
+and immediately restores the previous inline style. Manual nav
+button taps still retain focus. This does not globally remove smooth
+scrolling or change the media runtime.
 
-**Verification:** CI is pending for this change; check the Draft PR
-checks for the completed source/binary smoke result. These desktop
-browser/mobile-viewport tests do not substitute physical Android or
-iPhone Gate G2 measurements.
+**Verified:** [App CI #38845668240](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38845668240)
+**ALL SUCCESS** on the final code commit `2c25329226f1f6092b69aa880a7a87406f3a0c20`:
+Windows build/Node checks, actual ST and isolated MT Chrome
+H.264/AAC/Ping-pong, 10s frame order, conversion+Cancel navigation
+locking/unlocking, and focused headings visible at 320px width/568px
+height. [PR preview #38845668281](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38845668281)
+also passed. The optional full-resolution MT endurance job was not
+run (SKIPPED). Physical Android/iPhone G2 proof remains separate.
 
 ## 2026-10-16 — unsaved MP4 protection and accessible mobile transitions
 
@@ -210,6 +216,8 @@ The result MP4 remains available to retry download while unchanged.
 | Source replaced/cancelled/unreadable | Video current, old Result disabled; stale async loads cannot resurface | Automated ST/MT Chrome PASS; provider-specific Android pending |
 | Valid 0.5–10s MP4 | Result current only after fully validated output; Save downloads actual H.264 | Actual ST/MT Chrome MP4 PASS |
 | Back to Edit without changes | Output playback pauses while hidden; existing MP4 retained, navigating to Result works without re-encoding | Actual ST/MT Chrome PASS #38830240345 |
+| Conversion in progress on mobile | Video step unavailable, progress and Cancel stay accessible in Edit; Cancel/finish re-enables navigation | Actual ST/MT Chrome PASS #38845668240 |
+| Focused heading after automatic step change | Heading remains below sticky header without an inherited smooth-scroll race, including 320×568 viewport | Actual ST/MT Chrome PASS #38845668240 |
 | Typing trim start/end before blur | Old MP4 and Save cleared immediately on input, even before change/blur | Actual ST/MT Chrome PASS #38830240345 |
 | Mobile actions at 320/360/390px | Picker, capture, navigation and conversion tap areas at least 44px tall | Actual Chrome PASS #38830712274 |
 | Edit trim/quality/mode/audio after output | Old MP4 and Save cleared, Result disabled | Browser PASS |
