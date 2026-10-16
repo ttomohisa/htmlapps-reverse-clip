@@ -1,0 +1,37 @@
+# Reverse Clip v0.9.0 — actual screenshot evidence
+
+**Recorded 2026-10-17; CI-built development Draft PR #2, NOT RELEASED.**
+[GitHub Actions #38939628625](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38939628625)
+**ALL SUCCESS** including real ST/isolated MT H.264/AAC media tests.
+
+Four actual browser images are in artifact
+`reverse-clip-v090-real-ui-e8a8ce59664ff25bfc37112e60eac6730d614b04`,
+artifact ID **12062302953**, expires **2026-11-15T17:29:47Z**.
+Do not mistake this temporary CI artifact for durable README screenshots.
+
+| Generated file | Resolution | SHA-256 |
+| --- | --- | --- |
+| `reverse-clip-desktop-ja.png` | 1360×900 | `6cfd0fb9fa83b4e065b124a58431ff80c2824ad80e4aa9df5138089fe340f9e1` |
+| `reverse-clip-desktop-en.png` | 1360×900 | `5120f7c71dc8aa6f36ae68f43930294f616bad9242df560e44247059b72d4b57` |
+| `reverse-clip-mobile-ja.png` | 390×844 | `3324d87cbd461822532c16c15e74eac586b3c620b8173569c5443be6bd46c969` |
+| `reverse-clip-mobile-en.png` | 390×844 | `d5ba342a16b1739cffca039c9713c6a5aa2e0d34e47fa3905771d6b2da9eaab2e` |
+
+These screenshots are from real Chrome rendering of the verified
+MP4 Result step, generated from a synthetic 30fps H.264 fixture
+and reverse-exported to a 15-frame/1s H.264 MP4. There is no
+customer video or personal data. The shooting code is
+`tests/feasibility/browser-video-smoke.py` with
+`RC_CAPTURE_SCREENSHOTS=1`; normal source and output semantics
+are unchanged. The actual screenshots were inspected locally:
+Japanese glyphs rendered correctly, result headings/video were
+inside the viewport and saving was available.
+
+**Before using these in README:** choose whether the synthetic
+video looks appropriate as the representative preview, copy selected
+real PNG files into the repository `assets/` via the normal PR review,
+add them to both README languages and verify them after publishing.
+No screenshot is falsely claimed to be from Android hardware.
+
+**Outstanding:** physical Android current v0.9 UX and audible AAC,
+original G2 historical gate, permanent source-complete GPL Builder
+publication, G3 approval. No release actions have been performed.

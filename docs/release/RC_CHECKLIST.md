@@ -55,6 +55,44 @@ Capture: device and Android/Chrome versions, whether testing ST or isolated MT, 
 
 No certification from the owner's earlier Android v0.6 Pages smoke carries over automatically to the latest v0.9 bytes. Record real QA before marking the device P0 PASS.
 
+## 2026-10-17 — verified desktop Chrome screenshots and pinned GPL package audit
+
+**Screenshots:** [app CI #38939628625](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38939628625)
+**ALL SUCCESS** including ST/MT real H.264/AAC MP4 smoke and the
+`reverse-clip-v090-real-ui-e8a8ce59664ff25bfc37112e60eac6730d614b04`
+GitHub artifact (ID **12062302953**, GitHub expiry **2026-11-15T17:29:47Z**).
+The screenshot runner first generated and downloaded a 1-second,
+15-frame H.264 MP4 and verified the output with ffprobe, then captured
+its Result UI in **Japanese/English × desktop 1360×900/mobile 390×844**.
+A Japanese-capable font was installed **only on the CI runner**
+to prevent missing glyphs. Screenshots were independently reviewed
+from the downloaded ZIP (manifest and all four SHA-256 hashes matched,
+all results contained a visible video, heading and Save button).
+They are *synthetic local H.264 media in desktop Chrome viewports*,
+not a physical phone or browser-OS save screenshot.
+
+**Screenshot release status:** EVIDENCE GENERATED / VISUALLY REVIEWED,
+but the images are still a **30-day CI artifact**, not permanent
+checked-in README/asset screenshots. A-13 remains PENDING until chosen
+screenshots are committed and both READMEs updated. This new screenshot
+check does not require expensive MT HD/device stress.
+
+**Matching video-reverse 1.10.6 GPL review package:** independently
+downloaded Builder [review run #38617100332](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38617100332)
+artifact ID **11920042823** (~74.6 MB; expires **2026-10-21T18:41Z**).
+All **5 SHA256SUMS** entries passed. The two inner ST/MT ZIP bundles'
+four JS/WASM hashes and shared browser loader hash were independently
+recomputed and exactly matched `reverse-runtime.lock.json`;
+FFmpeg, x264, Emscripten upstream source trees, Builder build recipe,
+BUILDINFO and applicable notices were present in the corresponding
+source archive. See [Builder technical audit](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_SOURCE_RELEASE.md)
+and [Builder Draft PR #16](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/pull/16).
+
+**Source-release status:** package/hash/source-*presence* technical
+audit PASS. **LEGAL CORRESPONDING-SOURCE REVIEW AND PERMANENT PUBLIC
+DOWNLOAD STILL PENDING**; current app runtime lock remains
+`temporary-not-release`. No tag, release, merge or portal import.
+
 ## RC exit decision
 
 - P0 evidence all complete, no known severe core bug; exact claimed platform/source compatibility clearly stated.
