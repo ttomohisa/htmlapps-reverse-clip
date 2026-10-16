@@ -214,7 +214,13 @@ jobs:
               $st.Headers['Cross-Origin-Embedder-Policy']) {
             throw 'ST Preview should not receive MT COOP/COEP headers.'
           }
-          $mtSupported = $true
+          $stWorker = [string]$st.Headers['X-RC-Preview-Worker']
+          $mtWorker = [string]$mt.Headers['X-RC-Preview-Worker']
+          Write-Host "Preview Worker trace: ST=$stWorker, MT=$mtWorker"
+          if ($mtWorker -ne 'active') {
+            Write-Warning 'MT Preview Worker did not execute (or proxy removed diagnostic header).'
+          }
+          $mtSupported = ($mtWorker -eq 'active')
           foreach ($header in @(
             @('Cross-Origin-Opener-Policy','same-origin'),
             @('Cross-Origin-Embedder-Policy','require-corp'),

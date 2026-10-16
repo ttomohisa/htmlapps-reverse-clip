@@ -25,8 +25,7 @@ test('Wrangler invokes the Preview Worker only for actual MT HTML entries',()=>{
   assert.equal(config.main,'./scripts/preview-mt-worker.mjs');
   assert.equal(config.assets.directory,'./dist');
   assert.equal(config.assets.binding,'ASSETS');
-  assert.deepEqual(config.assets.run_worker_first,
-    ['/index.mt.html','/index.mt.self-extract.html']);
+  assert.equal(config.assets.run_worker_first,true); // Worker-first all assets, isolate MT only.
 });
 test('both MT Preview HTML entries get isolation without changing CSP or body',async()=>{
   for(const path of config.assets.run_worker_first){
@@ -34,6 +33,7 @@ test('both MT Preview HTML entries get isolation without changing CSP or body',a
     const url='https://example.workers.dev'+path;
     const response=await worker.fetch(new Request(url),env);
     assert.equal(response.status,200);
+    assert.equal(response.headers.get('X-RC-Preview-Worker'),'active');
     assert.deepEqual(calls,[url]);
     for(const [name,value] of headerNames)assert.equal(response.headers.get(name),value);
     assert.equal(response.headers.get('Content-Security-Policy'),
@@ -47,6 +47,7 @@ test('ST root and unrelated assets never acquire isolation headers',async()=>{
     const {env}=makeAssets();
     const response=await worker.fetch(new Request('https://example.workers.dev'+path),env);
     for(const [name] of headerNames)assert.equal(response.headers.get(name),null);
+    assert.equal(response.headers.get('X-RC-Preview-Worker'),'active');
   }
 });
 test('missing MT asset does not advertise a valid isolated page',async()=>{
