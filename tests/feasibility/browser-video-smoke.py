@@ -74,6 +74,29 @@ def create_compat_sources(workdir):
                for d in x.get("side_data_list",[]) if "rotation" in d]
     assert any(abs(float(x))==90 for x in rotations),rotate_info
 
+    # Static asymmetric color markers let us verify *pixels*, not only
+    # dimensions, for 180/270 degree rotation. A byte-copied MOV with a
+    # display matrix is not the same as physically rotated decoded frames.
+    markers=workdir/"orientation-markers.mov"
+    subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+        "-f","lavfi","-i","color=c=black:s=160x90:r=15:d=2",
+        "-vf","drawbox=x=10:y=8:w=42:h=20:c=red:t=fill,"
+              "drawbox=x=110:y=57:w=31:h=22:c=blue:t=fill,"
+              "drawbox=x=10:y=60:w=20:h=18:c=green:t=fill",
+        "-c:v","libx264","-preset","ultrafast","-pix_fmt","yuv420p",
+        str(markers)],check=True)
+    for angle in (180,270):
+        target=workdir/f"marked-rotate{angle}.mov"
+        subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
+            f"-display_rotation:v:0",str(angle),
+            "-i",str(markers),"-map","0:v:0","-c","copy",
+            str(target)],check=True)
+        shape=inspect_video_shape(target)
+        assert shape["coded"]==[160,90],shape
+        assert any(abs(int(v))==(180 if angle==180 else 90)
+                   for v in shape["rotations"]),shape
+        results[f"rotated-{angle}"]=target
+
     # A plausible ISO BMFF ftyp/mdat prefix but missing moov and media
     # must pass sniffing and fail later in browser decode, not export.
     corrupt=workdir/"truncated-h264.mp4"
@@ -92,6 +115,21 @@ def inspect_video_shape(path):
     return {"coded":[v["width"],v["height"]],
             "rotations":[d.get("rotation") for d in v.get("side_data_list",[])
                          if "rotation" in d]}
+
+def assert_visual_rotation(source, output, width, height):
+    # FFmpeg's default autorotation establishes the expected presentation.
+    # The asymmetric static fixture has identical pixels throughout time;
+    # comparing the first decoded frames remains meaningful after reversal.
+    def frame(path):
+        raw=run("ffmpeg","-hide_banner","-loglevel","error",
+                "-i",str(path),"-frames:v","1","-f","rawvideo",
+                "-pix_fmt","rgb24","pipe:1")
+        assert len(raw)==width*height*3,(path,len(raw),width,height)
+        return raw
+    original,rendered=frame(source),frame(output)
+    mae=sum(abs(int(a)-int(b)) for a,b in zip(original,rendered))/len(original)
+    assert mae<22,("wrong rotation/color marker placement",str(source),mae)
+    return round(mae,2)
 
 def inspect_compat_mp4(output, expected_frames=15):
     report = json.loads(run("ffprobe", "-v", "error",
@@ -578,7 +616,7 @@ def main():
                         if name in ("single-thread","multi-thread"):
                             # H.264 in MOV is an ordinary browser-supported
                             # container in Chrome, not automatic HEVC support.
-                            for label in ("mov","rotated-mov"):
+                            for label in ("mov","rotated-mov","rotated-180","rotated-270"):
                                 page.locator("#flowVideoButton").click()
                                 page.locator("#sourceInput").set_input_files(
                                     str(compat[label]))
@@ -618,15 +656,23 @@ def main():
                                 assert file_shape["coded"]==rendered_shape,(
                                     "MP4 coded dimensions do not match Chrome presentation",
                                     label,file_shape,rendered_shape)
-                                if label=="rotated-mov":
-                                    # Prove this is an actual display-matrix
-                                    # 90-degree rotation, then verify the
-                                    # encoded MP4 is upright without relying
-                                    # on a rotation tag after transcoding.
-                                    assert source_shape==[90,160],source_shape
+                                if label.startswith("rotated-") or label=="rotated-mov":
+                                    # Source display-matrix rotation is baked
+                                    # into upright pixels, not an opaque tag.
                                     assert file_shape["rotations"]==[],file_shape
-                                    print(f"[PASS] {name} MOV +90° orientation "
-                                          "baked to upright 90x160 MP4",flush=True)
+                                    assert source_shape==(
+                                        [160,90] if label=="rotated-180" else [90,160]),(
+                                        label,source_shape)
+                                    if label in ("rotated-180","rotated-270"):
+                                        delta=assert_visual_rotation(
+                                            compat[label],out_file,
+                                            file_shape["coded"][0],file_shape["coded"][1])
+                                        print(f"[PASS] {name} MOV {label} actual visual "
+                                              f"rotation matches source (RGB MAE {delta})",
+                                              flush=True)
+                                    else:
+                                        print(f"[PASS] {name} MOV +90° orientation "
+                                              "baked to upright 90x160 MP4",flush=True)
                             # A truncated file with plausible ftyp must fail
                             # decoder validation and never expose a stale MP4.
                             page.locator("#flowVideoButton").click()
@@ -642,7 +688,7 @@ def main():
                                 "This video cannot be previewed. The format may be unsupported or the file damaged.",
                                 "MP4/MOVの動画データを確認できません。拡張子だけを変えたファイルは利用できません。",
                                 "This does not have a recognizable MP4/MOV container header. Renaming a file is not a video conversion.")
-                            print(f"[PASS] {name} H.264 MOV + rotated MOV decoded/exported; "
+                            print(f"[PASS] {name} H.264 MOV + 90/180/270° MOV decoded/exported; "
                                   "truncated plausible MP4 refused without stale Save",
                                   flush=True)
                         if name == "single-thread":
