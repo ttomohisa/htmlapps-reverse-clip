@@ -189,6 +189,22 @@ test('v0.7 result, errors, and save guidance are fully localized without false c
   assert.ok(!html.includes('Files up to 64 MiB are copied into local browser memory for conversion'));
 });
 
+test('bilingual media labels and failed export focus are accessible',()=>{
+  assert.ok(html.includes('data-i18n-aria-label="sourceVideoLabel"'));
+  assert.ok(html.includes('data-i18n-aria-label="conversionProgressLabel"'));
+  for(const key of ['sourceVideoLabel','resultReverseVideoLabel',
+                    'resultPingpongVideoLabel','conversionProgressLabel']){
+    assert.equal(html.split('"'+key+'":').length-1,2,'JA/EN label '+key);
+  }
+  const setResultLabel="translate(isPingpong?'resultPingpongVideoLabel':'resultReverseVideoLabel')";
+  assert.equal(html.split(setResultLabel).length-1,2,
+    'result media aria-label must track both mode and language');
+  assert.ok(html.includes("const summary=$('#reverseErrorDetails > summary');"));
+  assert.ok(html.includes("summary.focus({preventScroll:true});"));
+  assert.ok(html.includes("summary.scrollIntoView({block:'nearest',behavior:'auto'});"));
+  assert.ok(html.includes("if(window.matchMedia?.('(max-width:600px)').matches){"));
+});
+
 test('optional diagnosis and development explanations are collapsed but accessible',()=>{
   for(const id of ['diagnosticsDetails','developmentDetails','openDiagnosticsButton']){
     assert.equal(html.split('id="'+id+'"').length-1,1,id);
