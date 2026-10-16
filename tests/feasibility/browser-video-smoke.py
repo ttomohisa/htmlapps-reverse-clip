@@ -183,6 +183,9 @@ def capture_rc_result_screenshots(page, output_path):
     original_mp4=page.locator("#resultVideo").evaluate("(v) => v.currentSrc")
     captures=[]
     try:
+        # Clear the temporary download status toast; the persistent
+        # localized save hint remains available in Result.
+        page.evaluate("() => window.AppToast?.dismiss?.()")
         # The compatibility section was opened by the test for source
         # constraints; close it for a normal first-use screen.
         disclosure=page.locator("#sourceCompatibilityDetails")
@@ -204,9 +207,13 @@ def capture_rc_result_screenshots(page, output_path):
                 # Scroll the genuine Result card into the photographed
                 # viewport. Preserve the fixed app header/navigation.
                 page.evaluate("""() => {
-                  const el=document.querySelector('#resultArea');
-                  const rect=el.getBoundingClientRect();
-                  const top=window.scrollY+rect.top-170;
+                  const header=document.querySelector('.app-header');
+                  const isMobile=innerWidth<=600;
+                  const target=document.querySelector(
+                    isMobile?'#rcFlowNav':'#resultArea');
+                  const rect=target.getBoundingClientRect();
+                  const headerHeight=header?.getBoundingClientRect().height||60;
+                  const top=window.scrollY+rect.top-headerHeight-8;
                   window.scrollTo({top:Math.max(0,top),behavior:'instant'});
                 }""")
                 page.wait_for_timeout(140)

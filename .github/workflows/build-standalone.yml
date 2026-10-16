@@ -118,6 +118,18 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y ffmpeg
           }
+      - name: Ensure Japanese glyphs render in actual CI screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! fc-list ':lang=ja' family | grep -q 'Noto Sans CJK'; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq fonts-noto-cjk
+            fc-cache -f >/dev/null
+          fi
+          fc-match -f '%{family}\n' ':lang=ja'
+          fc-list ':lang=ja' family | grep -q 'Noto Sans CJK'
+
       - name: Syntax-check opt-in v0.6 HD endurance harness (do not run load test)
         shell: bash
         run: python -m py_compile tests/feasibility/v060-stress-browser-smoke.py
