@@ -1,6 +1,8 @@
 # Changelog
 
-## [0.9.0] — RC PREPARATION (development only, 2026-10-16; not released)
+## [0.9.0] — RC PREPARATION (2026-10-16 onward; not released)
+
+- **2026-10-17 P0/P1/P2 acceptance review:** proposed initial Windows Chrome + Android Chrome short H.264 scope. [P0 essential safety and representative real-device checks](docs/release/REVISED_ACCEPTANCE_SCOPE.md) retained; P1 extra provider/Edge checks and P2 unadvertised Android/iPhone full-HD repeated stress separated. The original G2 remains historically NOT PASSED. A <=64MiB conditional local whole-source-copy fallback is proposed instead of the prior unconditional no-copy rule, while zero uploads, valid MP4 output, source generation guards and GPL source completeness remain requirements.
 
 - Advance the development version on existing unmerged Draft PR #2; **not** a signed-off RC or Gate G2/G3 PASS, no tag, release or Browser Kitty integration.
 - Freeze new features. Preserve the verified H.264/AAC Reverse/Ping-pong, mobile Video→Edit→Result, 15fps limits, local-only privacy and standalone ST/isolated MT behavior.

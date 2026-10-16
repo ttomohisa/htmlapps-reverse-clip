@@ -1,8 +1,27 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.9.0 RC PREPARATION (Draft, G2 and G3 OPEN; not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The 720p/10s and 1080p/5s bounds have passed selected **desktop ST and isolated MT** full-size scenarios, but **not physical-device G2**. Android repeated-use, three-repeat MT stress, reliable memory measurements, audio listening and a permanent GPL source bundle are outstanding; iPhone tests are deferred.
+**Development status: v0.9.0 RC PREPARATION (Draft, original G2 NOT PASSED, G3 OPEN; not released).** Desktop ST/MT H.264/AAC Chrome tests passed. The owner's 2026-10-17 test-scope review proposes an initial **Windows Chrome / Android Chrome short H.264 MP4** release. Representative Android basic Reverse/Ping-pong/save/retry/audio, safety/privacy, and source-complete GPL licensing stay mandatory. HD 3× stress, iPhone and precision RAM benchmarks are not mandatory for this **limited proposed scope**. Historical G2 remains NOT PASSED. See [acceptance policy](docs/release/REVISED_ACCEPTANCE_SCOPE.md).
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
+
+## 2026-10-17 — right-sized initial-release test plan
+
+The original G2 required Android **and iPhone** to complete
+720p10s/1080p5s Reverse/Ping-pong three times for every mode, with
+no whole-source in-memory copy below 1GiB. The proposed
+[revised acceptance scope](docs/release/REVISED_ACCEPTANCE_SCOPE.md)
+distinguishes **P0 mandatory safety and usable results** from
+**P1 recommended extra device/browser cases** and **P2 optional HD
+stress research**. P0 still requires one real current Android
+H.264 Reverse and Ping-pong with save/playback, cancellation/retry,
+audible AAC where supported, output integrity, no media upload and a
+permanent source-complete GPL FFmpeg Builder release.
+
+If direct Android provider reading fails, a local <=64MiB bounded
+input-copy fallback is proposed as acceptable; this does not imply a
+RAM cap or satisfy the original all-input zero-copy G2.
+HD modes remain experimental, iPhone/HEVC/HDR is not claimed as
+supported, and **G3 / actual release approval remain pending**.
 
 ## v0.9.0 RC preparation / pre-release checks
 

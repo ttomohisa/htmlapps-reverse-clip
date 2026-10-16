@@ -22,8 +22,10 @@ test('all 14 specified acceptance IDs are present with explicit blockers',()=>{
   assert.match(rc,/initial Windows Chrome\/Android Chrome|Android Chrome H\.264/);
   assert.match(rc,/720p10s \/ 1080p5s/);
   assert.match(read('docs/release/REVISED_ACCEPTANCE_SCOPE.md'),/P0/);
-  assert.match(rc,/Actual screenshots/);
-  assert.match(rc,/DEFERRED \/ NOT VERIFIED/);
+  assert.match(rc,/actual screenshots/i);
+  assert.match(rc,/iPhone.*deferred/i);
+  assert.match(rc,/conditional local whole-file copy/);
+  assert.match(rc,/64MiB/);
 });
 test('temporary pinned WASM does not masquerade as permanent GPL corresponding source',()=>{
   assert.equal(lock.kind,'experimental-dual-github-actions-artifact');
@@ -31,10 +33,25 @@ test('temporary pinned WASM does not masquerade as permanent GPL corresponding s
   assert.equal(lock.builderVersion,'1.10.6');
   assert.ok(lock.variants['single-thread'].assets['ffmpeg.wasm']);
   assert.ok(lock.variants['multi-thread'].assets['ffmpeg.wasm']);
-  assert.match(rc,/GPL corresponding-source/);
+  assert.match(rc,/source-complete GPL Builder distribution/);
   assert.match(read('README.md'),/v0\.9\.0 RC PREPARATION/);
   assert.match(read('README.ja.md'),/v0\.9\.0 公開前RC準備版/);
   assert.match(read('README-FIRST.txt'),/v0\.9\.0 — RC PREPARATION ONLY/);
   assert.match(read('VERIFY_OFFLINE.md'),/v0\.9\.0 RC PREPARATION/);
   assert.match(read('APP_SPEC.md'),/v0\.9\.0 RC準備中/);
+});
+
+test('reducing stress does not weaken input memory, privacy or stale-result safety',()=>{
+  const html=read('src/index.template.html');
+  assert.match(html,/connect-src 'none'/);
+  assert.match(html,/const INPUT_MEMORY_LIMIT = 64 \* 1024 \* 1024;/);
+  assert.match(html,/if \(file\.size > INPUT_MEMORY_LIMIT\)/);
+  assert.match(html,/if \(!MOBILE_INPUT \|\| file\.size > INPUT_MEMORY_LIMIT\) return false;/);
+  assert.match(html,/if\(file\.size>INPUT_MEMORY_LIMIT\)/);
+  assert.match(html,/sourceIsCurrent\(file, generation\)/);
+  assert.match(html,/function resetConversion\(\)/);
+  assert.match(html,/function flowResultReady\(\)/);
+  const policy=read('docs/release/REVISED_ACCEPTANCE_SCOPE.md');
+  assert.match(policy,/64MiB以下/);
+  assert.match(policy,/高解像度/);
 });
