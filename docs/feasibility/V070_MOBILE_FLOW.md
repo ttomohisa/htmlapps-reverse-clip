@@ -5,6 +5,31 @@ Gate G2 remains OPEN. No v0.7.0 version bump, tag or release has occurred.**
 iPhone Safari is explicitly deferred. Windows Chrome/Edge and physical
 Android Chrome are the current target devices.
 
+## 2026-10-16 regression and tap-target hardening
+
+[App CI #38830240345](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38830240345)
+**all jobs SUCCESS** after two narrowly scoped mobile fixes: changing
+Video/Edit/Result away from Result now pauses even an AAC-capable output
+video without discarding the verified MP4; editing a numeric trim field
+invalidates previous output immediately on `input` (not just blur).
+A first CI attempt failed solely because the new invalidation test erased
+the Android-transport diagnostic state before its existing assertion;
+the test order was corrected, and the full corrected ST/MT real-Chrome
+suite passed. No WASM binaries, codecs, frame plans, output quality,
+version or release status changed.
+
+Mobile action buttons (file choice/capture, conversion/cancel, save,
+diagnostics) now use at least **44px** height at <=600px. The
+320/360/390px regression explicitly measures the source pickers and
+conversion control in addition to the three navigation buttons. This
+last styling refinement is pending its subsequent CI run.
+
+[Pages-only test PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
+remains an **earlier pinned snapshot**; this development-branch
+follow-up is **not** present in those published-test bytes. It must
+not be claimed as Android hardware validated before a deliberately
+re-pinned deployment and physical review. G2 is still OPEN.
+
 ## 2026-10-15 automated UX acceptance — Chrome/browser PASS
 
 [App CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206)
@@ -89,8 +114,9 @@ The result MP4 remains available to retry download while unchanged.
 | Source metadata ready | Edit automatically selected, source playable, settings enabled | Automated Chrome PASS; physical Android pending |
 | Source replaced/cancelled/unreadable | Video current, old Result disabled; stale async loads cannot resurface | Automated ST/MT Chrome PASS; provider-specific Android pending |
 | Valid 0.5–10s MP4 | Result current only after fully validated output; Save downloads actual H.264 | Actual ST/MT Chrome MP4 PASS |
-| Back to Edit without changes | Output playback pauses while hidden; existing MP4 retained, navigating to Result works without re-encoding | Regression added; CI pending |
-| Typing trim start/end before blur | Old MP4 and Save cleared immediately on input, even before change/blur | Regression added; CI pending |
+| Back to Edit without changes | Output playback pauses while hidden; existing MP4 retained, navigating to Result works without re-encoding | Actual ST/MT Chrome PASS #38830240345 |
+| Typing trim start/end before blur | Old MP4 and Save cleared immediately on input, even before change/blur | Actual ST/MT Chrome PASS #38830240345 |
+| Mobile actions at 320/360/390px | Picker, capture, navigation and conversion tap areas at least 44px tall | Regression added; CI pending |
 | Edit trim/quality/mode/audio after output | Old MP4 and Save cleared, Result disabled | Browser PASS |
 | Abort/error or failed frame count | Stays on Edit and shows error details, never an incomplete MP4 | ST/MT regression PASS; independent Android still pending |
 | Result metadata | Actual MP4 dimensions, FPS, duration, output size; filename editable | Browser PASS |

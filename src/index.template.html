@@ -504,6 +504,9 @@
     /* Mobile workflow: one focused step at a time, without a bottom overlay. */
     .rc-flow-nav,.rc-mobile-only{display:none}
     @media(max-width:600px){
+      /* All ordinary mobile action buttons need an adequate tap area,
+         including load/cancel/convert/save and optional diagnostics. */
+      .button{min-height:44px}
       .rc-flow-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
         position:sticky;top:var(--header-height);z-index:20;
         margin:0 -14px 14px;padding:8px 14px 10px;background:var(--surface);

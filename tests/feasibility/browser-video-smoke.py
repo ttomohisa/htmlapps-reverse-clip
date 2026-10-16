@@ -311,11 +311,13 @@ def main():
                                 page.set_viewport_size({"width": width, "height": 720})
                                 assert not page.evaluate("""() =>
                                     document.documentElement.scrollWidth > innerWidth"""), width
-                                for control in ("#flowVideoButton","#flowEditButton","#flowResultButton"):
+                                for control in ("#flowVideoButton","#flowEditButton","#flowResultButton",
+                                                "#pickButton","#captureButton"):
                                     assert page.locator(control).bounding_box()["height"] >= 44, control
                                 page.locator("#flowGoEditButton").click()
                                 assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
                                 assert page.locator("#reverseButton").is_visible()
+                                assert page.locator("#reverseButton").bounding_box()["height"] >= 44
                                 page.locator("#flowVideoButton").click()
                             page.set_viewport_size({"width": 390, "height": 800})
                             print("[PASS] 320/360/390 widths, JA/EN mobile nav, "
