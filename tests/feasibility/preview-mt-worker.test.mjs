@@ -21,14 +21,14 @@ function makeAssets(status=200) {
   }}};
   return {env,calls};
 }
-test('Wrangler invokes the Preview Worker only for actual MT HTML entries',()=>{
+test('Wrangler invokes the Preview Worker for all paths but isolates MT only',()=>{
   assert.equal(config.main,'./scripts/preview-mt-worker.mjs');
   assert.equal(config.assets.directory,'./dist');
   assert.equal(config.assets.binding,'ASSETS');
   assert.equal(config.assets.run_worker_first,true); // Worker-first all assets, isolate MT only.
 });
 test('both MT Preview HTML entries get isolation without changing CSP or body',async()=>{
-  for(const path of config.assets.run_worker_first){
+  for(const path of ['/index.mt.html','/index.mt.self-extract.html']){
     const {env,calls}=makeAssets();
     const url='https://example.workers.dev'+path;
     const response=await worker.fetch(new Request(url),env);
