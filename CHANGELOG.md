@@ -2,6 +2,9 @@
 
 ## [0.7.0] — Mobile UX / Save Flow (development started 2026-10-16; not released)
 
+- **Processing navigation guard:** the Video step is disabled while an MP4 conversion is active so progress and Cancel cannot be hidden by normal mobile navigation. The action is available again after success, failure or cancellation; old-job invalidation remains functional. Manually invoking the Video step during a job is guarded.
+- **Visible keyboard focus:** automatic navigation scrolls the focused step heading into view below the sticky app header rather than hiding it above the sticky step buttons. Added 320×568 mobile viewport coverage, ST/MT conversion/cancel checks. No encoding/FFmpeg asset changes.
+
 - **Unsaved result protection:** ask before discarding a generated MP4 when selecting another video before download; cancellation preserves the original result/filename, confirmation revokes it. Accidental multi-file drop also retains an undownloaded output. A download request is never described as guaranteed OS save completion.
 - **Mobile focus recovery:** after auto step transitions and back-to-edit actions, focus the new visible workflow heading; keyboard-focused Cancel returns to the available action. Includes JA/EN help and real-browser regression coverage. FFmpeg assets and encoding are unchanged.
 

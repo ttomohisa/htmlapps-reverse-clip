@@ -65,6 +65,19 @@ audio listening, memory and the source-file whole-copy exception still
 need acceptance; iPhone is
 deferred. See [mobile flow acceptance](docs/feasibility/V070_MOBILE_FLOW.md).
 
+## Keep processing and Cancel visible on phones
+
+While MP4 processing runs, the Video step is temporarily unavailable,
+keeping progress and Cancel visible on the Edit screen. You can cancel
+the conversion and then select a different video; Video navigation is
+re-enabled after completion, failure or cancellation. Desktop retains
+its continuous workflow.
+
+When a mobile step changes automatically, its keyboard-focused heading
+is scrolled into view below the sticky header rather than hidden above
+the navigation controls. Narrow phone viewport tests exercise this
+behavior. This is a UI change only; the FFmpeg/ST/MT core is unchanged.
+
 ## Protecting an MP4 before replacing a video
 
 When a completed MP4 has not yet had its browser download started,

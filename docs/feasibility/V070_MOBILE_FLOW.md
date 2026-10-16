@@ -7,6 +7,31 @@ workflow PASS, but was not this new v0.7.0 build. No tag or release.**
 iPhone Safari is explicitly deferred. Windows Chrome/Edge and physical
 Android Chrome are the current target devices.
 
+## 2026-10-16 — keep conversion and Cancel visible on mobile
+
+While the WASM conversion is active, the Video workflow navigation
+button is disabled. The user stays in Edit, where the actual progress,
+processing stage and Cancel action are visible. Attempts to invoke
+Video navigation programmatically are guarded too. On successful
+completion, failure, or explicit cancellation the Video navigation
+is available again; output remains restricted to a verified MP4 and
+there is no hidden background job from ordinary mobile navigation.
+
+The mobile heading now stays inside the visible viewport when an
+automatic transition focuses it: focus moves to the workflow heading
+and scrolling brings the containing workflow below the sticky header,
+rather than placing the sticky navigation at the top and pushing the
+focused heading offscreen. Manual nav button taps still focus the
+button as before. Test coverage exercises both true ST and isolated
+MT conversion, interruption, the disabled Video step, and 320px
+width at 568px height. No encoding, CSP, input transport or runtime
+binaries have changed.
+
+**Verification:** CI is pending for this change; check the Draft PR
+checks for the completed source/binary smoke result. These desktop
+browser/mobile-viewport tests do not substitute physical Android or
+iPhone Gate G2 measurements.
+
 ## 2026-10-16 — unsaved MP4 protection and accessible mobile transitions
 
 The v0.7 Draft PR now protects a verified MP4 when the user selects
@@ -27,8 +52,10 @@ The workflow still retains no user video across reloads.
 
 Real ST/isolated MT H.264/AAC and mobile browser regression tests cover
 the confirmation cancel/approve paths, multi-drop, verified MP4 retention
-or invalidation and focus movement. **CI result pending** when this text
-was authored; check the associated PR checks for a completed result.
+or invalidation and focus movement. [App CI #38843512812](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38843512812)
+**ALL SUCCESS** (build, Node and genuine ST/MT Chrome); the associated
+[PR preview #38843512820](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38843512820)
+also succeeded.
 No FFmpeg/WASM encoding, source-provider memory fallback, CSP, or
 high-resolution experimental caps were changed. Android physical QA
 and G2 remain separate, unfinished acceptance work.
