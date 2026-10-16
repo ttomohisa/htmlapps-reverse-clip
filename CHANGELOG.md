@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0] — Mobile UX / Save Flow (development started 2026-10-16; not released)
+
+- **Owner-directed milestone:** begin v0.7.0 work while **G2 remains OPEN**. This is not G2 sign-off, stable publication, PR merge, a tag or a Browser Kitty import.
+- Existing three-step mobile Video → Edit → Result, real MP4 result preview/download, truthful save notice, collapsed diagnostics, JA/EN and 44px tap targets now belong to the v0.7 development milestone. Changing typed trim values invalidates old results immediately; navigating away from a result pauses playback without revoking a valid output.
+- Actual ST and cross-origin-isolated MT Chrome regressions passed [CI #38830712274](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38830712274); the prior public Pages UI snapshot [PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5) passed [live CI #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219) and had an owner-reported basic Android UX success. That pinned Pages build was **v0.6.0**, not this new Draft v0.7 version.
+- Preserve unresolved original G2 high-resolution Android/iPhone hardware repeats (iPhone deferred), real RAM/time, audio listening, cancel/provider checks, and Android <=64MiB full-copy fallback. The separately necessary immutable GPL source-complete Builder release remains pending. Runtime binaries, codecs and safety limits are unchanged by this version update.
+
 ## [0.6.0] — Adaptive quality guard / memory and reliability (development, 2026-10-13)
 - **2026-10-15 mobile UX/diagnostic disclosure verification:** Keep Browser checks and Development status behind native collapsed disclosures; expose an error-only button that expands/focuses diagnostic JSON export. Full [ST/MT App CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206) PASS with JS state/response tests, real H.264/AAC MP4 conversion and download, existing cancellation, frame count and VFR regression, JA/EN/320–390px mobile UI. [Pages test-only PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5) prepares actual hosted MT UI verification without merging development PRs. Physical Android UX and Gate G2 remain unapproved; no v0.7.0 version bump.
 

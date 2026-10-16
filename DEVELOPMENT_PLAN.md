@@ -1,9 +1,21 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status (2026-10-16):** v0.6.0 development; the publicly deployed mobile UI candidate is owner-reported Android basic UX PASS. The full G2 is still OPEN. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
+> **Status (2026-10-16):** v0.7.0 development begun at owner request under a documented exception to the sequential G2 gate; G2 still OPEN, no release. The earlier Pages mobile UI candidate has an owner-reported Android basic UX PASS. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-16 — v0.7.0 development approved by owner; G2 carried forward
+
+**Decision:** Following the owner's explicit request, start the **v0.7.0 development milestone on Draft PR #2** despite the open G2 checklist. This is a documented **development-sequence exception**, not a GO decision for G2, a stable v0.7 release, or a change in v1.0 acceptance.
+
+G2 is not formally passed because the original matrix requires Android **and iPhone** 720p10s and 1080p5s Reverse/Ping-pong three consecutive times; iPhone testing was explicitly deferred; Android real-camera repetitions, timing/RAM, audible AAC joins and cancellation/provider checks lack complete evidence. The <=64MiB Android MEMFS fallback still copies the entire input and violates the original strict no-whole-source-copy condition. The owner-reported Android Video/Edit/Result/Download success confirms the **basic workflow** on an older pinned Pages v0.6.0 snapshot, not those untested scenarios.
+
+The matching Builder 1.10.6 GPL binary-and-source archive remains a temporary review artifact. A reviewed permanent GPL corresponding-source Release is a **separate production distribution requirement**, not one of the original G2 performance checklist bullets, and does not need to block further v0.7 UI development.
+
+**Scope and invariants:** develop and test Video → Edit → Result, truthful download, JA/EN, touch, cancel/error states and standalone ST/isolated MT. Preserve H.264/AAC, original Reverse/Ping-pong behavior, file-processing locality, quality/duration limits and strict incomplete-output rejection. Formal G2 remains **INVESTIGATE / NOT PASSED** until evidence or an explicit scope change. G3, stable release, Builder public distribution and Browser Kitty integration remain separately gated. No merges, tag or release.
+
+This user-directed exception supersedes only the earlier plan's ban on **starting** v0.7 before G2 passes. Historical acceptance outcomes are not retroactively changed.
 
 ## 2026-10-16 — Pages実公開・Android操作のユーザー確認
 
@@ -357,7 +369,7 @@ FFmpeg Filter BuilderのST/MTアーキテクチャを参考に、Reverse Clip専
 
 **成果物：** `docs/feasibility/G2.md`、負荷測定・端末別テスト結果・既知制限。
 
-**完了判定：** Gate G2合格。満たせなければ仕様と商品価値を再審査し、v0.7.0に進まない。
+**完了判定（正式なG2基準）：** Gate G2合格。未達の場合は仕様と商品価値を再審査する。**2026-10-16のユーザー指示により、G2未合格のままv0.7.0開発開始だけを例外的に許可。** G2の未受入条件は保持し、G3やv1.0正式リリースの要件を緩めない。
 
 ### v0.7.0 — Mobile UX / Save Flow
 

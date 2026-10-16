@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.6.0",
-  "description": "Reverse Clip v0.6.0 development: ST/MT browser-local MP4/AAC Reverse/Ping-pong, experimental 720p10s/1080p5s profiles. Phone G2 and permanent GPL release pending.",
-  "descriptionJa": "Reverse Clip v0.6.0開発版。ST/MT逆再生・往復再生MP4（AACも選択可能）。720p級10秒と1080p級5秒は試験段階。実機G2とGPL恒久配布は未完了。",
+  "version": "0.7.0",
+  "description": "Reverse Clip v0.7.0 mobile UX development: browser-local ST/MT H.264/AAC Reverse/Ping-pong. Android basic workflow user-reported pass; G2 hardware acceptance and GPL release still pending. Not a stable release.",
+  "descriptionJa": "Reverse Clip v0.7.0スマホ操作・保存フロー開発版。ST/MT逆再生・往復再生MP4、AACに対応。Androidの基本操作は成功報告あり。G2実機検証とGPL恒久配布は未完了。正式版ではありません。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",

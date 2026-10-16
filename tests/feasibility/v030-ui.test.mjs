@@ -8,6 +8,15 @@ const html=read('src/index.template.html');
 const icon=read('assets/favicon.svg');
 const config=JSON.parse(read('app.config.json'));
 
+test('v0.7 development starts without claiming Gate G2 acceptance or stable release',()=>{
+  assert.equal(config.version,'0.7.0');
+  assert.match(config.description,/v0\.7\.0.*development.*G2/);
+  assert.match(config.descriptionJa,/G2実機検証とGPL恒久配布は未完了/);
+  assert.match(read('DEVELOPMENT_PLAN.md'),/v0\.7\.0 development approved by owner; G2 carried forward/);
+  assert.match(read('docs/feasibility/G2.md'),/G2 NOT PASSED/);
+  assert.match(read('CHANGELOG.md'),/\[0\.7\.0\].*not released/);
+});
+
 test('v0.3.0 version and exact supplied 64px favicon/brand icon',()=>{
   assert.match(config.version,/^0\.(3|[4-9]|[1-9][0-9]+)\.[0-9]+$/,'v0.3 foundation must persist in later milestones');
   assert.equal(createHash('sha256').update(icon).digest('hex'),
