@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
 const read=p=>readFileSync(new URL('../../'+p,import.meta.url),'utf8');
 const config=JSON.parse(read('app.config.json'));
 const lock=JSON.parse(read('reverse-runtime.lock.json'));
@@ -55,4 +56,34 @@ test('reducing stress does not weaken input memory, privacy or stale-result safe
   const policy=read('docs/release/REVISED_ACCEPTANCE_SCOPE.md');
   assert.match(policy,/64MiB以下/);
   assert.match(policy,/720p10秒/);
+});
+
+test('actual JA/EN desktop and mobile screenshots match the reviewed CI manifest',()=>{
+  const evidence=JSON.parse(read('docs/release/RC_SCREENSHOT_ASSET_MANIFEST.json'));
+  assert.equal(evidence.artifact_run_id,38944766865);
+  assert.equal(evidence.evidence.runtime,'single-thread Chrome (not Android/iPhone QA)');
+  const cases=[
+    ['reverse-clip-desktop-ja.png','assets/screenshot.png',1360,900,'README.ja.md'],
+    ['reverse-clip-desktop-en.png','assets/screenshot-en.png',1360,900,'README.md'],
+    ['reverse-clip-mobile-ja.png','assets/screenshot-mobile.png',390,844,'README.ja.md'],
+    ['reverse-clip-mobile-en.png','assets/screenshot-mobile-en.png',390,844,'README.md']
+  ];
+  const records=new Map(evidence.evidence.screenshots.map(x=>[x.file,x]));
+  assert.equal(records.size,4);
+  for(const [original,target,width,height,readme] of cases){
+    const record=records.get(original);
+    assert.ok(record,original);
+    const bytes=readFileSync(new URL('../../'+target,import.meta.url));
+    assert.ok(bytes.subarray(0,8).equals(Buffer.from('89504e470d0a1a0a','hex')));
+    assert.equal(bytes.readUInt32BE(16),width,target);
+    assert.equal(bytes.readUInt32BE(20),height,target);
+    assert.equal(bytes.length,record.bytes,target);
+    assert.equal(createHash('sha256').update(bytes).digest('hex'),record.sha256,target);
+    assert.ok(read(readme).includes('('+target+')'),readme+' missing '+target);
+  }
+  // Verified viewport screenshots are not falsely presented as phone hardware QA.
+  assert.match(read('README.md'),/not physical Android device certification/);
+  assert.match(read('README.ja.md'),/Android実機による動作確認を表す画像ではありません/);
+  assert.match(rc,/A-13 screenshots PASS/);
+  assert.equal(lock.status,'temporary-not-release');
 });
