@@ -5,6 +5,23 @@
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
 
+## 2026-10-17 — Right-sized RC test policy (owner requested)
+
+The owner asked to revise unnecessarily strict verification conditions.
+For the proposed initial **Windows Chrome + Android Chrome** release
+scope, use [REVISED_ACCEPTANCE_SCOPE.md](docs/release/REVISED_ACCEPTANCE_SCOPE.md):
+P0 safety/privacy/real basic-device workflow/valid MP4/immutable GPL
+corresponding source remain mandatory; P1 additional browser/device
+spot checks and P2 unadvertised 720p10s/1080p5s ×3 performance
+research do not automatically block a limited-scope release.
+
+Original G2 conditions are preserved as historical and NOT PASSED.
+A bounded <=64MiB Android provider-copy fallback is a **proposed**
+acceptable implementation condition when needed after a failed direct
+read; no >64MiB whole-file fallback, data upload, unbounded memory
+claims or silent errors. The exact release target and this revised
+scope require final release review; no G3 approval now.
+
 ## 2026-10-16 — v0.9.0 RC preparation (G2/G3 stay OPEN)
 
 The owner asked why the version had not advanced and approved continuing.
