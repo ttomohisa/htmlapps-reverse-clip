@@ -80,6 +80,13 @@ def test_conversion(page, workdir, prefix, start, end, frames, invalidate_after=
     assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "result"
     assert page.locator("#workspaceTitle").evaluate("(el) => document.activeElement === el"), prefix
     assert page.locator("#flowResultButton").get_attribute("aria-current") == "step"
+    # Automatic focus should be visible below the sticky page header.
+    assert page.evaluate("""() => {
+        const r=document.querySelector('#workspaceTitle').getBoundingClientRect();
+        const header=document.querySelector('.app-header').getBoundingClientRect();
+        return r.top >= header.bottom - 2 && r.bottom <= innerHeight;
+    }"""), ("hidden step heading", prefix)
+    page.wait_for_function("() => !document.querySelector('#flowVideoButton').disabled")
     assert page.locator("#workspaceTitle").inner_text() in ("結果を確認・保存", "Preview and save result")
     assert page.locator("#resultDimensions").is_visible()
     assert "15fps" in page.locator("#resultDimensions").inner_text()
@@ -303,10 +310,20 @@ def main():
                             page.evaluate("""() => {
                                 const start = document.querySelector('#reverseButton');
                                 const cancel = document.querySelector('#cancelReverseButton');
+                                const videoStep = document.querySelector('#flowVideoButton');
+                                const resultStep = document.querySelector('#flowResultButton');
                                 if (start.disabled) throw new Error('reverse action disabled');
                                 start.click();
                                 if (cancel.hidden) throw new Error('cancel action was not exposed');
+                                if (!videoStep.disabled || !resultStep.disabled)
+                                    throw new Error('Video/Result navigation enabled during conversion');
+                                videoStep.click();
+                                if (document.querySelector('#rcWorkflow').dataset.flowStep !== 'edit' ||
+                                    cancel.hidden)
+                                    throw new Error('conversion navigation hid Cancel');
                                 cancel.click();
+                                if (videoStep.disabled)
+                                    throw new Error('Video step still locked after cancel');
                             }""")
                             page.wait_for_timeout(250)
                             assert page.locator("#resultArea").is_hidden()
@@ -361,7 +378,7 @@ def main():
                             page.locator("#languageButton").click()
                             assert page.locator("#flowEditButton").inner_text() == original_edit
                             for width in (320, 360, 390):
-                                page.set_viewport_size({"width": width, "height": 720})
+                                page.set_viewport_size({"width": width, "height": 568 if width == 320 else 720})
                                 assert not page.evaluate("""() =>
                                     document.documentElement.scrollWidth > innerWidth"""), width
                                 for control in ("#flowVideoButton","#flowEditButton","#flowResultButton",
@@ -369,6 +386,11 @@ def main():
                                     assert page.locator(control).bounding_box()["height"] >= 44, control
                                 page.locator("#flowGoEditButton").click()
                                 assert page.locator("#rcWorkflow").get_attribute("data-flow-step") == "edit"
+                                assert page.evaluate("""() => {
+                                    const r=document.querySelector('#workspaceTitle').getBoundingClientRect();
+                                    const h=document.querySelector('.app-header').getBoundingClientRect();
+                                    return r.top >= h.bottom-2 && r.bottom <= innerHeight;
+                                }"""), ("heading offscreen in mobile", width)
                                 assert page.locator("#reverseButton").is_visible()
                                 assert page.locator("#reverseButton").bounding_box()["height"] >= 44
                                 page.locator("#flowVideoButton").click()

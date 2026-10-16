@@ -133,6 +133,16 @@ test('unsaved results use localized confirmation and automatic transitions resto
   assert.ok(html.includes("$('#flowBackToEditButton').addEventListener('click',()=>setFlowStep('edit',{focus:true}))"));
 });
 
+test('mobile processing stays on Edit until completion or cancellation',()=>{
+  assert.ok(html.includes("const busy=Boolean(conversionController);"));
+  assert.ok(html.includes("button.disabled=step==='video'?busy:step==='edit'?!canEdit:!canResult;"));
+  assert.ok(html.includes("if(step==='video'&&conversionController)return false;"));
+  assert.ok(html.includes("conversionController=controller;\n        updateFlowNavigation();"));
+  assert.ok(html.includes("conversionController=null;\n            updateFlowNavigation();"));
+  assert.ok(html.includes("#rcWorkflow{scroll-margin-top:var(--header-height)}"));
+  assert.ok(html.includes("(focus?$('#rcWorkflow'):$('#rcFlowNav'))"));
+});
+
 test('responsive step headings follow Video/Edit/Result and recover on desktop resize',()=>{
   assert.ok(html.includes('id="workspaceBody" data-i18n="workspaceBody"'));
   assert.ok(html.includes("'workspaceTitle':flowStep==='edit'?'flowEditTitle':'flowResultTitle'"));
