@@ -141,6 +141,8 @@ test('mobile processing stays on Edit until completion or cancellation',()=>{
   assert.ok(html.includes("conversionController=null;\n            updateFlowNavigation();"));
   assert.ok(html.includes("#workspaceTitle{scroll-margin-top:calc(var(--header-height) + 14px)}"));
   assert.ok(html.includes("(focus?$('#workspaceTitle'):$('#rcFlowNav'))"));
+  assert.ok(html.includes("root.style.scrollBehavior='auto';"));
+  assert.ok(html.includes("}finally{root.style.scrollBehavior=previous;}"));
 });
 
 test('responsive step headings follow Video/Edit/Result and recover on desktop resize',()=>{

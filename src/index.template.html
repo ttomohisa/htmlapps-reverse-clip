@@ -1433,11 +1433,17 @@
         // Automatic transitions must not strand keyboard focus in a hidden
         // panel. Manual nav taps leave focus on the visible nav button.
         if(onMobile&&focus)$('#workspaceTitle').focus({preventScroll:true});
-        // Bring the focused heading itself below the sticky app header.
-        // Scrolling the taller workflow container may align a hidden
-        // descendant above the viewport as the Result layout shrinks.
-        if(scroll&&onMobile)(focus?$('#workspaceTitle'):$('#rcFlowNav'))
-          .scrollIntoView({block:'start',behavior:'auto'});
+        // html {scroll-behavior:smooth} makes behavior:auto animate.
+        // Stop a focused heading from remaining hidden during that animation.
+        // Restore the template's normal scroll preference immediately.
+        if(scroll&&onMobile){
+          const root=document.documentElement, previous=root.style.scrollBehavior;
+          root.style.scrollBehavior='auto';
+          try{
+            (focus?$('#workspaceTitle'):$('#rcFlowNav'))
+              .scrollIntoView({block:'start',behavior:'auto'});
+          }finally{root.style.scrollBehavior=previous;}
+        }
         return true;
       }
       // A slow cloud/photo provider or a media decoder that never returns
