@@ -138,6 +138,7 @@ jobs:
         shell: bash
         env:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+          RC_CAPTURE_SCREENSHOTS: "1"
         run: python tests/feasibility/browser-video-smoke.py
 
       - name: Investigate owner-reported MT 30/24-frame mismatch using 37.89s camera-like sources
@@ -164,6 +165,15 @@ jobs:
         env:
           CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
         run: python tests/feasibility/file-standalone-browser-smoke.py
+
+      - name: Upload real app UI screenshots for release review
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reverse-clip-v090-real-ui-${{ github.event.pull_request.head.sha || github.sha }}
+          path: rc-evidence/screenshots/
+          if-no-files-found: ignore
+          retention-days: 30
 
   # v0.6 experimental full-resolution workload runs only on explicit manual
   # dispatch (run_hd_mt=true). Never burn minutes on ordinary PR updates.

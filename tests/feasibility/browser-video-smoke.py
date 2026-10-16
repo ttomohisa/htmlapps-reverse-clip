@@ -163,6 +163,73 @@ def assert_visual_rotation(source, output, width, height):
     assert mae<22,("wrong rotation/color marker placement",str(source),mae)
     return round(mae,2)
 
+def capture_rc_result_screenshots(page, output_path):
+    """Capture genuine verified MP4 result UI in JA/EN and desktop/mobile.
+
+    This runs *after* the download was saved and ffprobe validated its
+    H.264 frames. No fabricated UI, stock picture, uploaded video or
+    user file is involved. Screenshots are CI review artifacts only;
+    release documentation must not treat them as human device QA.
+    """
+    if os.getenv("RC_CAPTURE_SCREENSHOTS") != "1":
+        return
+    evidence=ROOT/"rc-evidence"/"screenshots"
+    evidence.mkdir(parents=True,exist_ok=True)
+    assert page.locator("#resultArea").is_visible()
+    assert page.locator("#saveReverseButton").is_enabled()
+    assert page.locator("#resultVideo").evaluate("(v) => v.videoWidth>0 && v.videoHeight>0")
+    locale_before=page.locator("html").get_attribute("lang")
+    viewport_before=page.viewport_size.copy()
+    original_mp4=page.locator("#resultVideo").evaluate("(v) => v.currentSrc")
+    captures=[]
+    try:
+        # The compatibility section was opened by the test for source
+        # constraints; close it for a normal first-use screen.
+        disclosure=page.locator("#sourceCompatibilityDetails")
+        if disclosure.evaluate("(el) => el.open"):
+            disclosure.locator("summary").click()
+        for mode,width,height in (("desktop",1360,900),("mobile",390,844)):
+            page.set_viewport_size({"width":width,"height":height})
+            assert not page.evaluate("document.documentElement.scrollWidth > innerWidth")
+            for lang in ("ja","en"):
+                if page.locator("html").get_attribute("lang") != lang:
+                    page.locator("#languageButton").click()
+                assert page.locator("html").get_attribute("lang") == lang
+                assert page.locator("#resultVideo").evaluate(
+                    "(v) => v.currentSrc") == original_mp4
+                assert page.locator("#saveReverseButton").is_enabled()
+                assert page.locator("#resultInfo").inner_text().strip()
+                # Scroll the genuine Result card into the photographed
+                # viewport. Preserve the fixed app header/navigation.
+                page.evaluate("""() => {
+                  const el=document.querySelector('#resultArea');
+                  const rect=el.getBoundingClientRect();
+                  const top=window.scrollY+rect.top-170;
+                  window.scrollTo({top:Math.max(0,top),behavior:'instant'});
+                }""")
+                page.wait_for_timeout(140)
+                dest=evidence/f"reverse-clip-{mode}-{lang}.png"
+                page.screenshot(path=str(dest),full_page=False,
+                                animations="disabled")
+                size=dest.stat().st_size
+                assert size>12000,("screenshot empty",str(dest),size)
+                captures.append({"viewport":mode,"language":lang,
+                                 "file":dest.name,"bytes":size,
+                                 "sha256":hashlib.sha256(dest.read_bytes()).hexdigest()})
+    finally:
+        page.set_viewport_size(viewport_before)
+        if page.locator("html").get_attribute("lang") != locale_before:
+            page.locator("#languageButton").click()
+    (evidence/"manifest.json").write_text(json.dumps({
+       "source":"synthetic H.264 fps30; generated and verified in real Chrome",
+       "app":"Reverse Clip v0.9.0 RC preparation, NOT released",
+       "runtime":"single-thread Chrome (not Android/iPhone QA)",
+       "output_sha256":hashlib.sha256(output_path.read_bytes()).hexdigest(),
+       "screenshots":captures
+    },ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    print("[PASS] actual Reverse MP4 Result JA/EN desktop+mobile "
+          "screenshots captured to CI artifact",flush=True)
+
 def inspect_compat_mp4(output, expected_frames=15):
     report = json.loads(run("ffprobe", "-v", "error",
         "-show_entries", "stream=codec_name,codec_type,nb_frames:format=duration",
@@ -643,6 +710,8 @@ def main():
                                 out_file=temp/f"{name}-{label}-compat.mp4"
                                 dl.value.save_as(out_file)
                                 inspect_compat_mp4(out_file)
+                                if name=="single-thread" and label=="fps30":
+                                    capture_rc_result_screenshots(page,out_file)
                                 print(f"[PASS] {name} {label} => 15fps H.264 MP4",
                                       flush=True)
                         if name in ("single-thread","multi-thread"):
