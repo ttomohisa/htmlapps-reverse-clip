@@ -1,12 +1,20 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
-> **Status:** v0.7.0 development under owner-directed progression（G1/G2の正式合格は未取得、リリース未実施）  
+> **Status:** v0.8.0 Compatibility / Hardening development（G1/G2の正式合格は未取得、リリース未実施）  
 > **作成日:** 2026-10-11  
 > **目標版:** v1.0.0  
 > **アプリ名:** Reverse Clip / 動画逆再生（仮称）  
 > **アプリslug:** `reverse-clip`（仮）  
 > **新規リポジトリ候補:** `ttomohisa/htmlapps-reverse-clip`（GitHub上で作成済み、2026-10-11確認）  
 > **関連資料:** [`DEVELOPMENT_PLAN.md`](./DEVELOPMENT_PLAN.md)
+
+## 2026-10-16 — v0.8.0形式互換性・異常系強化への移行
+
+ユーザーの指示で、既存Draft PR #2上の開発版をv0.8.0へ進める。v0.7.0で完成したスマホUI・保存・逆再生／往復再生・AACを維持する。元の開発計画どおりH.264 30/60fps、VFR、縦動画回転、MOV/HEVC、HDR/10-bit、複数音声、壊れたMP4、短すぎる動画、巨大入力などの互換性を検証する。
+
+最初の実装は、正常にデコードできる0.5秒未満の動画を「壊れたファイル」ではなく区間長不足として日英で区別すること、入力形式・色の注意を折りたたみで説明すること。HDR/10-bit検出・原色の維持は未保証、出力15fps・複数音声トラック選択非対応を明記する。ST/MT実Chromeで短時間・30/60fpsのH.264動画を用いるテストを追加する。検証状況は `docs/feasibility/V080_COMPATIBILITY_MATRIX.md` に個別記録する。
+
+この変更は**v0.8.0の開発着手**であり、全互換性試験・Android実機・iPhone（延期）の完了、G2合格、正式リリースを意味しない。既存の安全上限、元動画の外部送信禁止、Worker/WASMと単一HTMLの方針を維持する。
 
 ## 2026-10-16 — v0.7.0スマホUIの実装完了（自動テスト合格）
 

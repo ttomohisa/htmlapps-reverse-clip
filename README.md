@@ -1,8 +1,28 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.7.0 Mobile UX / Save Flow (Draft; G2 remains OPEN; not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The 720p/10s and 1080p/5s bounds have passed selected **desktop ST and isolated MT** full-size scenarios, but **not physical-device G2**. Android repeated-use, three-repeat MT stress, reliable memory measurements, audio listening and a permanent GPL source bundle are outstanding; iPhone tests are deferred.
+**Development status: v0.8.0 Compatibility / Hardening (Draft; G2 remains OPEN; not released).** Prior desktop Chrome ST/MT actual H.264+AAC Reverse/Ping-pong passed [CI #38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120). The 720p/10s and 1080p/5s bounds have passed selected **desktop ST and isolated MT** full-size scenarios, but **not physical-device G2**. Android repeated-use, three-repeat MT stress, reliable memory measurements, audio listening and a permanent GPL source bundle are outstanding; iPhone tests are deferred.
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
+
+## v0.8.0 — input compatibility work
+
+The current development milestone focuses on real files and explicit
+failure states. A decodable video shorter than **0.5 seconds** now
+shows a localized minimum-length explanation rather than being called
+corrupt. Actual H.264 30fps/60fps input checks are being added to
+the ST and isolated MT Chrome suites; these are **output at 15fps**,
+not preservation of the input frame rate.
+
+The Edit step provides collapsed **source format and color limitations**:
+the app does not reliably identify or guarantee HDR/10-bit color
+fidelity, so colors may change; it does not expose a selector for
+multiple audio tracks. A browser preview being successful does not
+prove that its colors or metadata are retained by the MP4 export.
+
+See the [v0.8 compatibility evidence matrix](docs/feasibility/V080_COMPATIBILITY_MATRIX.md).
+HEVC MOV, true portrait rotation, HDR/10-bit correctness, multi-audio
+streams, and full physical Android/iPhone compatibility remain unaccepted.
+iPhone remains deferred. No stable release or G2 approval is implied.
 
 ## Low-frame-rate MT correction (2026-10-15, user-reported PC/Android success)
 

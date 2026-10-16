@@ -1,9 +1,42 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status (2026-10-16):** v0.7.0 UX implementation complete with real ST/MT browser automation PASS; G2/hardware remains OPEN under the documented owner-directed milestone exception, no release. The earlier Pages mobile UI candidate has an owner-reported Android basic UX PASS. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
+> **Status (2026-10-16):** v0.8.0 Compatibility / Hardening development started at the owner's request following v0.7.0 UX implementation and real ST/MT Chrome PASS; G2/hardware remains OPEN, no release. The earlier Pages mobile UI candidate has an owner-reported Android basic UX PASS. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
+
+## 2026-10-16 — v0.8.0 Compatibility / Hardening development start
+
+The owner explicitly requested progression to the v0.8.0 milestone.
+On the existing, unmerged application Draft PR #2 only, the app version
+advances to `0.8.0` (development, no tag or release). Its scope is the
+original plan's **Compatibility / Hardening**: genuine H.264 30/60fps,
+short sources, MOV/HEVC, VFR, portrait rotation, HDR/10-bit caveats,
+silent/multi-track audio, invalid/truncated/oversized inputs, MP4
+integrity and local-only standalone operation.
+
+First implemented changes: decodable input below 0.5 seconds reports a
+specific localized minimum-duration error rather than the misleading
+"unsupported or damaged" status; the source panel includes collapsed
+JA/EN explanations that source color/HDR/10-bit fidelity is **not
+detected or guaranteed**, 30/60fps is resampled to 15fps rather than
+preserved, and multi-track audio selection is not implemented.
+No new codec, media network connection or WASM dependency is added.
+
+A real ST/isolated MT browser regression now generates 0.27-second,
+30fps and 60fps H.264 fixtures locally in CI and checks correct
+short-input rejection and actual 15-frame 1-second H.264 exports.
+Testing of genuine HDR/10-bit color, HEVC MOV, physical-device rotation,
+multi-audio-track selection and iPhone Safari is still **OPEN**;
+a disclosure is not color-fidelity validation. See
+`docs/feasibility/V080_COMPATIBILITY_MATRIX.md` for case-by-case evidence.
+
+The same documented owner-directed milestone-order exception used
+for v0.7.0 permits v0.8.0 **development** while formal
+**G2 remains INVESTIGATE / NOT PASSED**. This does not waive Android
+high-resolution ×3, provider memory-copy constraints, audio seam
+listening or the v0.9/v1.0 release gates. Do not merge PR #1/#2 or
+Builder #16, tag, release or change the Browser Kitty site.
 
 ## 2026-10-16 — v0.7.0 UX code-complete checkpoint
 
