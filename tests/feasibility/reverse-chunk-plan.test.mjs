@@ -114,6 +114,7 @@ test('v0.6 releases the final WASM output bytes once the preview Blob owns them'
   assert.ok(html.includes("resultUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));"));
   assert.ok(html.includes("bytes=null;\n          const resultVideo"));
   assert.ok(html.includes('outputBytes:outputSize'));
-  assert.ok(html.includes('size:humanSize(outputSize)'));
+  assert.ok(html.includes('size:humanSize(result.outputBytes)'));
+  assert.ok(html.includes('function renderResultDetails()'));
   assert.ok(!html.includes('outputBytes:bytes.byteLength'));
 });

@@ -165,7 +165,7 @@ test('JA/EN workflow labels and actual output metadata are present; saving does 
     '"flowOutputDimensions": "Output: {width} × {height}px · {fps}fps"'
   ]) assert.ok(html.includes(label),label);
   assert.ok(html.includes("width:result.outputWidth,height:result.outputHeight"));
-  assert.ok(html.includes("width:resultVideo.videoWidth,height:resultVideo.videoHeight"));
+  assert.ok(html.includes('outputWidth:resultVideo.videoWidth,outputHeight:resultVideo.videoHeight'));
   assert.ok(html.includes('逆再生MP4のダウンロードを開始しました。'));
   assert.ok(html.includes('Ping-pong MP4 download started.'));
   assert.ok(!html.includes('逆再生MP4を保存しました。'));
