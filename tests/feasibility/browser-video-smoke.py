@@ -322,16 +322,17 @@ def main():
                                                 invalidate_after=name in ("single-thread", "multi-thread"))
                         if name in ("single-thread", "multi-thread"):
                             if name == "single-thread":
-                                # Inject only a failed runner response after a
-                                # successful real MP4. The UI must expose the
-                                # error, keep Save disabled, translate it on
-                                # demand, then recover on a real retry.
+                                # Force a deterministic runtime-preflight
+                                # error (no real MP4/WASM failure is implied).
+                                # Mock only the embedded core-presence check:
+                                # the audio inspector may reload BrowserFFmpeg,
+                                # which makes loader monkeypatches unreliable.
                                 page.evaluate("""() => {
-                                    window.__v07RealLoader = window.BrowserFFmpeg.loadEmbedded;
-                                    window.BrowserFFmpeg.loadEmbedded = async () => ({
-                                        run: async () => ({exitCode:1,files:[]}),
-                                        dispose(){}
-                                    });
+                                    window.__v07RealAssetHas = window.StandaloneAssets.has;
+                                    window.StandaloneAssets.has = function(dep,key) {
+                                        if(dep==='reverse-wasm' && key==='coreWasm') return false;
+                                        return window.__v07RealAssetHas.call(this,dep,key);
+                                    };
                                 }""")
                                 page.locator("#flowEditButton").click()
                                 page.locator("#rangeStart").fill("0")
@@ -355,8 +356,8 @@ def main():
                                 page.locator("#languageButton").click()
                                 assert page.locator("#reverseStatus").inner_text() == status
                                 page.evaluate("""() => {
-                                    window.BrowserFFmpeg.loadEmbedded = window.__v07RealLoader;
-                                    delete window.__v07RealLoader;
+                                    window.StandaloneAssets.has = window.__v07RealAssetHas;
+                                    delete window.__v07RealAssetHas;
                                 }""")
                                 print("[PASS] v0.7 localized failure/diagnostics and real retry readiness",
                                       flush=True)
