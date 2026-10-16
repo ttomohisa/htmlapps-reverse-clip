@@ -65,8 +65,8 @@ def create_compat_sources(workdir):
     # confused with coded width/height. Record both in the test.
     rotated=workdir/"h264-rotate90.mov"
     subprocess.run(["ffmpeg","-hide_banner","-loglevel","error","-y",
-        "-i",str(mov),"-map","0:v:0","-c","copy",
-        "-metadata:s:v:0","rotate=90",str(rotated)],check=True)
+        "-display_rotation:v:0","90",
+        "-i",str(mov),"-map","0:v:0","-c","copy",str(rotated)],check=True)
     results["rotated-mov"]=rotated
     rotate_info=json.loads(run("ffprobe","-v","error","-select_streams","v:0",
         "-show_entries","stream_side_data=rotation","-of","json",str(rotated)))
