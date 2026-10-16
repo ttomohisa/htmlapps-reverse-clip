@@ -22,7 +22,10 @@ Mobile action buttons (file choice/capture, conversion/cancel, save,
 diagnostics) now use at least **44px** height at <=600px. The
 320/360/390px regression explicitly measures the source pickers and
 conversion control in addition to the three navigation buttons. This
-last styling refinement is pending its subsequent CI run.
+styling refinement passed [App CI #38830712274](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38830712274)
+(all jobs SUCCESS: Windows build, Node assertions, actual ST and isolated
+MT Chrome MP4/AAC, low-FPS/VFR, offline and mobile layout regressions).
+The opt-in HD MT endurance job was not run as part of normal CI.
 
 [Pages-only test PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)
 remains an **earlier pinned snapshot**; this development-branch
@@ -116,7 +119,7 @@ The result MP4 remains available to retry download while unchanged.
 | Valid 0.5–10s MP4 | Result current only after fully validated output; Save downloads actual H.264 | Actual ST/MT Chrome MP4 PASS |
 | Back to Edit without changes | Output playback pauses while hidden; existing MP4 retained, navigating to Result works without re-encoding | Actual ST/MT Chrome PASS #38830240345 |
 | Typing trim start/end before blur | Old MP4 and Save cleared immediately on input, even before change/blur | Actual ST/MT Chrome PASS #38830240345 |
-| Mobile actions at 320/360/390px | Picker, capture, navigation and conversion tap areas at least 44px tall | Regression added; CI pending |
+| Mobile actions at 320/360/390px | Picker, capture, navigation and conversion tap areas at least 44px tall | Actual Chrome PASS #38830712274 |
 | Edit trim/quality/mode/audio after output | Old MP4 and Save cleared, Result disabled | Browser PASS |
 | Abort/error or failed frame count | Stays on Edit and shows error details, never an incomplete MP4 | ST/MT regression PASS; independent Android still pending |
 | Result metadata | Actual MP4 dimensions, FPS, duration, output size; filename editable | Browser PASS |
