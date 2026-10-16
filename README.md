@@ -4,6 +4,18 @@
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 
+## Screenshots — actual Chrome MP4 output
+
+The following screenshots show **actual exported and verified H.264 MP4 result screens** from Chrome with a locally generated motion sample. The desktop (1360×900) and mobile-size (390×844) screenshots are **desktop Chrome viewport captures, not physical Android device certification**. This is the unreleased v0.9.0 development branch.
+
+| Desktop (English) | Mobile layout (English) |
+| --- | --- |
+| ![Reverse Clip's actual H.264 MP4 Result in desktop Chrome](assets/screenshot-en.png) | ![Reverse Clip's Result on a 390px Chrome viewport](assets/screenshot-mobile-en.png) |
+
+[Japanese desktop screenshot](assets/screenshot.png) · [Japanese mobile layout screenshot](assets/screenshot-mobile.png) · [SHA-256 and reproducible CI evidence](docs/release/RC_SCREENSHOT_ASSET_MANIFEST.json)
+
+
+
 ## 2026-10-17 — right-sized initial-release test plan
 
 The original G2 required Android **and iPhone** to complete
@@ -37,7 +49,7 @@ The FFmpeg/x264 WASM lock still points to a **temporary Actions artifact**,
 not a reviewed permanent GPL corresponding-source release. Original
 Gate G2 criteria, including the <=64MiB whole-file memory-copy exception
 and 720p10s/1080p5s hardware repetitions, remain OPEN. Gate G3 also
-remains NOT PASSED. Actual Japanese/English result screenshots,
+remains NOT PASSED. Actual Japanese/English result screenshots are now checked in as Chrome viewport evidence;
 Windows Edge and up-to-date physical Android acceptance are pending.
 
 Existing silent-by-default H.264 Reverse/Ping-pong, supported optional
