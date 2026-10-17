@@ -1,6 +1,6 @@
 # Reverse Clip v0.9.0 — current MT QA browser evidence (2026-10-17)
 
-**Status: remote desktop Chrome MT PASS; physical Android MT NOT TESTED.** Not an approved release and no change to historical G2 or Gate G3 (both NOT PASSED).
+**Status: remote desktop Chrome MT PASS; subsequent Android MT four-action owner smoke USER-REPORTED PASS.** Not an approved release and no change to historical G2 or Gate G3 (both NOT PASSED).
 
 ## Endpoints and exact build
 
@@ -32,10 +32,12 @@ CI stdout included:
 [PASS] Pages ST remains unisolated after MT worker install
 ```
 
-The test uses the GitHub Pages-style SW implementation but targets the temporary Cloudflare QA origin. This is **desktop Linux Chrome proof only**, not Android physical performance/memory/sound testing. A separate owner-reported Android **ST** smoke is recorded in [`ANDROID_ST_RC_OWNER_SMOKE.md`](ANDROID_ST_RC_OWNER_SMOKE.md).
+The test uses the GitHub Pages-style SW implementation but targets the temporary Cloudflare QA origin. This CI is **desktop Linux Chrome proof only**, not Android physical performance/memory/sound testing. Separately, the owner later reported **「MTも4つOK」** after testing the four requested operations on Android Chrome ([owner evidence](ANDROID_MT_RC_OWNER_SMOKE.md)); no phone logs/measurements were obtained. A separate owner-reported Android **ST** smoke is recorded in [`ANDROID_ST_RC_OWNER_SMOKE.md`](ANDROID_ST_RC_OWNER_SMOKE.md).
 
-## Next meaningful human test
+## Android MT owner smoke completed; next release action
 
-On Android Chrome, open the **MT QA URL** and verify that a short normal H.264 MP4 can (a) reverse, save and replay, (b) ping-pong, save and replay, (c) cancel/retry and (d) play reversed sound if supported. Since ST passed those four user checks already, a quick representative MT check is more useful than repeated HD/endurance testing. Record device/Android/Chrome if available; **do not mark MT Android P0 PASS until the owner actually tests it**.
+The owner was given the **MT QA URL** and four specific checks: (a) reverse/save/replay, (b) ping-pong/save/replay, (c) cancel/retry, (d) listen to reversed audio. On 2026-10-17 the owner responded **「MTも4つOK」**. Record this as **USER-REPORTED PASS for all four MT QA phone smoke actions**; see [Android MT owner smoke](ANDROID_MT_RC_OWNER_SMOKE.md). Do not infer phone metadata or exact codec/timing from that reply.
+
+**Next:** permanent corresponding-source-complete GPL Builder distribution, verify the exact final hosted MT runtime and release scope, and close G3 only after explicit review. Avoid requiring redundant high-load phone tests outside the agreed release scope.
 
 No external user-video upload, no Builder release, tag, PR merge or Browser Kitty import is included. The QA Worker should be removed once acceptance is complete to avoid an indefinite publicly reachable development copy.

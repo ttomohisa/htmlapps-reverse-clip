@@ -3,21 +3,27 @@
 **2026-10-17: PREPARATION / NOT APPROVED. Gate G3 NOT PASSED.**
 The RC is not a published release; PR #2, PR #1 and Builder PR #16 remain open Drafts. The user requested **less excessive testing while keeping real safeguards**. Refer to [revised initial-release scope](REVISED_ACCEPTANCE_SCOPE.md) for the proposed P0/P1/P2 criteria. These revised criteria are a proposal applied to RC planning, **not** a retrospective PASS of the original G2 or authorization to publish.
 
-References: [APP_SPEC.md A-01–A-14](../../APP_SPEC.md), [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md), [historical G2 evidence](../feasibility/G2.md), [v0.8 compatibility matrix](../feasibility/V080_COMPATIBILITY_MATRIX.md), [2026-10-17 Android ST owner smoke](ANDROID_ST_RC_OWNER_SMOKE.md), [latest MT test deployment](MT_QA_BROWSER_EVIDENCE.md).
+References: [APP_SPEC.md A-01–A-14](../../APP_SPEC.md), [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md), [historical G2 evidence](../feasibility/G2.md), [v0.8 compatibility matrix](../feasibility/V080_COMPATIBILITY_MATRIX.md), [2026-10-17 Android ST owner smoke](ANDROID_ST_RC_OWNER_SMOKE.md), [latest MT test deployment](MT_QA_BROWSER_EVIDENCE.md), [2026-10-17 Android MT owner smoke](ANDROID_MT_RC_OWNER_SMOKE.md).
+
+## 2026-10-17 — Android ST + MT four-action owner smoke
+
+The owner confirmed **「4つともOK」** for the v0.9 **ST** Preview and then separately **「MTも4つOK」** after testing the latest **MT** temporary QA URL on Android Chrome. Both were answers to the same four requested actions: Reverse MP4 save/replay, Ping-pong save/replay, cancel→retry, and audible reversed audio. **ST + MT owner-reported basic Android smoke PASS**, not independently collected phone logs or ffprobe proof. Hardware/browser versions, exact input/output metadata, file-provider details and accurate timings were not supplied. [ST evidence](ANDROID_ST_RC_OWNER_SMOKE.md) · [MT evidence](ANDROID_MT_RC_OWNER_SMOKE.md).
+
+This closes the **user-performed basic Android P0 smoke-feedback task**, not original historical Gate G2, which remains **NOT PASSED**, and not G3, which remains **NOT PASSED**. The final MT distribution must still be verified if hosting/runtime changes; permanent GPL corresponding-source binary/source publication and owner review remain blockers.
 
 ## 2026-10-17 — latest MT hosted browser proof (NOT Android device acceptance)
 
 [Temporary QA deployment / build CI #38954969819](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38954969819) **SUCCESS** using branch `8c263294`. The exact current MT standalone was rebuilt on Windows, staged under [`/mt/`](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/) with the existing pinned COI Service Worker, and a **real remote Chrome test** confirmed cross-origin isolation, SharedArrayBuffer, conversion and saving of a 1-second H.264 reversed MP4. ST at root stayed non-isolated even after registration. The standard Wrangler Preview's response headers still did not provide direct COOP/COEP, so do not use its `/index.mt.html` as an MT acceptance URL.
 
-**MT Chrome-hosted CI PASS; Android phone MT P0 still PENDING.** The QA URL is temporary, not Browser Kitty and not a versioned GPL release; no Android RAM/audio hardware metrics were measured. [Evidence and exact scope](MT_QA_BROWSER_EVIDENCE.md).
+**MT Chrome-hosted CI PASS; Android phone MT four-action owner smoke subsequently USER-REPORTED PASS** (see [MT owner record](ANDROID_MT_RC_OWNER_SMOKE.md)); The QA URL is temporary, not Browser Kitty and not a versioned GPL release; no Android RAM/audio hardware metrics were measured. [Evidence and exact scope](MT_QA_BROWSER_EVIDENCE.md).
 
 ## P0 — mandatory for proposed initial scope
 
 | Requirement | Evidence and action | Status |
 | --- | --- | --- |
 | ST and MT actual H.264 Reverse + Ping-pong, bounded trim and playable MP4 | Desktop Chrome source/MP4 frame-order tests PASS [CI #38866625722](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38866625722). Verify release candidate bytes on next build | **AUTOMATED PASS** |
-| Actual Android Chrome H.264 5s Reverse at long edge ≤720px and 1–3s Ping-pong, one run **each** | Owner confirmed all four requested workflows on latest ST PR Preview ([smoke record](ANDROID_ST_RC_OWNER_SMOKE.md)); settings/phone/provider not independently logged. Production-intended isolated MT still lacks physical-device proof | **ST USER-REPORTED PASS; MT PENDING** |
-| Android cancellation/retry and one supported audio listening check | Owner replied “4つともOK” for ST Preview cancel/retry and reversed audio listening; AAC structural/sync checks remain desktop CI only. MT phone check outstanding | **ST USER-REPORTED PASS; MT PENDING** |
+| Actual Android Chrome H.264 5s Reverse at long edge ≤720px and 1–3s Ping-pong, one run **each** | Owner confirmed all four requested workflows on latest ST PR Preview ([smoke record](ANDROID_ST_RC_OWNER_SMOKE.md)); settings/phone/provider not independently logged. the temporary MT QA owner smoke also passed four requested operations; exact phone/settings metadata not supplied. Final distributed MT deployment still requires release review | **ST+MT OWNER SMOKE PASS; final distribution PENDING** |
+| Android cancellation/retry and one supported audio listening check | Owner replied “4つともOK” for ST Preview cancel/retry and reversed audio listening; AAC structural/sync checks remain desktop CI only. MT QA Android owner likewise confirmed four actions OK; precision AAC and memory metrics not collected | **ST+MT OWNER SMOKE PASS; final distribution PENDING** |
 | Incorrect output prevention and privacy | Reject truncated/unsupported input, no stale/partial MP4, verify original+output association, no runtime uploads/external dependencies, truthful saving, bounded fallback behavior. Actual ST/MT Chrome PASS; final distribution review still needed | **PARTIAL** |
 | Final artifact and GPL distribution | Reproducible pinned ST single HTML direct `file://` and hosted isolated MT; fixed hashes, third-party notices, reviewed **permanent source-complete GPL Builder distribution**, full JA/EN README and actual screenshots | **PENDING — DISTRIBUTION** |
 | Critical bugs in **claimed** core features | 0 known P0 failures (data leak, broken output, normal supported input unable to save); no claim of unverified formats/phones | **PENDING — FINAL REVIEW** |
@@ -35,19 +41,19 @@ The 64MiB Android provider fallback is a **KNOWN G2 DEVIATION** from the origina
 | ID | Acceptance | Source of evidence / remaining check | Classification |
 | --- | --- | --- | --- |
 | A-01 | Reverse frame order | ST/MT real H.264 Chrome 10s frame markers CI #38866625722 | **P0 automated PASS** |
-| A-02 | Ping-pong order/turn | ST/MT Chrome full-frame and join checks PASS; Android ST Preview turn/save user-reported OK, MT physical Pending | **P0 ST owner smoke PASS, MT device PENDING** |
+| A-02 | Ping-pong order/turn | ST/MT Chrome full-frame and join checks PASS; Android ST Preview and MT QA turn/save both user-reported OK; exact files unavailable | **P0 ST+MT owner smoke PASS** |
 | A-03 | Trim boundaries | Chrome half-frame/fractional source trim PASS; exhaustive all-device frame-difference report **P2** | **P0 automated PASS** |
-| A-04 | Silent, AAC, A/V synchronization | Chrome PCM/AAC tests PASS; owner-reported ST Android reversed audio audible. MT phone audio and exact device sync unverified; ≤150ms hardware measurement **P2** unless a defect is found | **P0 ST owner smoke PASS, MT device PENDING** |
+| A-04 | Silent, AAC, A/V synchronization | Chrome PCM/AAC tests PASS; owner-reported ST Android reversed audio audible. MT QA Android audio user-reported OK; exact device sync unmeasured; ≤150ms hardware measurement **P2** unless a defect is found | **P0 ST+MT owner smoke PASS; sync unmeasured** |
 | A-05 | Portrait MOV/rotation/VFR | Synthetic H.264 MOV 90/180/270° + VFR Chrome PASS. Real HEVC/HDR/mobile combination **P2** outside claimed supported input | **P0 for claimed format; P2 others** |
-| A-06 | Actual MP4 playable | Desktop Chrome/ffprobe PASS; owner replied OK to save/replay instructions for Android ST Preview. No original saved MP4 or hash received; MT phone replay PENDING | **P0 ST owner smoke PASS, MT device PENDING** |
-| A-07 | No stale output after cancellation/change | Chrome generation+Abort, source changes/retry PASS; owner-reported ST Android cancel→retry OK. Explicit stale-output phone audit and MT phone test PENDING | **P0 ST owner smoke PASS; remaining device checks** |
+| A-06 | Actual MP4 playable | Desktop Chrome/ffprobe PASS; owner replied OK to save/replay instructions for Android ST Preview. No original saved MP4 or hash received; MT QA phone save/replay user-reported OK | **P0 ST+MT owner smoke PASS; no output hashes** |
+| A-07 | No stale output after cancellation/change | Chrome generation+Abort, source changes/retry PASS; owner-reported ST Android cancel→retry OK. MT QA Android cancel→retry also user-reported OK; explicit stale-output phone audit unlogged | **P0 ST+MT owner smoke PASS; stale-output detail unlogged** |
 | A-08 | Empty/loading/completion/error/unsupported | Localized Chrome flow and broken/HEVC fail-closed PASS; real device representative error PENDING | **P0 automated / manual** |
-| A-09 | 320/360/390, long names, small height, dialogs | Browser 320×420, 320×568, 360/390px PASS. ST Android main workflow owner-reported OK; full keyboard matrix **P1**, MT phone flow PENDING | **P0 ST owner smoke PASS; MT PENDING** |
+| A-09 | 320/360/390, long names, small height, dialogs | Browser 320×420, 320×568, 360/390px PASS. ST and MT QA Android main workflows owner-reported OK; full keyboard matrix **P1** | **P0 ST+MT owner smoke PASS; keyboard P1** |
 | A-10 | JA and EN UI/help/errors | Automated toggle and error messages PASS. JA/EN genuine Chrome desktop/mobile-viewport screenshots reviewed and committed; physical Android language/error review not separately captured | **P0 automated/docs PASS, device partial** |
 | A-11 | No upload or runtime external dependency | `connect-src 'none'`, real ST/MT no unexpected network on Chrome PASS; verify final exact distribution | **P0 pending final build** |
 | A-12 | Standalone ST/self-extract file:// | Real desktop Chrome standalone MP4 PASS; MT hosted isolation validated. Windows Edge direct manual **P1** | **P0 automated PASS** |
 | A-13 | README JA/EN, licenses, favicon, real screenshots, CI | Four genuine Chrome JA/EN desktop/mobile-viewport screenshot PNGs are committed, SHA-256 locked; README links reviewed. Permanent GPL corresponding-source distribution still missing | **P0 partial: screenshots PASS, GPL release PENDING** |
-| A-14 | Source/settings/result/filename linked | Confirmation/invalidation/filename/no-partial-MP4 Chrome tests PASS; Android ST save/replay owner-reported OK. Actual filename/provider/output hash and MT phone verification PENDING | **P0 ST owner smoke PASS, details/MT PENDING** |
+| A-14 | Source/settings/result/filename linked | Confirmation/invalidation/filename/no-partial-MP4 Chrome tests PASS; Android ST save/replay owner-reported OK. MT QA Android save/replay owner-reported OK; actual filename/provider/output hashes not supplied | **P0 ST+MT owner smoke PASS; details unlogged** |
 
 ## Five-minute Android smoke form (one representative handset; no unnecessary matrix)
 
@@ -59,11 +65,11 @@ Capture: device and Android/Chrome versions, whether testing ST or isolated MT, 
 - [ ] **Audio if source supported:** select reverse-audio once, listen for obvious noise, silence or gross A/V misalignment. No laboratory millisecond measurement.
 - [ ] **Input/provider and save:** verify chosen source appears correctly, user-editable output filename and file destination are understandable. If a provider cannot be read, report error and memory fallback rather than force high-resolution repetitions.
 
-The previous Android v0.6 Pages smoke was not promoted to a v0.9 pass. On 2026-10-17, the owner separately confirmed **all four requested checks for the v0.9 ST Cloudflare PR Preview**, recorded in [ANDROID_ST_RC_OWNER_SMOKE.md](ANDROID_ST_RC_OWNER_SMOKE.md). This is owner-reported smoke feedback, not independently captured device metadata or final MT production acceptance.
+The previous Android v0.6 Pages smoke was not promoted to a v0.9 pass. On 2026-10-17, the owner separately confirmed **all four requested checks for the v0.9 ST Cloudflare PR Preview**, recorded in [ANDROID_ST_RC_OWNER_SMOKE.md](ANDROID_ST_RC_OWNER_SMOKE.md). On 2026-10-17, the owner also confirmed **all four MT QA checks** separately. Both are owner-reported smoke feedback, not independently captured device metadata or final production distribution acceptance.
 
 ## 2026-10-17 — v0.9 Android ST owner smoke (separate from MT)
 
-The owner replied **「4つともOK」** after being asked to test (1) ~5s H.264 Reverse MP4 save/replay, (2) ~2s Ping-pong save/replay, (3) Cancel→Retry, and (4) audible reversed audio on the **latest ST Cloudflare PR Preview**, not Pages MT. Record this as **ST USER-REPORTED PASS for those four smoke items only**. Exact actual input properties, phone/browser versions and saved output hashes were not supplied; this is not a lab result. The production-target MT Android check, permanent GPL source-complete WASM distribution, original G2 and G3 still remain open. [Detailed evidence and boundaries](ANDROID_ST_RC_OWNER_SMOKE.md).
+The owner replied **「4つともOK」** after being asked to test (1) ~5s H.264 Reverse MP4 save/replay, (2) ~2s Ping-pong save/replay, (3) Cancel→Retry, and (4) audible reversed audio on the **latest ST Cloudflare PR Preview**, not Pages MT. Record this as **ST USER-REPORTED PASS for those four smoke items only**. Exact actual input properties, phone/browser versions and saved output hashes were not supplied; this is not a lab result. The temporary MT QA phone checks are now user-reported OK, but the final production MT distribution has not been signed off; permanent GPL source-complete WASM distribution, original G2 and G3 still remain open. [Detailed evidence and boundaries](ANDROID_ST_RC_OWNER_SMOKE.md).
 
 ## 2026-10-17 — verified desktop Chrome screenshots and pinned GPL package audit
 

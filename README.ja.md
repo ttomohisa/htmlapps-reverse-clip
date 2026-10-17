@@ -6,11 +6,11 @@
 
 ## Android実機（ST版）確認 — 2026-10-17
 
-v0.9.0の[Cloudflare PR #2プレビュー（ST）](https://r1414006067-pr-2-bk-previews.ttomohisa.workers.dev)について、ユーザーから**「4つともOK」**との報告がありました。直前に依頼した、約5秒の逆再生MP4保存・再生、約2秒の往復再生MP4保存・再生、中止→再試行、音声付き逆再生の聞き取りについての**実機ユーザー報告による基本動作PASS**です。端末・OS・Chromeのバージョン、実際の入力形式・画質、保存されたMP4のハッシュ、詳細な性能は未収集です。**MT版の最新版Android実機確認ではありません**。元のG2およびG3は未合格、GPL対応ソースの恒久公開も未完了です。[確認結果と未確認事項](docs/release/ANDROID_ST_RC_OWNER_SMOKE.md)。
+v0.9.0の[Cloudflare PR #2プレビュー（ST）](https://r1414006067-pr-2-bk-previews.ttomohisa.workers.dev)について、ユーザーから**「4つともOK」**との報告がありました。直前に依頼した、約5秒の逆再生MP4保存・再生、約2秒の往復再生MP4保存・再生、中止→再試行、音声付き逆再生の聞き取りについての**実機ユーザー報告による基本動作PASS**です。端末・OS・Chromeのバージョン、実際の入力形式・画質、保存されたMP4のハッシュ、詳細な性能は未収集です。**これはST版についての確認です**。別途MT版についてもAndroid実機で4項目の成功報告があります。元のG2およびG3は未合格、GPL対応ソースの恒久公開も未完了です。[確認結果と未確認事項](docs/release/ANDROID_ST_RC_OWNER_SMOKE.md)。
 
 ## MT版の一時的な実機確認環境（2026-10-17）
 
-[MT版の一時QAページ](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/)は、最新v0.9.0を配布用ST版と分けて試すためのページです。Cloudflareの通常プレビューは隔離ヘッダーが落ちるため、このQAサイトでは既存のSHA-256固定Service Workerを使用します。[CI #38954969819](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38954969819)で、PCの実Chromeからページを開き、隔離・逆再生MP4生成・ダウンロードが成功しました。**Android実機でMT版が正常動作する確認はまだ行っていません。** このURLは検証専用であり、恒久的な配布先ではありません。[テスト証跡](docs/release/MT_QA_BROWSER_EVIDENCE.md)。
+[MT版の一時QAページ](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/)は、最新v0.9.0を配布用ST版と分けて試すためのページです。Cloudflareの通常プレビューは隔離ヘッダーが落ちるため、このQAサイトでは既存のSHA-256固定Service Workerを使用します。[CI #38954969819](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38954969819)で、PCの実Chromeからページを開き、隔離・逆再生MP4生成・ダウンロードが成功しました。**Android ChromeのMT版でもユーザーから「MTも4つOK」と報告がありました**（逆再生MP4保存・再生、往復再生、キャンセル後の再試行、音声付き逆再生）。ただし実機ログ・OS/Chromeバージョン・MP4ファイル実物・処理時間は未取得です。[MT実機確認記録](docs/release/ANDROID_MT_RC_OWNER_SMOKE.md)。 このURLは検証専用であり、恒久的な配布先ではありません。[テスト証跡](docs/release/MT_QA_BROWSER_EVIDENCE.md)。
 
 ## スクリーンショット — 実際のMP4変換結果
 
@@ -58,8 +58,7 @@ AAC・完全ローカル処理・出力15fps・単一HTMLを維持します。
 デスクトップChromeの自動試験で確認した範囲と、
 最新Android実機、Windows Edge、iPhone（延期）の
 未受入項目を区別しています。実画面の日本語・英語スクリーンショットはCIで取得・リポジトリへ収録済みです。一方、Androidの高解像度・RAM測定、
-64MiB以下の元動画全量コピー例外、最新MT版のAndroid実機での音声を含む確認、
-GPL対応ソース付き恒久WASM配布も残っています。ST版の実機音声はユーザー報告で確認済みです。
+64MiB以下の元動画全量コピー例外、およびGPL対応ソース付き恒久WASM配布も残っています。ST・MT両方の短い基本動作と音声はAndroid実機のユーザー報告で確認済みですが、最終配布バイナリの確認・詳細端末ログ・公開承認は未完了です。
 
 [公開ノート案](docs/release/RELEASE_NOTES_DRAFT.md)はDRAFTで、
 PRのマージ・タグ・正式公開・Browser Kitty本体への追加を
