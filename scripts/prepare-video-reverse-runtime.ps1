@@ -14,6 +14,11 @@ if ($sourceKind -notin @('experimental-dual-github-actions-artifact', 'github-re
   throw "Unsupported reverse runtime source kind: $sourceKind"
 }
 $isRelease = $sourceKind -eq 'github-release-st-mt'
+# Fail closed if an unapproved staging proposal is copied into the live lock.
+# A published ZIP and a proposed tag alone do not authorize application release.
+if ($isRelease -and [string]$lock.status -cne 'release-approved') {
+  throw 'Public Builder Release import requires explicit release-approved status.'
+}
 $entry = $lock.variants.PSObject.Properties[$Variant].Value
 if (-not $entry) { throw "Pinned reverse WASM lock has no $Variant entry." }
 if ($isRelease) {
