@@ -64,7 +64,7 @@ jobs:
 
       - name: Verify pinned ST and MT runtime bytes
         shell: pwsh
-        run: node --test ./tests/feasibility/threading-distribution.test.mjs ./tests/feasibility/release-lock-guard.test.mjs
+        run: node --test ./tests/feasibility/threading-distribution.test.mjs ./tests/feasibility/release-lock-guard.test.mjs ./tests/feasibility/release-import-mock.test.mjs
 
       - name: Verify ST and MT Pages staging
         shell: pwsh
