@@ -16,6 +16,24 @@ if ($sourceKind -notin @('experimental-dual-github-actions-artifact', 'github-re
 $isRelease = $sourceKind -eq 'github-release-st-mt'
 $entry = $lock.variants.PSObject.Properties[$Variant].Value
 if (-not $entry) { throw "Pinned reverse WASM lock has no $Variant entry." }
+if ($isRelease) {
+  # Validate the *release source*, version and archive lock BEFORE any
+  # previously populated experimental cache can satisfy Cached().
+  $version = [string]$lock.builderVersion
+  $tag = [string]$lock.builderTag
+  $assetName = [string]$entry.releaseAsset
+  $archiveSha = [string]$entry.releaseArchiveSha256
+  $sourceAsset = [string]$lock.correspondingSourceAsset
+  $sourceSha = [string]$lock.correspondingSourceSha256
+  if ($version -notmatch '^\d+\.\d+\.\d+$' -or
+      $tag -cnotin @("v$version","video-reverse-v$version") -or
+      $assetName -cne "ffmpeg-wasm-video-reverse-$Variant-v$version.zip" -or
+      $archiveSha -cnotmatch '^[a-f0-9]{64}$' -or
+      $sourceAsset -cne "ffmpeg-wasm-sources-v$version.tar.gz" -or
+      $sourceSha -cnotmatch '^[a-f0-9]{64}$') {
+    throw 'Invalid pinned Builder Release version, profile tag, hashes or source metadata.'
+  }
+}
 $cache = Join-Path $root ".cache/reverse-runtime/$Variant"
 $files = @('ffmpeg.js','ffmpeg.wasm','browser-ffmpeg.js')
 function Get-Hash([string]$Path) {
@@ -34,6 +52,18 @@ function Assert-File([string]$Filename, [string]$Root, [object]$Hashes) {
   }
 }
 $releaseSourceProof = Join-Path $root '.cache/reverse-runtime/corresponding-source.tar.gz'
+$releaseArchiveProof = Join-Path $cache 'verified-release-archive.json'
+function Verified-ReleaseArchive() {
+  if (-not $isRelease) { return $true }
+  if (-not (Test-Path -LiteralPath $releaseArchiveProof -PathType Leaf)) { return $false }
+  try {
+    $proof = Get-Content -Raw -Encoding UTF8 -LiteralPath $releaseArchiveProof | ConvertFrom-Json
+    return $proof.tag -ceq $tag -and
+           $proof.asset -ceq $assetName -and
+           $proof.sha256 -ceq $archiveSha -and
+           $proof.sourceSha256 -ceq $sourceSha
+  } catch { return $false }
+}
 function Verified-SourceRelease() {
   # Do not accept locally cached WASM as a reviewed Release unless the
   # exact SHA-256 pinned corresponding source was downloaded and retained.
@@ -47,7 +77,7 @@ function Verified-SourceRelease() {
 }
 function Cached() {
   try {
-    if (-not (Verified-SourceRelease)) { return $false }
+    if (-not (Verified-SourceRelease) -or -not (Verified-ReleaseArchive)) { return $false }
     foreach($name in $files){Assert-File $name $cache $entry.assets}
     $manifestFile = Join-Path $cache 'manifest.json'
     if (-not (Test-Path -LiteralPath $manifestFile)) { return $false }
@@ -164,6 +194,13 @@ try {
     Copy-Item -LiteralPath (Join-Path $variantDir $name) -Destination (Join-Path $cache $name) -Force
   }
   Copy-Item -LiteralPath $manifestFile -Destination (Join-Path $cache 'manifest.json') -Force
+  if ($isRelease) {
+    # Only create this marker *after* the public binary ZIP has been fetched
+    # and its hash and contained license/JS/WASM assets were checked.
+    $proof = @{ tag=$tag; asset=$assetName; sha256=$archiveSha; sourceSha256=$sourceSha } |
+      ConvertTo-Json -Compress
+    [IO.File]::WriteAllText($releaseArchiveProof, $proof, (New-Object Text.UTF8Encoding($false)))
+  }
   if (-not (Cached)) { throw "Pinned $Variant runtime cache failed final validation." }
   Write-Host "[Reverse WASM] $Variant JS/WASM and metadata verified. No runtime downloads."
 } finally {
