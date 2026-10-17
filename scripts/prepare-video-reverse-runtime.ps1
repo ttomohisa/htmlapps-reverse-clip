@@ -25,13 +25,17 @@ if ($isRelease) {
   $archiveSha = [string]$entry.releaseArchiveSha256
   $sourceAsset = [string]$lock.correspondingSourceAsset
   $sourceSha = [string]$lock.correspondingSourceSha256
+  $noticeAsset = [string]$lock.supplementalNoticeAsset
+  $noticeSha = [string]$lock.supplementalNoticeSha256
   if ($version -notmatch '^\d+\.\d+\.\d+$' -or
       $tag -cnotin @("v$version","video-reverse-v$version") -or
       $assetName -cne "ffmpeg-wasm-video-reverse-$Variant-v$version.zip" -or
       $archiveSha -cnotmatch '^[a-f0-9]{64}$' -or
       $sourceAsset -cne "ffmpeg-wasm-sources-v$version.tar.gz" -or
-      $sourceSha -cnotmatch '^[a-f0-9]{64}$') {
-    throw 'Invalid pinned Builder Release version, profile tag, hashes or source metadata.'
+      $sourceSha -cnotmatch '^[a-f0-9]{64}$' -or
+      $noticeAsset -cne 'VIDEO_REVERSE_LICENSE_ADDENDUM.md' -or
+      $noticeSha -cnotmatch '^[a-f0-9]{64}$') {
+    throw 'Invalid pinned Builder Release version, profile tag, hashes, GPL notice or source metadata.'
   }
 }
 $cache = Join-Path $root ".cache/reverse-runtime/$Variant"
@@ -52,6 +56,16 @@ function Assert-File([string]$Filename, [string]$Root, [object]$Hashes) {
   }
 }
 $releaseSourceProof = Join-Path $root '.cache/reverse-runtime/corresponding-source.tar.gz'
+$releaseNoticeProof = Join-Path $root '.cache/reverse-runtime/video-reverse-gpl-addendum.md'
+function Verified-ReleaseNotice() {
+  if (-not $isRelease) { return $true }
+  if (-not (Test-Path -LiteralPath $releaseNoticeProof -PathType Leaf)) { return $false }
+  if ((Get-Hash $releaseNoticeProof) -cne $noticeSha) { return $false }
+  $noticeText = Get-Content -Raw -Encoding UTF8 -LiteralPath $releaseNoticeProof
+  return $noticeText.Contains('video-reverse') -and
+         $noticeText.Contains('GPL-2.0-or-later') -and
+         $noticeText.Contains('x264')
+}
 $releaseArchiveProof = Join-Path $cache 'verified-release-archive.json'
 function Verified-ReleaseArchive() {
   if (-not $isRelease) { return $true }
@@ -61,7 +75,8 @@ function Verified-ReleaseArchive() {
     return $proof.tag -ceq $tag -and
            $proof.asset -ceq $assetName -and
            $proof.sha256 -ceq $archiveSha -and
-           $proof.sourceSha256 -ceq $sourceSha
+           $proof.sourceSha256 -ceq $sourceSha -and
+           $proof.noticeSha256 -ceq $noticeSha
   } catch { return $false }
 }
 function Verified-SourceRelease() {
@@ -77,7 +92,8 @@ function Verified-SourceRelease() {
 }
 function Cached() {
   try {
-    if (-not (Verified-SourceRelease) -or -not (Verified-ReleaseArchive)) { return $false }
+    if (-not (Verified-SourceRelease) -or -not (Verified-ReleaseNotice) -or
+        -not (Verified-ReleaseArchive)) { return $false }
     foreach($name in $files){Assert-File $name $cache $entry.assets}
     $manifestFile = Join-Path $cache 'manifest.json'
     if (-not (Test-Path -LiteralPath $manifestFile)) { return $false }
@@ -137,6 +153,14 @@ try {
       throw "Invalid pinned Builder Release version, archive hash or corresponding-source metadata."
     }
     $releaseBase = "https://github.com/$($lock.builderRepository)/releases/download/$tag"
+    if (-not (Verified-ReleaseNotice)) {
+      New-Item -ItemType Directory -Path (Split-Path -Parent $releaseNoticeProof) -Force | Out-Null
+      Invoke-WebRequest -Uri "$releaseBase/$noticeAsset" -UseBasicParsing -OutFile $releaseNoticeProof
+      if (-not (Verified-ReleaseNotice)) {
+        Remove-Item -LiteralPath $releaseNoticeProof -Force -ErrorAction SilentlyContinue
+        throw 'Supplemental GPL video-reverse notice SHA-256 mismatch or missing profile details.'
+      }
+    }
     if (-not (Verified-SourceRelease)) {
       $sourceDir = Split-Path -Parent $releaseSourceProof
       New-Item -ItemType Directory -Path $sourceDir -Force | Out-Null
@@ -197,7 +221,7 @@ try {
   if ($isRelease) {
     # Only create this marker *after* the public binary ZIP has been fetched
     # and its hash and contained license/JS/WASM assets were checked.
-    $proof = @{ tag=$tag; asset=$assetName; sha256=$archiveSha; sourceSha256=$sourceSha } |
+    $proof = @{ tag=$tag; asset=$assetName; sha256=$archiveSha; sourceSha256=$sourceSha; noticeSha256=$noticeSha } |
       ConvertTo-Json -Compress
     [IO.File]::WriteAllText($releaseArchiveProof, $proof, (New-Object Text.UTF8Encoding($false)))
   }
