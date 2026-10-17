@@ -82,4 +82,12 @@ test('future immutable Builder Release import is fail-closed and current lock st
   ]) assert.ok(importer.includes(token),'Release import guard missing '+token);
   assert.ok(importer.includes('if (-not $isRelease) {'));
   assert.ok(importer.includes('Builder Release archive SHA-256 mismatch.'));
+  // A distinct video-reverse-v1.10.6 release must not collide with the
+  // existing Builder-wide v1.10.6 Release. Do not update today's temp lock.
+  assert.ok(importer.includes('video-reverse-v$version'));
+  assert.ok(importer.includes('Verified-SourceRelease'));
+  assert.ok(importer.includes('Get-Hash $releaseSourceProof'));
+  assert.ok(importer.includes('Invoke-WebRequest -Uri "$releaseBase/$sourceAsset"'));
+  assert.ok(importer.includes('Corresponding GPL source archive SHA-256 mismatch.'));
+  assert.equal(lock.status,'temporary-not-release');
 });
