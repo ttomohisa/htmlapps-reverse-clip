@@ -86,6 +86,12 @@ test('future immutable Builder Release import is fail-closed and current lock st
   // existing Builder-wide v1.10.6 Release. Do not update today's temp lock.
   assert.ok(importer.includes('video-reverse-v$version'));
   assert.ok(importer.includes('Verified-SourceRelease'));
+  // A pre-existing temp-asset cache must not masquerade as a public release.
+  assert.ok(importer.includes('Verified-ReleaseArchive'));
+  assert.ok(importer.includes('verified-release-archive.json'));
+  assert.ok(importer.includes('Invalid pinned Builder Release version, profile tag, hashes or source metadata.'));
+  assert.ok(importer.includes('if (-not (Verified-SourceRelease) -or -not (Verified-ReleaseArchive))'));
+  assert.ok(importer.includes('WriteAllText($releaseArchiveProof'));
   assert.ok(importer.includes('Get-Hash $releaseSourceProof'));
   assert.ok(importer.includes('Invoke-WebRequest -Uri "$releaseBase/$sourceAsset"'));
   assert.ok(importer.includes('Corresponding GPL source archive SHA-256 mismatch.'));
