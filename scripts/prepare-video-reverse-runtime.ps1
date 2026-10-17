@@ -33,8 +33,145 @@ function Assert-File([string]$Filename, [string]$Root, [object]$Hashes) {
     throw "Pinned $Variant runtime SHA-256 mismatch: $Filename"
   }
 }
+$releaseSourceProof = Join-Path $root '.cache/reverse-runtime/corresponding-source.tar.gz'
+function Verified-SourceRelease() {
+  # Do not count locally cached FFmpeg bytes as a public GPL release unless
+  # the SHA-pinned corresponding source was also downloaded and verified.
+  if (-not $isRelease) { return $true }
+  $expected = [string]$lock.correspondingSourceSha256
+  if ($expected -cnotmatch '^[a-f0-9]{64}
+    $manifestFile = Join-Path $cache 'manifest.json'
+    if (-not (Test-Path -LiteralPath $manifestFile)) { return $false }
+    $m = Get-Content -Raw -Encoding UTF8 $manifestFile | ConvertFrom-Json
+    Assert-Manifest $m
+    return $true
+  } catch { return $false }
+}
+function Assert-Manifest($m) {
+  if ($m.profile -ne $lock.profile -or $m.builderVersion -ne $lock.builderVersion -or
+      $m.binaryLicense -ne $lock.wasmLicense -or $m.runtime.threading -ne $Variant -or
+      -not $m.runtime.workerFsInput) {
+    throw "Pinned $Variant runtime has unexpected profile/version/license/threading."
+  }
+  $isMt = $Variant -eq 'multi-thread'
+  if ([bool]$m.runtime.requiresCrossOriginIsolation -ne $isMt -or
+      [bool]$m.runtime.requiresSharedArrayBuffer -ne $isMt -or
+      [bool]$m.runtime.fileProtocolSingleHtml -eq $isMt) {
+    throw "Pinned $Variant runtime has incorrect isolation/file:// contract."
+  }
+  if ($isMt -and [int]$m.runtime.pthreadPoolSize -lt 1) {
+    throw "Pinned $Variant runtime has no pthread pool."
+  }
+}
+if (-not $ForceDownload -and (Cached)) {
+  Write-Host "[Reverse WASM] Using verified cached $Variant runtime."
+  return
+}
+$token = ''
+if (-not $isRelease) {
+  $token = [string]$env:GITHUB_TOKEN
+  if ([string]::IsNullOrWhiteSpace($token)) { $token = [string]$env:GH_TOKEN }
+  if ([string]::IsNullOrWhiteSpace($token)) {
+    throw "Pinned $Variant cache is absent. GITHUB_TOKEN or GH_TOKEN is required for temporary Builder Actions artifacts."
+  }
+}
+New-Item -ItemType Directory -Force -Path $cache | Out-Null
+$zip = Join-Path $cache 'builder-artifact.zip'
+$extract = Join-Path $cache 'extract'
+try {
+  Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $extract
+  Remove-Item -Force -ErrorAction SilentlyContinue $zip
+  if ($isRelease) {
+    # A reviewed, immutable public Release needs no token. All source and
+    # binary identifiers must be pinned; never resolve 'latest'.
+    $version = [string]$lock.builderVersion
+    $tag = [string]$lock.builderTag
+    $assetName = [string]$entry.releaseAsset
+    $archiveSha = [string]$entry.releaseArchiveSha256
+    $sourceAsset = [string]$lock.correspondingSourceAsset
+    $sourceSha = [string]$lock.correspondingSourceSha256
+    if ($version -notmatch '^\d+\.\d+\.\d+$' -or $tag -cnotin @("v$version","video-reverse-v$version") -or
+        $assetName -cne "ffmpeg-wasm-video-reverse-$Variant-v$version.zip" -or
+        $archiveSha -cnotmatch '^[a-f0-9]{64}$' -or
+        $sourceAsset -cne "ffmpeg-wasm-sources-v$version.tar.gz" -or
+        $sourceSha -cnotmatch '^[a-f0-9]{64}$') {
+      throw "Invalid pinned Builder Release version, archive hash or corresponding-source metadata."
+    }
+    $releaseBase = "https://github.com/$($lock.builderRepository)/releases/download/$tag"
+    if (-not (Verified-SourceRelease)) {
+      # Verify the real publicly downloadable source asset before trusting
+      # locally cached binary bytes, even if all their individual hashes match.
+      $sourceDir = Split-Path -Parent $releaseSourceProof
+      New-Item -ItemType Directory -Path $sourceDir -Force | Out-Null
+      Write-Host "[Reverse WASM] Verifying corresponding source $tag / $sourceAsset"
+      Invoke-WebRequest -Uri "$releaseBase/$sourceAsset" -UseBasicParsing -OutFile $releaseSourceProof
+      if (-not (Verified-SourceRelease)) {
+        Remove-Item -LiteralPath $releaseSourceProof -Force -ErrorAction SilentlyContinue
+        throw 'Corresponding GPL source archive SHA-256 mismatch.'
+      }
+    }
+    $url = "$releaseBase/$assetName"
+    Write-Host "[Reverse WASM] Downloading fixed Builder Release $tag / $assetName"
+    Invoke-WebRequest -Uri $url -UseBasicParsing -OutFile $zip
+    if ((Get-Hash $zip) -cne $archiveSha) {
+      throw "Pinned $Variant Builder Release archive SHA-256 mismatch."
+    }
+    Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+    $variantDir = $extract
+    foreach ($notice in @('LICENSES/FFmpeg-COPYING.GPLv2',
+        'LICENSES/x264-COPYING', 'LICENSES/Emscripten-LICENSE',
+        'THIRD_PARTY_NOTICES.md', 'BUILDINFO.txt')) {
+      if (-not (Test-Path -LiteralPath (Join-Path $variantDir $notice) -PathType Leaf)) {
+        throw "Pinned Builder Release is missing license/build notice: $notice"
+      }
+    }
+  } else {
+    $headers = @{
+      Accept = 'application/vnd.github+json'
+      'User-Agent' = 'browser-kitty-reverse-clip/0.1'
+      Authorization = "Bearer $token"
+    }
+    $url = "https://api.github.com/repos/$($lock.builderRepository)/actions/artifacts/$($lock.artifactId)/zip"
+    Write-Host "[Reverse WASM] Downloading $Variant from pinned Builder artifact $($lock.artifactId)"
+    Invoke-WebRequest -Uri $url -Headers $headers -UseBasicParsing -OutFile $zip
+    Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+    $variantDir = Join-Path $extract $Variant
+  }
+
+  $manifestFile = Join-Path $variantDir 'manifest.json'
+  $manifest = Get-Content -Raw -Encoding UTF8 $manifestFile | ConvertFrom-Json
+  Assert-Manifest $manifest
+  foreach ($name in @('ffmpeg.js', 'ffmpeg.wasm')) {
+    Assert-File $name $variantDir $entry.assets
+  }
+  $loader = Join-Path $cache 'browser-ffmpeg.js'
+  if ($isRelease) {
+    Assert-File 'browser-ffmpeg.js' $variantDir $entry.assets
+    Copy-Item -LiteralPath (Join-Path $variantDir 'browser-ffmpeg.js') -Destination $loader -Force
+  } else {
+    $runtimeUrl = "https://raw.githubusercontent.com/$($lock.builderRepository)/$($lock.builderCommit)/runtime/browser-ffmpeg.js"
+    Invoke-WebRequest -Uri $runtimeUrl -UseBasicParsing -Headers @{'User-Agent'='browser-kitty-reverse-clip/0.1'} -OutFile $loader
+  }
+  Assert-File 'browser-ffmpeg.js' $cache $entry.assets
+  foreach ($name in @('ffmpeg.js','ffmpeg.wasm')) {
+    Copy-Item -LiteralPath (Join-Path $variantDir $name) -Destination (Join-Path $cache $name) -Force
+  }
+  Copy-Item -LiteralPath $manifestFile -Destination (Join-Path $cache 'manifest.json') -Force
+  if (-not (Cached)) { throw "Pinned $Variant runtime cache failed final validation." }
+  Write-Host "[Reverse WASM] $Variant JS/WASM and metadata verified. No runtime downloads."
+} finally {
+  Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $extract
+  Remove-Item -Force -ErrorAction SilentlyContinue $zip
+}
+ -or
+      -not (Test-Path -LiteralPath $releaseSourceProof -PathType Leaf)) {
+    return $false
+  }
+  return (Get-Hash $releaseSourceProof) -ceq $expected
+}
 function Cached() {
   try {
+    if (-not (Verified-SourceRelease)) { return $false }
     foreach($name in $files){Assert-File $name $cache $entry.assets}
     $manifestFile = Join-Path $cache 'manifest.json'
     if (-not (Test-Path -LiteralPath $manifestFile)) { return $false }
