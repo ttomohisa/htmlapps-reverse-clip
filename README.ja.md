@@ -18,6 +18,8 @@ v0.9.0の[Cloudflare PR #2プレビュー（ST）](https://r1414006067-pr-2-bk-p
 
 将来の公開版を取り込むコードには、ソースとバイナリ両方のSHA-256検証を追加済みですが、現在のWASMロックは期限付きActions成果物のままです。ソース・ライセンスの最終確認、恒久配布、正式リリース承認は未完了です。[Builderの公開前チェック](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_PUBLICATION_HANDOFF.md)。
 
+**GPL表記の追加確認：** 既存の検証済みWASM ZIPにはGPL・x264のライセンス文書と、`video-reverse`をGPL対象とするビルド情報があります。ただし一般的な第三者ライブラリの説明文には専用プロファイル名がありません。[補足文書](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_LICENSE_ADDENDUM.md)を別に作成し、[CI #39006344474](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39006344474)でハッシュ検証のうえ審査候補に含めました。**元のWASM ZIPと対応ソースのバイト列は変更していません。** 将来の公開版取り込み時には、WASM・対応ソース・補足文書の3つを検証します。これで法的審査・正式公開が完了したわけではありません。
+
 ## スクリーンショット — 実際のMP4変換結果
 
 ローカル生成したサンプル動画を実際に逆再生し、MP4として保存・検証した結果画面です。PC版Chromeで撮影した1360×900とスマホ幅390×844の画面であり、**Android実機による動作確認を表す画像ではありません**。画像は未公開のv0.9.0開発版です。

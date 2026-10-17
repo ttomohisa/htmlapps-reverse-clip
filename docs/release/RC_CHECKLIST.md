@@ -25,6 +25,18 @@ The Builder-wide `v1.10.6` Release already exists **without video-reverse assets
 
 **Public permanent GPL corresponding-source distribution and owner/legal review remain P0 BLOCKERS**, and G3 is NOT PASSED. The archive is an expiring review copy, not a substitute for public matching-source availability.
 
+## 2026-10-17 — original GPL NOTICE omission and audited addendum
+
+Inspection of the exact original ST/MT Builder 1.10.6 binary ZIPs found
+that their included generic `THIRD_PARTY_NOTICES.md` lacks the name
+`video-reverse` in its x264/GPL profile enumeration, even though both
+binary `BUILDINFO.txt` files explicitly state `Profile: video-reverse`,
+`Generated core license: GPL-2.0-or-later` and x264 linkage.
+
+Builder adds a [separate GPL/x264 profile disclosure](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_LICENSE_ADDENDUM.md) to the future publication package **without repacking or changing the SHA-256 of either existing WASM ZIP or the corresponding source**. [Builder staging CI #39006344474](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39006344474) **SUCCESS**, including explicit regression checks for the legacy notice omission, actual core GPL/x264 BUILDINFO, and separate addendum SHA-256. Refreshed **review-only** Actions artifact **12090973204**, expires **2026-11-16T05:28:00Z**.
+
+The app's future `github-release-st-mt` importer will now fail closed unless the public Release has exact pinned `supplementalNoticeAsset` and `supplementalNoticeSha256` as well as matching source/binary SHA hashes. The **active** `reverse-runtime.lock.json` remains `temporary-not-release` and is not promoted. **P0 GPL/legal/publication gate remains PENDING; original G2 and G3 are NOT PASSED.** Never treat a review-only Actions artifact or this disclosure addendum as permanent matching-source publication or legal compliance approval.
+
 ## P0 — mandatory for proposed initial scope
 
 | Requirement | Evidence and action | Status |

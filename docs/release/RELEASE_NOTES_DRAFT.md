@@ -10,6 +10,8 @@ Limits: HEVC/HDR color fidelity not guaranteed; unsupported synthetic HEVC 8/10-
 
 The existing Builder-wide `v1.10.6` GitHub Release does not contain this profile. The exact audited ST/MT/source files were independently staged as a **temporary review candidate** in [CI #39004330416](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39004330416). A distinct profile-scoped `video-reverse-v1.10.6` GitHub Release is only **proposed**; no tag or Release has been created. The importer has a future fail-closed path for source/binary hashes and a validated cache, but the runtime lock still points at expiring Actions artifacts.
 
+The original pinned Builder ST/MT ZIPs include GPL/x264 licenses and correct `video-reverse` BUILDINFO, but their generic notices omit the dedicated profile name. A [GPL license addendum](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_LICENSE_ADDENDUM.md) was separately audited and staged with unchanged core/source binaries in [CI #39006344474](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39006344474). The future importer requires SHA-256-pinned public addendum, corresponding source and binary ZIP. Permanent GPL publication and final sign-off remain outstanding.
+
 See [RC_CHECKLIST.md](RC_CHECKLIST.md). No tag, release, merge or Browser Kitty integration until final MT distribution verification, source-complete immutable GPL Builder distribution, supported-platform scope and Gate G2/G3 acceptance are resolved.
 
 
