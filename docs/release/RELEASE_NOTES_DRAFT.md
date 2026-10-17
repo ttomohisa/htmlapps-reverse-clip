@@ -8,6 +8,8 @@ Desktop Chrome ST/isolated MT CI validated marked H.264 frame order, AAC mono/st
 
 Limits: HEVC/HDR color fidelity not guaranteed; unsupported synthetic HEVC 8/10-bit rejected in the tested desktop Chrome. Multiple source audio tracks cannot be selected. Android input providers may trigger <=64MiB whole-source fallback copy, conflicting with original G2. Higher quality and long export remain experimental. Download initiation does not prove OS save completion. iPhone deferred.
 
+The existing Builder-wide `v1.10.6` GitHub Release does not contain this profile. The exact audited ST/MT/source files were independently staged as a **temporary review candidate** in [CI #39004330416](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39004330416). A distinct profile-scoped `video-reverse-v1.10.6` GitHub Release is only **proposed**; no tag or Release has been created. The importer has a future fail-closed path for source/binary hashes and a validated cache, but the runtime lock still points at expiring Actions artifacts.
+
 See [RC_CHECKLIST.md](RC_CHECKLIST.md). No tag, release, merge or Browser Kitty integration until final MT distribution verification, source-complete immutable GPL Builder distribution, supported-platform scope and Gate G2/G3 acceptance are resolved.
 
 

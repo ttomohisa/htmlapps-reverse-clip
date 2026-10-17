@@ -17,6 +17,14 @@ This closes the **user-performed basic Android P0 smoke-feedback task**, not ori
 
 **MT Chrome-hosted CI PASS; Android phone MT four-action owner smoke subsequently USER-REPORTED PASS** (see [MT owner record](ANDROID_MT_RC_OWNER_SMOKE.md)); The QA URL is temporary, not Browser Kitty and not a versioned GPL release; no Android RAM/audio hardware metrics were measured. [Evidence and exact scope](MT_QA_BROWSER_EVIDENCE.md).
 
+## 2026-10-17 — Builder source-complete promotion staged, **NOT released**
+
+Builder [review staging CI #39004330416](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39004330416) **SUCCESS**: the already-audited ST/MT 1.10.6 byte-identical ZIPs, corresponding-source tarball, original BUILDINFO files and SHA256SUMS were rechecked and staged as review-only Actions artifact **12089984511** (expires **2026-11-16T04:55:02Z**). No rebuild or public distribution occurred.
+
+The Builder-wide `v1.10.6` Release already exists **without video-reverse assets**, so it must not be overwritten. A distinct profile-scoped `video-reverse-v1.10.6` tag is **only a proposed publication name**, currently not created. See [Builder publication handoff](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_PUBLICATION_HANDOFF.md). The app's future Release importer now accepts that exact tag format and checks both the publicly downloadable source archive hash and binary ZIP hash, plus a per-variant verified cache marker. The active `reverse-runtime.lock.json` remains **`temporary-not-release`**.
+
+**Public permanent GPL corresponding-source distribution and owner/legal review remain P0 BLOCKERS**, and G3 is NOT PASSED. The archive is an expiring review copy, not a substitute for public matching-source availability.
+
 ## P0 — mandatory for proposed initial scope
 
 | Requirement | Evidence and action | Status |

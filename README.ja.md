@@ -12,6 +12,12 @@ v0.9.0の[Cloudflare PR #2プレビュー（ST）](https://r1414006067-pr-2-bk-p
 
 [MT版の一時QAページ](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/)は、最新v0.9.0を配布用ST版と分けて試すためのページです。Cloudflareの通常プレビューは隔離ヘッダーが落ちるため、このQAサイトでは既存のSHA-256固定Service Workerを使用します。[CI #38954969819](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38954969819)で、PCの実Chromeからページを開き、隔離・逆再生MP4生成・ダウンロードが成功しました。**Android ChromeのMT版でもユーザーから「MTも4つOK」と報告がありました**（逆再生MP4保存・再生、往復再生、キャンセル後の再試行、音声付き逆再生）。ただし実機ログ・OS/Chromeバージョン・MP4ファイル実物・処理時間は未取得です。[MT実機確認記録](docs/release/ANDROID_MT_RC_OWNER_SMOKE.md)。 このURLは検証専用であり、恒久的な配布先ではありません。[テスト証跡](docs/release/MT_QA_BROWSER_EVIDENCE.md)。
 
+## GPL対応ソース付き配布の準備状況（2026-10-17）
+
+通常のBuilder `v1.10.6` は公開済みですが、Reverse Clip用のST・MTバイナリは含まれていません。専用のバージョン付きリリース `video-reverse-v1.10.6` は**提案段階**です。既存のWASM・ライセンス・対応ソースをハッシュ検証し、[審査用CI #39004330416](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39004330416)で一時的な配布候補を確保しました。これは正式な公開ではありません。
+
+将来の公開版を取り込むコードには、ソースとバイナリ両方のSHA-256検証を追加済みですが、現在のWASMロックは期限付きActions成果物のままです。ソース・ライセンスの最終確認、恒久配布、正式リリース承認は未完了です。[Builderの公開前チェック](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_PUBLICATION_HANDOFF.md)。
+
 ## スクリーンショット — 実際のMP4変換結果
 
 ローカル生成したサンプル動画を実際に逆再生し、MP4として保存・検証した結果画面です。PC版Chromeで撮影した1360×900とスマホ幅390×844の画面であり、**Android実機による動作確認を表す画像ではありません**。画像は未公開のv0.9.0開発版です。
