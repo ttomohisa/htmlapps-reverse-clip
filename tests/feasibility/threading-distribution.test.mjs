@@ -82,6 +82,8 @@ test('future immutable Builder Release import is fail-closed and current lock st
   ]) assert.ok(importer.includes(token),'Release import guard missing '+token);
   assert.ok(importer.includes('if (-not $isRelease) {'));
   assert.ok(importer.includes('Builder Release archive SHA-256 mismatch.'));
+  assert.ok(importer.includes("lock.status -cne 'release-approved'"));
+  assert.ok(importer.includes('Public Builder Release import requires explicit release-approved status.'));
   // A distinct video-reverse-v1.10.6 release must not collide with the
   // existing Builder-wide v1.10.6 Release. Do not update today's temp lock.
   assert.ok(importer.includes('video-reverse-v$version'));
