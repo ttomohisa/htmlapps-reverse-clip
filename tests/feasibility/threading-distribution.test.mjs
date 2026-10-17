@@ -97,7 +97,7 @@ test('future immutable Builder Release import is fail-closed and current lock st
   assert.ok(importer.includes('Verified-ReleaseArchive'));
   assert.ok(importer.includes('verified-release-archive.json'));
   assert.ok(importer.includes('Invalid pinned Builder Release version, profile tag, hashes, GPL notice or source metadata.'));
-  assert.ok(importer.includes('if (-not (Verified-SourceRelease) -or -not (Verified-ReleaseArchive))'));
+  assert.match(importer, /if\s*\(-not\s*\(Verified-SourceRelease\)\s*-or\s*-not\s*\(Verified-ReleaseNotice\)\s*-or\s*-not\s*\(Verified-ReleaseArchive\)\)/);
   assert.ok(importer.includes('WriteAllText($releaseArchiveProof'));
   assert.ok(importer.includes('Get-Hash $releaseSourceProof'));
   assert.ok(importer.includes('Invoke-WebRequest -Uri "$releaseBase/$sourceAsset"'));
