@@ -96,7 +96,7 @@ test('future immutable Builder Release import is fail-closed and current lock st
   // A pre-existing temp-asset cache must not masquerade as a public release.
   assert.ok(importer.includes('Verified-ReleaseArchive'));
   assert.ok(importer.includes('verified-release-archive.json'));
-  assert.ok(importer.includes('Invalid pinned Builder Release version, profile tag, hashes or source metadata.'));
+  assert.ok(importer.includes('Invalid pinned Builder Release version, profile tag, hashes, GPL notice or source metadata.'));
   assert.ok(importer.includes('if (-not (Verified-SourceRelease) -or -not (Verified-ReleaseArchive))'));
   assert.ok(importer.includes('WriteAllText($releaseArchiveProof'));
   assert.ok(importer.includes('Get-Hash $releaseSourceProof'));
