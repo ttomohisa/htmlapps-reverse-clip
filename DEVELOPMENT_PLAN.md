@@ -1,13 +1,325 @@
 # Reverse Clip / 動画逆再生 — v0.1.0〜v1.0.0 開発計画
 
-> **Status:** v0.1.0 feasibility in progress; G1 still pending  
+> **Status (2026-10-16):** v0.9.0 RC PREPARATION started after successful v0.8.0 real ST/MT compatibility regression tests. Gate G2 hardware and Gate G3 release acceptance remain OPEN; no merge, tag or release. The earlier Pages mobile UI candidate has an owner-reported Android basic UX PASS. The previously failing sparse-VFR input now **USER-REPORTED PASS on PC and Android** after Builder 1.10.6 and [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4). Real Chrome MT 10-second ×3 sparse tests PASS independently. Full G2 remains OPEN for general 720p/1080p real-camera coverage, memory/no-copy, audio listening, cancellation and permanent GPL source distribution. iPhone testing deferred.
 > **作成日:** 2026-10-11  
 > **正となる製品仕様:** [`APP_SPEC.md`](./APP_SPEC.md)  
 > **目標:** スマートフォンで短い区間の逆再生／往復再生MP4を、ブラウザ内だけで安定して作る。
 
+## 2026-10-17 — Right-sized RC test policy (owner requested)
+
+The owner asked to revise unnecessarily strict verification conditions.
+For the proposed initial **Windows Chrome + Android Chrome** release
+scope, use [REVISED_ACCEPTANCE_SCOPE.md](docs/release/REVISED_ACCEPTANCE_SCOPE.md):
+P0 safety/privacy/real basic-device workflow/valid MP4/immutable GPL
+corresponding source remain mandatory; P1 additional browser/device
+spot checks and P2 unadvertised 720p10s/1080p5s ×3 performance
+research do not automatically block a limited-scope release.
+
+Original G2 conditions are preserved as historical and NOT PASSED.
+A bounded <=64MiB Android provider-copy fallback is a **proposed**
+acceptable implementation condition when needed after a failed direct
+read; no >64MiB whole-file fallback, data upload, unbounded memory
+claims or silent errors. The exact release target and this revised
+scope require final release review; no G3 approval now.
+
+## 2026-10-16 — v0.9.0 RC preparation (G2/G3 stay OPEN)
+
+The owner asked why the version had not advanced and approved continuing.
+Advance the **development version** to v0.9.0 and begin collecting
+release-candidate evidence. This is NOT an RC pass or release
+authorization; Android v0.9 device QA, original Gate G2, Gate G3,
+GPL corresponding-source permanence and deferred iPhone scope are
+still incomplete. The milestone sequencing exception applies to
+development only.
+
+**Feature freeze:** preserve ST/MT H.264/AAC Reverse/Ping-pong,
+mobile Video/Edit/Result, fail-closed invalid MP4, local-only
+connect-src 'none', 15fps and experimental size/duration limits.
+Do not introduce codecs or changes that undermine file://.
+Review all APP_SPEC A-01–A-14 and mark evidence PASS/PARTIAL/PENDING
+by exact environment; desktop Chrome does not certify Android/Edge.
+Record in `docs/release/RC_CHECKLIST.md` and keep release notes
+as DRAFT. No app/Builder PR merge, tag, GitHub Release or Browser
+Kitty main repository change.
+
+## 2026-10-16 — v0.8 extended rotation and HEVC fail-closed QA
+
+[Real ST/isolated MT Chrome CI #38863445237](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445237)
+ALL SUCCESS, [PR preview #38863445204](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445204)
+SUCCESS. The v0.8 test matrix now covers 180°/270° QuickTime
+display rotation with actual asymmetric color-marker pixels matching
+autorotated source reference (mean RGB MAE 0.46 in each ST/MT
+fixture), in addition to the previous 90° case. The MP4 outputs
+have upright coded frames and no residual display-matrix tag.
+
+Native generated HEVC/H.265 8-bit and PQ/BT.2020-tagged 10-bit MOV
+are both refused by this desktop Chrome build's preview decoder
+without enabling stale MP4 downloads. This is expected safe
+failure on one browser configuration, **not HEVC/HDR support**.
+
+Physical Android/iPhone source compatibility, HDR color fidelity,
+input audio track selection, original G2 RAM/no-copy and full-HD
+endurance, and a durable matching GPL Builder corresponding-source
+Release remain OPEN. Do not mark v0.8 accepted yet or advance to
+v0.9 RC; do not merge Draft PRs, tag or publish.
+
+## 2026-10-16 — H.264 MOV / 90° rotation / corrupt MP4 / dual AAC QA
+
+[CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532) and
+[PR preview #38857118536](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118536) ALL SUCCESS.
+Real Chrome ST and isolated MT confirmed H.264 MOV decoding and
+reverse MP4; a genuine 90° MOV display matrix was handled as browser
+portrait preview 90×160 and upright coded 90×160 output without
+residual display rotation; a 128-byte plausible ISO BMFF truncated
+source could not activate Result/Save; and a source with two AAC
+tracks exported **zero** audio tracks under the default mute setting.
+These are synthetic browser fixtures, not HEVC/iPhone/real Android
+endurance proof. No codec, FFmpeg binary, network or privacy changes.
+
+The v0.8 matrix documents remaining 180/270°/HDR/10-bit, actual
+source-track selection, file-provider and G2 phone gaps.
+No app/Builder PR merge, tag, public release or Browser Kitty import.
+
+## 2026-10-16 — v0.8.0 Compatibility / Hardening development start
+
+The owner explicitly requested progression to the v0.8.0 milestone.
+On the existing, unmerged application Draft PR #2 only, the app version
+advances to `0.8.0` (development, no tag or release). Its scope is the
+original plan's **Compatibility / Hardening**: genuine H.264 30/60fps,
+short sources, MOV/HEVC, VFR, portrait rotation, HDR/10-bit caveats,
+silent/multi-track audio, invalid/truncated/oversized inputs, MP4
+integrity and local-only standalone operation.
+
+First implemented changes: decodable input below 0.5 seconds reports a
+specific localized minimum-duration error rather than the misleading
+"unsupported or damaged" status; the source panel includes collapsed
+JA/EN explanations that source color/HDR/10-bit fidelity is **not
+detected or guaranteed**, 30/60fps is resampled to 15fps rather than
+preserved, and multi-track audio selection is not implemented.
+No new codec, media network connection or WASM dependency is added.
+
+[Actual ST/isolated MT Chrome CI #38853679777](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679777)
+**ALL SUCCESS**: locally generated 0.27-second H.264 rejected with
+the correct translated message, genuine 30fps and 60fps H.264 inputs
+each output as 15-frame, 1-second H.264 MP4 verified by ffprobe.
+[PR preview #38853679768](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679768) also PASS.
+Testing of genuine HDR/10-bit color, HEVC MOV, physical-device rotation,
+multi-audio-track selection and iPhone Safari is still **OPEN**;
+a disclosure is not color-fidelity validation. See
+`docs/feasibility/V080_COMPATIBILITY_MATRIX.md` for case-by-case evidence.
+
+The same documented owner-directed milestone-order exception used
+for v0.7.0 permits v0.8.0 **development** while formal
+**G2 remains INVESTIGATE / NOT PASSED**. This does not waive Android
+high-resolution ×3, provider memory-copy constraints, audio seam
+listening or the v0.9/v1.0 release gates. Do not merge PR #1/#2 or
+Builder #16, tag, release or change the Browser Kitty site.
+
+## 2026-10-16 — v0.7.0 UX code-complete checkpoint
+
+The 3-step phone workflow, localized successful/silent/AAC/ping-pong
+MP4 results and errors, truthful downloads, accessible labels, explicit
+source-replacement guard, processing navigation lock, short viewport
+and keyboard-focus safeguards are implemented on the existing Draft.
+[Actual ST and isolated MT browser CI #38850394911](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394911) and
+[PR preview #38850394895](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394895) PASS. Browser acceptance is
+not a claim of Android or iPhone acceptance for this new branch.
+G2 real-device repeats/RAM/source-provider/audio listening and a
+permanent matching GPL Builder Release remain open; iPhone deferred.
+No merge, GitHub release or Browser Kitty integration.
+
+## 2026-10-16 — v0.7.0 development approved by owner; G2 carried forward
+
+**Decision:** Following the owner's explicit request, start the **v0.7.0 development milestone on Draft PR #2** despite the open G2 checklist. This is a documented **development-sequence exception**, not a GO decision for G2, a stable v0.7 release, or a change in v1.0 acceptance.
+
+G2 is not formally passed because the original matrix requires Android **and iPhone** 720p10s and 1080p5s Reverse/Ping-pong three consecutive times; iPhone testing was explicitly deferred; Android real-camera repetitions, timing/RAM, audible AAC joins and cancellation/provider checks lack complete evidence. The <=64MiB Android MEMFS fallback still copies the entire input and violates the original strict no-whole-source-copy condition. The owner-reported Android Video/Edit/Result/Download success confirms the **basic workflow** on an older pinned Pages v0.6.0 snapshot, not those untested scenarios.
+
+The matching Builder 1.10.6 GPL binary-and-source archive remains a temporary review artifact. A reviewed permanent GPL corresponding-source Release is a **separate production distribution requirement**, not one of the original G2 performance checklist bullets, and does not need to block further v0.7 UI development.
+
+**Scope and invariants:** develop and test Video → Edit → Result, truthful download, JA/EN, touch, cancel/error states and standalone ST/isolated MT. Preserve H.264/AAC, original Reverse/Ping-pong behavior, file-processing locality, quality/duration limits and strict incomplete-output rejection. Formal G2 remains **INVESTIGATE / NOT PASSED** until evidence or an explicit scope change. G3, stable release, Builder public distribution and Browser Kitty integration remain separately gated. No merges, tag or release.
+
+This user-directed exception supersedes only the earlier plan's ban on **starting** v0.7 before G2 passes. Historical acceptance outcomes are not retroactively changed.
+
+## 2026-10-16 — Pages実公開・Android操作のユーザー確認
+
+- [Pages専用PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5)はユーザーがマージ済み。 [デプロイ／公開実Chrome検証 #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219)の準備・公開・本番MT実変換はすべて成功。
+- ユーザーは求められたAndroidの**動画選択→区間編集→結果の確認・MP4保存**について「androidもOK」と報告。**公開テスト版の基本UXは実機ユーザー報告でPASS**とするが、機種・ブラウザー詳細、ファイル提供元、品質・所要時間・RAM・音声・3回連続等の個別データは未確認。
+- 公開されたHTMLはアプリコミット`e5f66428c501090513b6fa0da925b1d1bffbbfb8`から固定生成したもの。後続の10月16日修正（結果再生の停止、数値編集中の旧結果失効、44pxボタン拡張）はDraft PR #2側のCIでPASSしているが、このAndroid結果の対象ではない。
+- G2本体は継続して未合格。iPhone実機は延期。バージョンはv0.6.0のまま、Draft PRやBuilderのマージ・Release・Browser Kittyへの導入なし。
+
+## 2026-10-15 — スマホ導線・診断折りたたみの実ブラウザ回帰完了
+
+- [アプリ CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206) はビルド／Node／実Chrome ST・隔離MT動画変換・AAC・フレーム数・キャンセル・通常動画・低fps動画の全ジョブ成功。スマホ用320/360/390pxの横スクロール、44pxタップ、長い日本語ファイル名、JA/EN切替、動画→編集→結果の遷移と古い結果の失効もチェックした。
+- 編集以外の「動作テスト」「開発中の機能と制限」を標準では閉じたネイティブ折りたたみにし、変換エラー時は診断保存へ誘導する。これらの既存機能自体は削除せず、必要なときに開ける。ローカルChromeでもH.264保存・結果情報と診断開閉を確認済み。
+- [Pages UI確認専用 PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5) は、Draft PR #2の検証済み単一HTMLのみをGitHub Pagesのテスト版へ反映する。マージはユーザーが行う。修正版の実公開URLでのChrome検証とAndroid実機の新UI確認はマージ後に実施する。
+- G2の旧64MiB Android全量コピー救済経路、端末別RAM、高解像度・音声・キャンセルの実機受入、恒久GPL配布は未合格。v0.7.0の版数へは進めず、iPhone実機も引き続き延期する。
+
+## 2026-10-15 — v0.7.0 Mobile UX / Save Flow 準備実装（v0.6.0のまま）
+
+- v0.6.0でPC/Android実機の低fps動画成功が報告されたため、機能を維持したまま**スマホ幅600px以下の「動画→編集→結果」3段階の作業導線**を先行実装する。正式なGate G2合格やv0.7.0へのバージョン更新ではなく、Draft PR #2上のUX準備実装とする。
+- モバイルでは動画選択が終わるまで編集・結果のナビを無効にし、動画プレビューと区間編集が準備できたら編集へ進む。実際のMP4 Blob・再生用メタデータの検査が成功した場合だけ結果へ進む。編集に戻って設定を変えたときは生成済み結果を破棄して、古いMP4を保存できないようにする。
+- 実行中エラー・キャンセル・元ファイル差替えでは結果を無効化し、エラー詳細の閲覧を妨げない。PCでは既存の連続画面を維持し、WebAssemblyの動画処理は変更しない。
+- 44px以上のタップ領域、安全なヘッダー直下のStickyナビ、固定下部UIの不使用、320/360/390px、日本語／英語、長いファイル名、結果の寸法・保存先案内を検証する。保存ボタンはブラウザーダウンロードを開始するだけで、OSの保存成功を確約しない。
+- 細かな状態のチェックと実Chrome ST/MTのMP4保存回帰を `tests/feasibility/v030-ui.test.mjs` / `browser-video-smoke.py` に追加。実機AndroidでのUIの受入、ソフトキーボード・デバイス別保存先は別途確認が必要。
+- Gate G2には、高画質全モードの実機反復、音声折返しの聞き取り、キャンセル・クラウドファイル取込、元ファイルの全体コピー禁止、恒久GPL配布が残る。iPhoneは引き続き延期。UI改善だけでG2やv0.7.0を完了と扱わない。
+
+## 2026-10-15 — 修正版MTのPC・Android実機成功を報告（特定不具合は改善）
+
+- [Pages PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4)をユーザーがマージし、[実公開URLのChrome CI #38667384368](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38667384368)でMT分離・2秒58フレーム・10秒298フレームの合成スライド型MP4保存・デコードが成功。
+- **実機ユーザー報告：「PCもAndroidも成功したよ」**。前にMTで `expected=30 actual=24` と失敗した元動画について、修正版で両環境の成功が確認できた。今回は動画や端末名・処理秒数・3回それぞれの詳細ログを取得していないため、**元動画の特定不具合のユーザー受入成功**として記録し、他の試験項目まで一括で合格扱いしない。
+- G2は引き続き残課題を記録：実機カメラ動画の720p10秒・1080p5秒の各モード反復、音声折返しの聞き取り・同期、キャンセル再実行、Androidファイル提供元ごとの元ファイルコピー例外、性能記録、対応ソース付き恒久GPL Release。iPhone実機は延期。
+- **進行判断：** 従来の低fps重大ブロッカーは解消見込み。ただし全G2を正式に閉じるまではv0.7.0へのバージョン移行を完了扱いにしない。v0.7.0 UI/保存フローの準備作業は残条件の整理と切り離して検討できる。
+
+## 2026-10-15 — 低fps動画の修正とMTの実Chrome 3連続検証が成功（G2実機は未受入）
+
+- 元動画と同様の **H.264 High／1920×1080／39フレーム／37.806089秒／平均約1.03fps** のスライド型VFR合成ファイルで旧版の出力フレーム不足を再現した。Builder 1.10.6で元動画の表示時刻を15fpsに正規化してから区間をフレーム境界で切り出し、厳密な出力フレーム数検査は維持する。MTのpthread Workerを区間終了後に解放する処理も追加した。
+- [アプリ実Chrome CI #38618083612](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38618083612) が全ジョブ成功。新しいChromeでのST／MT変換、同一MTページからの**10秒往復再生×3回**と保存・フレーム数照合に成功。通常の動画・音声・キャンセル・オフライン検証も成功した。
+- さらに多数の異なる動画を同一Chromeプロセスで変換した場合の負荷検証は別途残るため、テストを `mt-real-source-regression.py --phase isolated/repeat/extended` に分けた。通常CIから一度きりの3連続高負荷実行は外し、必要なときに手動で再実行できる。
+- [Pages公開更新PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4) は開発PR #1／#2をマージせず、SHA固定した1.10.6バイナリだけを公開テスト用に更新する。公開後は実URLから2秒・10秒のスライド型VFR往復再生を確認する。
+- **G2は未合格**。ユーザーの実際のMP4とAndroid実機での3回連続、メモリ・音声・ファイル読み込みの受入が必要。iPhone延期中。対応ソース付きレビュー候補は [Builder #38617100332](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38617100332) で検証済みだが、恒久Releaseと法的レビューは未完了。v0.7.0への移行は保留。
+
+## 2026-10-14 — 実機MTの出力フレーム数不一致（G2ブロック中）
+
+- ユーザーからGitHub Pagesの**ST成功・MT失敗**報告。MTの実エラーは `Stage: video-segments`、`Reverse frame count mismatch: expected=30 actual=24`。元動画の表示情報は長さ37.89秒、396kb/s。MTの2秒・15fps区間で6フレーム不足している。原因はまだ未確定で、メモリ不足と決めつけない。
+- 当該エラーは不完全なMP4を公開しないための正常な保護検査。**検査を緩めず、MTとSTを黙って入れ替えない**。
+- 原因調査用に37.89秒相当の29.97fps/Bフレーム・可変フレームレートのH.264を生成し、実ST/MTの逆再生・往復再生を比較するChrome回帰を追加。元動画そのものを要求しない。
+- アプリのエラー詳細を失敗時に自動展開し、失敗区間番号／先頭時刻／方向／MT・ST判定と期待・実フレーム数を診断JSONへ記録する。次のテスト用公開版へ反映するまでは既存Pages版には適用されない。
+- 物理AndroidおよびPCでのMTの主要機能が失敗したため、**G2は未合格、v0.7.0への移行も停止**。修正・回帰検証が必要。
+
+## 2026-10-14 — v0.6.0 Android入力の不要なメモリコピーを抑制（実機未受入）
+
+- **CI受入（デスクトップのみ）：** [Actions #38493664787](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38493664787)がすべて成功。Android UA模擬ChromeでWorkerFSの10秒・150フレーム逆再生と、強制Worker読取失敗からMEMFS救済経路での1秒・15フレーム逆再生を、実MP4保存と診断ログのtransport値で検証。ST/MTの従来音声・往復再生等も回帰成功。実Androidの写真/クラウドプロバイダーや物理メモリは未受入。
+
+
+- 従来のAndroid 64MiB以下の動画ファイルを毎回一括コピーする方式に対して、専用Workerで先頭・末尾32バイトのみを`FileReaderSync`で試し、正常な場合は元の`File`をWORKERFSで使う。読み取れない場合は旧64MiB以下のMEMFS救済コピーを残す。失敗時の変換中再試行も維持。
+- Worker probeは最大2.5秒で終了し、キャンセル・ソース差替え・元動画の読込タイムアウトで停止してBlob URLを解放する。入力全体をサーバーへ送らず、IndexedDB等にも保存しない。
+- Nodeでprobe成功・失敗・中断・リソース解放を試験。ChromeのAndroid UA模擬では本当のMP4出力と診断JSONの`workerfs`／`memory`経路をそれぞれ検証する。
+- **なおG2の元動画の完全無コピー基準は未達。** 64MiB以下のプロバイダー失敗時には全体コピーを使用するため、Android実機での可用性・メモリ比較・例外仕様を別途判断する。これだけでGate G2合格やv0.7.0移行としない。
+
+## 2026-10-14 — v0.6.0 分離されたMTの高解像度実行
+
+- GitHub Actions [#38464029860](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38464029860) でCOOP/COEP有効のChrome実MTが成功。720p級10秒・AAC付きPing-pongは298フレーム／約19.867秒を11.20秒で出力。1080p級5秒・無音Reverseは75フレーム／5.000秒を5.87秒で出力。双方ともMP4の保存・デコード・全出力フレームの元フレーム照合が成功。
+- 参考RSSはChrome関連プロセスの合計で約3,203MiB／2,846MiB。ただし**共有ページの二重計上があり、実機メモリ使用量やSTとの速度比較に使用しない**。次回の試験ツールではLinux PSS/USSも収集できる構成に変更。
+- 今回は2シナリオ各1回のみ。高解像度MTの連続3回／キャンセル復帰、実Androidのメモリ・速度、音質試聴、元動画コピー排除は未実施。iPhone検証は延期中。**Gate G2は未合格。**
+- 詳細: `docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md`。高負荷MTジョブはGitHub Actionsの消費を抑えるため、手動実行時の明示フラグがある場合だけ起動するよう戻した。
+- 出力Blob作成後の元WASM出力ArrayBufferを早期に解放する小改善も実装（実ピーク低下は別途測定）。
+
+## 2026-10-13 — v0.6.0 デスクトップ ST 高解像度測定
+
+- 実バイナリ内包の単一HTML（app commit `b26ebc8b77e407a7a267b11bcd74666912b2e471`、CI artifact `11801040425`）をLinux Chromiumで実際に実行。720p級10秒と1080p級5秒、映像のみ/AAC、逆再生/往復再生を**合計11回**保存・ffprobe・全動画デコードし成功した。
+- 無音Ping-pongは720p/1080pともに3回連続成功。処理時間は720p約18〜21秒、1080p約20〜21秒。各実行のブラウザー関連子プロセス合計RSSは概ね727〜891MiB（実端末ピークメモリではない）。
+- 合成動画の逆再生・折返しについて、全出力フレームを縮小グレースケール化し、意図した元フレームが隣接フレームより一致することを実測。AACのストリーム時間が両解像度で動画と一致。
+- 720p10秒AAC往復再生の変換中、区間1/10の処理中にキャンセルし、不完全な結果が保存できないこと、直後の再実行で正しいMP4が得られることを確認。
+- **制約：** STのみ、Linuxデスクトップ合成入力のみ、コンテナのナビゲーション規制により `page.set_content` の実行。高解像度MT・Android実機・音質試聴・カメラMOV/VFR・正確なRSS/WASMピーク・元動画全体コピー排除は未検証。G2は未合格。
+- 詳細: `docs/feasibility/V060_DESKTOP_ST_MEASUREMENTS.md`。専用高解像度テスト `tests/feasibility/v060-stress-browser-smoke.py` に全フレームの順序比較を追加（通常CIで自動実行せず、構文のみ確認）。
+
+## 2026-10-13 — v0.6.0 分割メモリ制御と復帰動作の実装開始
+
+- 720p級（短辺720px・長辺1280px・最大10秒）と1080p級（短辺1080px・長辺1920px・最大5秒）を追加。15fps、元動画の拡大なし。区間超過時は自動短縮・自動画質変更をしない。
+- 既存FFmpeg ST/MTバイナリの契約を変えず、分割プランの推定YUV420フレーム保持目標を48MiB/区間に抑える。実メモリ上限ではないため、別途実機のRSSやWASMの計測を必須とする。
+- 音声トラックの検査WASMを映像エンコード開始前に停止し、必要な場合は変換終了後に再検査。重複起動、失敗プレビューと戻る操作後の古いURL・Worker再利用を防止する。
+- 0.5〜10秒/0.5〜5秒の分割計画について、逆再生・往復再生のフレーム数・折返し境界のNode試験を追加。
+- 実720p10秒/1080p5秒、各3回連続、音声クリック試聴、Android実機、iPhone（延期）、1GiB入力経路、恒久GPL対応ソース付き配布が未受入。G2判定はINVESTIGATEのまま。詳細は docs/feasibility/G2.md。
+
+## 2026-10-13 — v0.5.0 音声付きST/MT MP4検証結果
+
+- [App CI 38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120) がST/MT両方で成功。音声あり/なしのH.264 MP4、0.5秒・1秒のモノラルAAC、5秒ステレオ逆再生、10秒ステレオ往復（出力298フレーム・約19.867秒）を保存・ffprobe/PCMデコードで検査。左右独立440Hz/660Hzの順序も保持。
+- [Builder CI 38357268611](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38357268611)も両スレッド版のブラウザA/Vテスト合格。短いチャンクの120フレーム制約を完成MP4へ誤適用していた不具合を修正し、出力は最大960フレームかつ予定数完全一致で検査。
+- ソース音声検査、AAC正逆変換、H.264へのAAC結合まで実装。実験版では初期値「音声なし」を維持する。
+- **未受入**：Android実機・リスニングによるクリック音/無音区間、44.1kHz等のサンプルレート、回転/HDR実撮影、720p10秒/1080p5秒の負荷、GPL対応ソース付き恒久Release。現WASM Actions成果物は2026-10-20に失効。
+- 機能としてのデスクトップ成功と製品Gate G1/G2/G3の合格は区別する。詳細は `docs/feasibility/V050_AUDIO_ACCEPTANCE.md`。Browser Kittyへの取込は完成後。
+
+## 2026-10-13 — v0.5.0 AAC検査・結合フローの試験
+
+- 検証済みの`audio-mux`ランタイム能力を要求してから音声オプションを解放する。端末内のFFmpegを使って動画の音声コーデック/チャンネルを軽量に確認する。ソース変更・中止で古い音声検査の結果を破棄する。
+- 選択動画のAAC音声を正方向／逆方向に生成し、`--mux-audio`で完成したH.264 MP4へAACトラックだけを結合。旧サイレント変換は変更せず、結合不良は部分結果を保存させない。
+- `audio-browser-smoke.py`は二音階の合成動画で実AACデコード/音声の向きを解析し、Silent入力・保存・キャンセルをST/MTで確認する。ビルダーのコンパイル成功だけで公開せず、**実CIと音声波形検証を受入条件**にする。
+
+## 2026-10-13 — v0.5.0 音声モードの開発を開始
+
+- 「音声なし」を既定として維持し、日英UIへ音声選択欄を追加する。現在のv0.4専用WASMでは音声入力の選択を無効とし、映像のみの出力は従来どおり正常に動作させる。
+- 専用Builderに正方向／逆方向の音声区間AAC変換を実装。音声トラックがない入力を音声変換成功と誤認しない。大きい元動画全体をブラウザメモリへ一括コピーしない。
+- 本番機能として有効化する条件：ST/MT両版の実WASMで、音声トラック検出、動画＋AACのMP4結合、出力の動画長と音声長、折り返し・末尾のクリック音、0.5/5/10秒、モノラル／ステレオ／無音入力の失敗閉鎖を検証する。検証済み新バイナリを個別SHA-256で固定し、`audio-mux`能力をロックに記述して初めてUIを有効化する。
+- 現時点ではv0.5.0の開発開始のみ。音声機能の完了承認、G1/G2/G3合格、正式公開やBrowser Kittyへの取り込みを意味しない。
+
+## 2026-10-13 — v0.4.0 Ping-pongの実装・Chrome回帰検証
+
+- 専用Builderコミット `fa52f86b...` はST/MT両方を作成し、正方向→逆方向の実WASM H.264 MP4をブラウザで生成。対応するバイナリとJSのSHA-256を `reverse-runtime.lock.json` に固定して往復モードを有効化済み。
+- [Reverse Clip CI 38347758127](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38347758127) でST/MT両方の15→28、31→60、150→298、最短0.5秒、VFR、意図的な黒フレーム、縦長90×160の実MP4生成・保存・デコードを確認。表示・英日切替、10秒逆再生とオフラインSTも回帰確認。
+- テスト結果と未検証項目を [v0.4.0受入記録](docs/feasibility/V040_PINGPONG_ACCEPTANCE.md) に分離した。これはデスクトップChromeの結果で、物理Android実機の証拠ではない。
+- 注意：今のWASMは2026年10月20日に期限切れのActions成果物。GPL対応ソースを含む恒久Release、Android実機のMT・メモリと高解像度、回転メタデータは別の受入ゲートとして残す。Browser Kittyへの取り込みPRは作らず、ユーザーが手動マージするまでDraft継続。
+
+## 2026-10-13 — v0.4.0 Ping-pongの実装を開始
+
+- 専用Builderへ `--direction forward|reverse` の安全な定義済みチャンク処理と最大16チャンク結合を追加。旧Reverseモードはデフォルト `reverse` のままとし、指定可能な出力fps/サイズ/フレーム数上限は維持する。
+- 往復再生のフレーム構成は `0..N-1, N-2..1` の `2N-2` 個。0.5秒／31フレーム／5秒／10秒／非整数時刻を、共通純粋計画関数で検証する。
+- Reverse Clip UIにモード選択、往復時の出力予定時間・進捗・保存名・結果表示を追加する。ビルダーの新しいST/MTバイナリを両方ハッシュ固定するまでは往復オプションを無効化して安全にする。
+- Builder WASMとブラウザの実MP4再生・保存・フレーム順テストを通した後に往復モードを有効化する。恒久的な対応ソース付きGPLリリースは別途審査し、Android実機のMT・高解像度、VFR・回転素材を検証する。
+- これをG1/G2/G3達成やv1.0.0公開とはせず、Browser Kittyには取り込まない。
+
+## 2026-10-13 — v0.3.0 Trim & Reverseの実装を開始
+
+- v0.3.0へ進み、動画の直下の開始・終了ハンドル、数字入力との同期、キーボード操作、選択範囲の**元動画**再生を実装。逆再生結果の確認と編集可能なMP4保存を維持する。
+- STとMTの実Chromeで、先頭／途中／終端の短い選択区間、フレーム逆順・15fpsの時間軸・保存名を検証する。320/360/390pxのはみ出しとヘルプの背景スクロールも検査する。
+- 言語切替はEN/JAへ。提供されたSVGを両アイコンへ取り込み、ヘッダーを用途が伝わる説明に変更し、フッターの旧版説明を削除する。
+- 本マイルストーンのAndroid実機受入および従来のG1/G2/G3は未合格。音声・往復再生・1080p目標は別の予定マイルストーンで維持し、Builder恒久配布も未完了。Browser Kitty PRの追加・マージはしない。
+
+## 2026-10-13 — v0.2.0 動画取込の失敗回復を強化
+
+- 先頭32BのISO-BMFF/QuickTime検査で明らかな拡張子偽装を排除。巨大ファイルの全量コピーは行わない。
+- 30秒の読み込みタイムアウト、世代IDでの古い結果拒否、URL/動画の解放、日英エラー表示、元動画名に基づく保存名を追加。
+- ST/MTのブラウザ試験に壊れたヘッダー／デコード不能動画／遅延した旧動画読込／応答しない読込／正常動画への再切替・手動の読込中止・複数ドロップの拒否を追加。320/360/390px/PCの横方向表示も自動検証。Android実機については `docs/feasibility/ANDROID_V020_MATRIX.md` に対象ケースと証跡欄を設ける。
+- 引き続きG1は未合格、v0.2.0実機受入未完了。正式版やBrowser Kittyへの取り込みは行わない。
+
+## 2026-10-13 — v0.2.0 App Foundationを開始
+
+- v0.1.xで実動画のST/MT WASM逆再生、ローカル単一HTML、10秒分割処理、キャンセル/再試行のブラウザ試験に成功したため、技術スパイクからv0.2.0アプリ基盤の実装へ進む。細かなv0.1.xバージョンを無期限に重ねない。
+- **G1は未完了**。バージョン移行はG1合格宣言ではない。優先プラットフォームであるAndroid実機の取込・差し替え・不正ファイル・保存/再試行を検証し、v0.2.0完了判定を別途行う。
+- `empty / inspecting / ready / error` 状態を明示し、ファイル世代IDを使って古い非同期結果を捨てる。形式不正、0バイト、デコード不能を日英で区別し、元動画を差し替えると出力を必ず無効化する。
+- GitHub Pages ST/MTと直開きSTを継続検証。Android/Windows優先・iPhone延期・Builder恒久配布未完了は維持する。
+- Browser Kittyの本体更新や取り込みPRはアプリ完成まで行わない（PR #41は未マージでクローズ済み）。
+
+## 2026-10-13 — v0.1.7 720p級出力の試験範囲
+
+- 長辺720pxの従来設定とは別に、標準720p級の画質（最大長辺1280px）を新設。横1280×720／縦720×1280相当（元動画の拡大なし）を**最大5秒まで**試験する。
+- まずデスクトップChrome ST/MTで実1280×720 H.264入力→1秒出力のデコード、正しい寸法・フレーム数・再生可能性を確認する。続いてAndroid実機の720p級5秒、反復・メモリ・キャンセルを検証したうえで720p10秒へ進む。
+- 現時点の720p10秒、1080p5秒、音声・往復再生と物理Android MT性能は未完成。Browser Kittyへの取り込みは完成後。
+
+## 2026-10-13 — 取り込み順序の修正・v0.1.6の信頼性改善
+
+- Browser Kittyへの取り込みは**Reverse Clip完成後**。実装中のBrowser Kitty PRは作らない。先行して作成したBrowser Kitty PR #41は未マージでクローズ済み。今後はBuilderとReverse Clipのコード、CI、実機検証を優先する。
+- v0.1.6: WASMローダーの遅延完了、処理中の中止、入力ファイル変更時のジョブ所有権を修正。古いジョブのrunnerを必ず解放し、新しい処理のrunnerには触れない。出力動画のメタデータ読み込みもキャンセル可能にする。
+- STとMTの実Chrome試験で初期化中キャンセル→差し替え→再変換→MP4保存の一連の動作を確認する。実Android MT性能、長時間反復、標準720p/1080p・音声・往復再生は別途検証する。
+- 期限付きActions WASMの恒久配布、FFmpeg/x264/Emscriptenの対応ソース・ライセンスは安定版公開の必須条件。Android/iPhoneの合否やG1～G3を未実施のまま合格扱いにしない。
+
+## 2026-10-12 — Android / PC優先への計画変更
+
+**ユーザーの最新指示：iPhoneは当面対象外。** この節は、以下に残る当初の「iPhone Safari必須」「iPhone未検証なら先へ進まない」といった条件よりも優先する。元の受入項目は将来の再開用として保持し、**合格済みとして扱わない**。
+
+- **現在の開発・確認対象：** Android Chrome実機、Windows Chrome/Edge、単一HTML・オフライン・CSP。日本語／英語のUIは維持する。
+- **延期：** iPhone Safari実機、iPhone撮影HEVC MOV、iOS固有の保存UX・回転・メモリ測定。iPhone向けの確認依頼もいったん行わない。
+- **実測済み（ユーザー報告）：** Androidで1秒、5秒・長辺360px、5秒・長辺720pxが成功。最後の5秒・長辺720pxは**12.7秒**。画質選択の「720px」は長辺の制限であり、**標準の1280×720（720p）とは異なる**。
+- **Android-first継続判断：** 上記の成功によって実験的な機能実装を続行する根拠は得られた。ただしG1の旧クロスプラットフォーム判定は**未完了**、標準720p/10秒・1080p/5秒、実機の反復・メモリ・音声などを合格済みにはしない。
+- **優先順位：** ① Androidでの再実行・キャンセル・端末メモリ・入力別エラー対策、② 最大10秒へ拡張するための境界・処理時間の検証、③ 往復再生、④ 恒久的なGPL対応ソース付きFFmpeg WASM配布、⑤ PCでの`file://`検証と日英UI／保存UX。
+- **正式リリースの条件：** iPhoneの扱いを決めるまでは「iPhone対応」と表示しない。リリース対象プラットフォームと元のG1/G2/G3受入条件の最終変更は、安定版候補のレビュー時に明確に決める。期限付きActions成果物のまま正式公開しない。
+
+
+### v0.1.4 technical experiment — 10-second reverse (Android-first)
+
+- Extend **experimental** video-only selection from 5s to 10s without enlarging the per-chunk reverse frame buffer: at 15fps, split a 10s selection into five 2s segments.
+- Apply the new dedicated Builder WASM `--frames N` and `--expected-frames N` public-libav validations. Refuse a segment or joined MP4 with unexpected encoded-frame count. In the previous binary, some non-frame-aligned ranges produced extra frames.
+- Use `long edge 360px or 720px` labels; these are *not* standard 1280×720 output dimensions. Label >5s clearly as experimental and recommend 360px first on phones without automatically downscaling.
+- Verify exact 10s/150 frames, 9.9s/149 frames, 0.1–9.87s/146 frames, cancellation and repeat runs with real WASM in Chromium. Confirm portrait input, Android-UA MEMFS staging and no runtime HTTP(S) or layout overflow.
+- Android **5s** success remains user-reported, including **12.7s** at long-edge720px. Android **10s** remains **UNTESTED**, as do native-standard 720p10s, 1080p5s, VFR/HEVC, repeated real-device memory and direct `file://`.
+- Keep Builder artifact temporary and Draft PRs unmerged. A permanent source-complete GPL release and separate stable-release acceptance decision are required. iPhone stays deferred.
+
+## 2026-10-12 — ST / MT併用への新しい配布要求
+
+FFmpeg Filter BuilderのST/MTアーキテクチャを参考に、Reverse Clip専用Builderの両バリアントを**実WASMで別々に生成**する。GitHub Pagesは `/` をST、`/mt/` をMTとし、後者に同一オリジンのCOI Service Workerを置く。Browser KittyにはMT版だけを取り込み、専用ルートへCOOP/COEP/CORPを設定する。ST単一HTMLはfile://で利用でき、MT単一HTMLは分離されたHTTPS/localhostで使用する。STからMTへの性能改善は実測前に断定しない。PRのマージと本番公開はユーザーの判断とする。詳細は `docs/THREADING_DISTRIBUTION.md`。
+
 ## 1. 開発原則
 
-1. **技術検証が先、UI完成は後。** 初期にiPhone／AndroidでMP4作成・保存を試し、成立しなければ開発を中止する。
+1. **技術検証が先、UI完成は後。** 当面Android Chrome実機とWindowsブラウザーでMP4作成・保存を検証する。iPhoneは2026-10-12の方針変更により延期し、未検証を「非対応確定」とは扱わない。
 2. すべての段階で「入力→出力」を壊さず、モバイル・日英UI・単一HTML・通信制約を後回しにしない。
 3. このアプリには「短い区間の逆再生・往復再生」以外の動画編集機能を載せない。
 4. **FFmpeg Builder本体の変更**と**Reverse Clipアプリの変更**を別々に管理する。既存プロファイルへ無理に流用しない。
@@ -42,7 +354,9 @@
 
 ## 3. Go / No-Go Gate
 
-### Gate G1 — v0.1.0完了時：**開発継続の可否**
+### Gate G1 — 当初のクロスプラットフォーム条件（未完了）
+
+> **2026-10-12更新：** この節のiPhone必須条件は延期。Android/PC向けの実験開発はAndroid実機成功を根拠に継続する。ただし旧G1を合格済みとせず、未実施のiPhoneテストは将来の受入項目として残す。
 
 **必ず試すこと**
 
@@ -178,7 +492,7 @@
 
 **成果物：** `docs/feasibility/G2.md`、負荷測定・端末別テスト結果・既知制限。
 
-**完了判定：** Gate G2合格。満たせなければ仕様と商品価値を再審査し、v0.7.0に進まない。
+**完了判定（正式なG2基準）：** Gate G2合格。未達の場合は仕様と商品価値を再審査する。**2026-10-16のユーザー指示により、G2未合格のままv0.7.0開発開始だけを例外的に許可。** G2の未受入条件は保持し、G3やv1.0正式リリースの要件を緩めない。
 
 ### v0.7.0 — Mobile UX / Save Flow
 
@@ -333,4 +647,4 @@ Changes needed in APP_SPEC:
 
 ---
 
-**次の着手点は v0.1.0 のFFmpeg専用プロファイル＋実機技術検証。** Gate G1の結果が出るまで、v0.2.0以降は実装しない。
+**現在の次の着手点：** Android/PC向けの短時間動画の安定化・10秒への段階的拡張・往復再生・Builderの恒久配布。iPhoneは延期し、旧G1が未完了であることは維持したまま、Android-first実験版を継続する。

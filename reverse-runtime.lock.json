@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "kind": "experimental-dual-github-actions-artifact",
+  "status": "temporary-not-release",
+  "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
+  "builderCommit": "8e60da7cf9de644ce3f6cce9c007b17e6a385c53",
+  "workflowRunId": 38603383794,
+  "artifactId": 11914029733,
+  "profile": "video-reverse",
+  "builderVersion": "1.10.6",
+  "wasmLicense": "GPL-2.0-or-later",
+  "browserRuntimeSha256": "32edec91e98e93ef10496a4daaed7e42cabf33ab705df4ca287376ab96cf1ce4",
+  "variants": {
+    "single-thread": {
+      "assets": {
+        "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
+        "ffmpeg.wasm": "b12598c46d9e98f4f46f5c510476261b9d226ae0de01dc8bd8859d9eeacb108b"
+      }
+    },
+    "multi-thread": {
+      "assets": {
+        "ffmpeg.js": "0f41f937b6535d92159bfafbe063735286e8c693475c4ede856f0df7e8168fa4",
+        "ffmpeg.wasm": "8a9e45ce28d06d9dfde734d41d9af022d1158798b4967bb1e05ee41c20cd193c"
+      }
+    }
+  },
+  "notes": "v0.6 sparse WebCodecs VFR frame-window fix (source FPS normalization before trim), plus experimental MT pthread teardown per chunk in Builder 1.10.6. Builder Chrome ST+MT core smoke CI 38603383794 success. New core SHA256 pinned to temporary artifact 11914029733 (expires 2026-10-21). App Chrome 1080p sparse input 10s MT endurance and physical Android pending; no 1.10.6 GPL corresponding-source release or legal approval. Previous source bundle only covers 1.10.4.",
+  "features": [
+    "pingpong",
+    "audio-mux"
+  ]
+}

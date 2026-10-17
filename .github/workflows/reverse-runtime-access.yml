@@ -1,0 +1,38 @@
+name: Check pinned reverse WASM artifact access
+
+on:
+  push:
+    branches: [feat/reverse-wasm-preview]
+    paths: [.github/workflows/reverse-runtime-access.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download public Builder Actions artifact
+        shell: bash
+        env:
+          REPO_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          url=https://api.github.com/repos/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/artifacts/11694894835/zip
+          status=$(curl -sSL --retry 2 -w '%{http_code}' -o /tmp/reverse-wasm.zip \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'User-Agent: reverse-clip-spike' "$url")
+          echo "Unauthenticated artifact download HTTP: $status"
+          if [[ "$status" != 200 ]]; then
+            status=$(curl -sSL --retry 2 -w '%{http_code}' -o /tmp/reverse-wasm.zip \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'User-Agent: reverse-clip-spike' \
+              -H "Authorization: Bearer $REPO_TOKEN" "$url")
+            echo "Cross-repository GITHUB_TOKEN download HTTP: $status"
+          fi
+          [[ "$status" = 200 ]] || exit 1
+          unzip -t /tmp/reverse-wasm.zip >/dev/null
+          unzip -p /tmp/reverse-wasm.zip manifest.json | grep -q '"profile": "video-reverse"'
+          echo 'Verified ZIP and reverse profile manifest'
