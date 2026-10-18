@@ -33,9 +33,16 @@ test('temporary pinned WASM does not masquerade as permanent GPL corresponding s
   assert.equal(lock.kind,'experimental-dual-github-actions-artifact');
   assert.equal(lock.status,'temporary-not-release');
   assert.equal(lock.builderVersion,'1.10.6');
+  const notices=read('THIRD_PARTY_NOTICES.md');
+  assert.ok(notices.includes(lock.builderCommit),'Third-party notices must match the compiled Builder commit');
+  assert.ok(notices.includes('Builder version: **'+lock.builderVersion+'**'),'Third-party notices must show the current Builder version');
+  assert.ok(notices.includes(String(lock.artifactId)),'Third-party notices must identify the temporary locked artifact');
+  assert.ok(notices.includes(lock.wasmLicense),'Third-party notices must state the current WASM license');
+  assert.match(notices,/single-thread \(ST\).*multi-thread \(MT\/pthreads\)/s);
+  assert.doesNotMatch(notices,/Builder 1\.10\.4|11715866319/);
   assert.ok(lock.variants['single-thread'].assets['ffmpeg.wasm']);
   assert.ok(lock.variants['multi-thread'].assets['ffmpeg.wasm']);
-  assert.match(rc,/source-complete GPL Builder distribution/);
+  assert.match(rc,/publicly obtainable matching GPL source/);
   assert.match(read('README.md'),/v0\.9\.0 RC PREPARATION/);
   assert.match(read('README.ja.md'),/v0\.9\.0 公開前RC準備版/);
   assert.match(read('README-FIRST.txt'),/v0\.9\.0 — RC PREPARATION ONLY/);
