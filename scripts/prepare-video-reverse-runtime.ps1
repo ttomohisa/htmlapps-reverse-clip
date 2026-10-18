@@ -2,8 +2,7 @@ param(
   [Parameter(Mandatory=$true)]
   [ValidateSet('single-thread','multi-thread')]
   [string]$Variant,
-  [switch]$ForceDownload,
-  [switch]$UseAuditedReviewFallback
+  [switch]$ForceDownload
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -124,7 +123,7 @@ function Assert-Manifest($m) {
     throw "Pinned $Variant runtime has no pthread pool."
   }
 }
-if (-not $ForceDownload -and -not $UseAuditedReviewFallback -and (Cached)) {
+if (-not $ForceDownload -and (Cached)) {
   Write-Host "[Reverse WASM] Using verified cached $Variant runtime."
   return
 }
@@ -142,7 +141,6 @@ $extract = Join-Path $cache 'extract'
 try {
   Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $extract
   Remove-Item -Force -ErrorAction SilentlyContinue $zip
-  Remove-Item -Recurse -Force -ErrorAction SilentlyContinue (Join-Path $cache 'reviewed-binary-extract')
   if ($isRelease) {
     # A reviewed, immutable public Release needs no token. All source and
     # binary identifiers must be pinned; never resolve 'latest'.
@@ -200,174 +198,10 @@ try {
       Authorization = "Bearer $token"
     }
     $url = "https://api.github.com/repos/$($lock.builderRepository)/actions/artifacts/$($lock.artifactId)/zip"
-    $legacyAvailable = $false
-    if (-not $UseAuditedReviewFallback) {
-      Write-Host "[Reverse WASM] Downloading $Variant from pinned Builder artifact $($lock.artifactId)"
-      try {
-        Invoke-WebRequest -Uri $url -Headers $headers -UseBasicParsing -OutFile $zip
-        $legacyAvailable = $true
-      } catch {
-        $statusCode = $null
-        if ($_.Exception.Response -and $_.Exception.Response.StatusCode) {
-          $statusCode = [int]$_.Exception.Response.StatusCode
-        }
-        # Only a confirmed expired/not-found Actions artifact may activate this
-        # reviewed, still temporary fallback. Auth/server failures stay fatal.
-        if ($statusCode -notin @(404,410)) { throw }
-        Write-Warning "Original temporary Builder artifact unavailable (HTTP $statusCode). Trying SHA-pinned review-only preservation copy."
-      }
-    }
-    if ($legacyAvailable) {
-      Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
-      $variantDir = Join-Path $extract $Variant
-    } else {
-      # The review artifact is temporary and must NEVER be treated as a
-      # published/approved GPL Release. It is only a byte-identical archive
-      # backup of the compiled source and binary already locked above.
-      if ([string]$lock.status -cne 'temporary-not-release' -or
-          [int64]$lock.artifactId -ne 11914029733 -or
-          [string]$lock.builderCommit -cne '8e60da7cf9de644ce3f6cce9c007b17e6a385c53' -or
-          [string]$lock.builderVersion -cne '1.10.6') {
-        throw 'Audited fallback is only available for exact experimental Builder 1.10.6 lock.'
-      }
-      $reviewArtifactId = 12145680508
-      $reviewUrl = "https://api.github.com/repos/$($lock.builderRepository)/actions/artifacts/$reviewArtifactId/zip"
-      Write-Host "[Reverse WASM] Using review-only archived source + WASM (artifact $reviewArtifactId; NOT a GitHub Release)"
-      Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
-      Invoke-WebRequest -Uri $reviewUrl -Headers $headers -UseBasicParsing -OutFile $zip
-      Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
-      $expectedStageNames = @(
-        'ffmpeg-wasm-video-reverse-single-thread-v1.10.6.zip',
-        'ffmpeg-wasm-video-reverse-multi-thread-v1.10.6.zip',
-        'ffmpeg-wasm-sources-v1.10.6.tar.gz',
-        'BUILDINFO-video-reverse-single-thread.txt',
-        'BUILDINFO-video-reverse-multi-thread.txt',
-        'SHA256SUMS.txt',
-        'VIDEO_REVERSE_LICENSE_ADDENDUM.md',
-        'VIDEO_REVERSE_PROMOTION_MANIFEST.json',
-        'REVERSE_CLIP_RELEASE_LOCK_PROPOSAL.json',
-        'REVIEW_RESTAGING_PROVENANCE.json'
-      )
-      $actualStageNames = @(Get-ChildItem -LiteralPath $extract -Force | ForEach-Object { $_.Name })
-      if ((@($actualStageNames | Where-Object { $_ -notin $expectedStageNames }).Count -ne 0) -or
-          (@($expectedStageNames | Where-Object { $_ -notin $actualStageNames }).Count -ne 0)) {
-        throw 'Reviewed backup has missing or unexpected files.'
-      }
-      foreach ($name in $expectedStageNames) {
-        if (-not (Test-Path -LiteralPath (Join-Path $extract $name) -PathType Leaf)) {
-          throw "Reviewed backup has unexpected non-file payload: $name"
-        }
-      }
-      $sourcePath = Join-Path $extract 'ffmpeg-wasm-sources-v1.10.6.tar.gz'
-      $noticePath = Join-Path $extract 'VIDEO_REVERSE_LICENSE_ADDENDUM.md'
-      $pins = @{
-        'ffmpeg-wasm-video-reverse-single-thread-v1.10.6.zip'='9087bf4d03b29d141e78c93e9de62a237f2d408f24b43caeef26072e6d3b21b0'
-        'ffmpeg-wasm-video-reverse-multi-thread-v1.10.6.zip'='b577be491754ecfa96d0b86021184b82b2fc280f8881bd73cb5d52d83914d3bd'
-        'ffmpeg-wasm-sources-v1.10.6.tar.gz'='9ceb47a5f46fb3484f8b1f6a8fa37e6d0dc4144aa09d78939ac9d23e8ab5ce92'
-        'VIDEO_REVERSE_LICENSE_ADDENDUM.md'='e011d66e3451dbf5ffa5f67f26636749664a69d285a3cfc665a71e36635e15f3'
-      }
-      foreach ($name in $pins.Keys) {
-        if ((Get-Hash (Join-Path $extract $name)) -cne $pins[$name]) {
-          throw "Reviewed fallback SHA-256 mismatch: $name"
-        }
-      }
-      $stageManifest = Get-Content -Raw -Encoding UTF8 (Join-Path $extract 'VIDEO_REVERSE_PROMOTION_MANIFEST.json') | ConvertFrom-Json
-      if ([string]$stageManifest.status -cne 'review-only-not-published' -or
-          [bool]$stageManifest.publicReleaseApproved -or
-          [bool]$stageManifest.gplLegalReviewApproved -or
-          [string]$stageManifest.exactCompiledBuilderSourceCommit -cne [string]$lock.builderCommit) {
-        throw 'Reviewed fallback improperly marked as a Release.'
-      }
-      $proposal = Get-Content -Raw -Encoding UTF8 (Join-Path $extract 'REVERSE_CLIP_RELEASE_LOCK_PROPOSAL.json') | ConvertFrom-Json
-      if ([string]$proposal.proposedLock.kind -cne 'review-only-proposed-github-release-st-mt' -or
-          [string]$proposal.proposedLock.status -cne 'review-only-not-published' -or
-          [bool]$proposal.releasePublished -or [bool]$proposal.legalApprovalRecorded) {
-        throw 'Reviewed fallback proposal must remain non-activatable.'
-      }
-      $sourceChecksums = @{}
-      foreach ($line in @(Get-Content -LiteralPath (Join-Path $extract 'SHA256SUMS.txt'))) {
-        if ($line -cnotmatch '^([a-f0-9]{64})  ([A-Za-z0-9._-]+)
-  }
-
-  $manifestFile = Join-Path $variantDir 'manifest.json'
-  $manifest = Get-Content -Raw -Encoding UTF8 $manifestFile | ConvertFrom-Json
-  Assert-Manifest $manifest
-  foreach ($name in @('ffmpeg.js', 'ffmpeg.wasm')) {
-    Assert-File $name $variantDir $entry.assets
-  }
-  $loader = Join-Path $cache 'browser-ffmpeg.js'
-  if ($isRelease) {
-    Assert-File 'browser-ffmpeg.js' $variantDir $entry.assets
-    Copy-Item -LiteralPath (Join-Path $variantDir 'browser-ffmpeg.js') -Destination $loader -Force
-  } else {
-    if ($variantDir -eq (Join-Path $cache 'reviewed-binary-extract')) {
-      Assert-File 'browser-ffmpeg.js' $variantDir $entry.assets
-      Copy-Item -LiteralPath (Join-Path $variantDir 'browser-ffmpeg.js') -Destination $loader -Force
-    } else {
-      $runtimeUrl = "https://raw.githubusercontent.com/$($lock.builderRepository)/$($lock.builderCommit)/runtime/browser-ffmpeg.js"
-      Invoke-WebRequest -Uri $runtimeUrl -UseBasicParsing -Headers @{'User-Agent'='browser-kitty-reverse-clip/0.1'} -OutFile $loader
-    }
-  }
-  Assert-File 'browser-ffmpeg.js' $cache $entry.assets
-  foreach ($name in @('ffmpeg.js','ffmpeg.wasm')) {
-    Copy-Item -LiteralPath (Join-Path $variantDir $name) -Destination (Join-Path $cache $name) -Force
-  }
-  Copy-Item -LiteralPath $manifestFile -Destination (Join-Path $cache 'manifest.json') -Force
-  if ($isRelease) {
-    # Only create this marker *after* the public binary ZIP has been fetched
-    # and its hash and contained license/JS/WASM assets were checked.
-    $proof = @{ tag=$tag; asset=$assetName; sha256=$archiveSha; sourceSha256=$sourceSha; noticeSha256=$noticeSha } |
-      ConvertTo-Json -Compress
-    [IO.File]::WriteAllText($releaseArchiveProof, $proof, (New-Object Text.UTF8Encoding($false)))
-  }
-  if (-not (Cached)) { throw "Pinned $Variant runtime cache failed final validation." }
-  Write-Host "[Reverse WASM] $Variant JS/WASM and metadata verified. No runtime downloads."
-} finally {
-  Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $extract
-  Remove-Item -Force -ErrorAction SilentlyContinue $zip
-}
-) {
-          throw 'Original reviewed checksum file has invalid entries.'
-        }
-        if ($sourceChecksums.ContainsKey($Matches[2])) { throw 'Duplicate original reviewed checksum entry.' }
-        $sourceChecksums[$Matches[2]] = $Matches[1]
-      }
-      if ($sourceChecksums.Count -ne 5) { throw 'Expected exactly five original Builder source/binary checksums.' }
-      foreach ($name in @(
-        'ffmpeg-wasm-video-reverse-single-thread-v1.10.6.zip',
-        'ffmpeg-wasm-video-reverse-multi-thread-v1.10.6.zip',
-        'ffmpeg-wasm-sources-v1.10.6.tar.gz',
-        'BUILDINFO-video-reverse-single-thread.txt',
-        'BUILDINFO-video-reverse-multi-thread.txt')) {
-        if (-not $sourceChecksums.ContainsKey($name) -or
-            (Get-Hash (Join-Path $extract $name)) -cne $sourceChecksums[$name]) {
-          throw "Original Builder checksum differs in reviewed fallback: $name"
-        }
-      }
-      $noticeText = Get-Content -Raw -Encoding UTF8 -LiteralPath $noticePath
-      if (-not $noticeText.Contains('GPL-2.0-or-later') -or
-          -not $noticeText.Contains('video-reverse') -or
-          -not $noticeText.Contains('x264')) {
-        throw 'Reviewed fallback GPL notice is incomplete.'
-      }
-      $binaryArchive = Join-Path $extract "ffmpeg-wasm-video-reverse-$Variant-v1.10.6.zip"
-      $innerExtract = Join-Path $cache 'reviewed-binary-extract'
-      Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $innerExtract
-      Expand-Archive -LiteralPath $binaryArchive -DestinationPath $innerExtract -Force
-      $variantDir = $innerExtract
-      # The inner ffmpeg.js, ffmpeg.wasm and browser-ffmpeg.js remain
-      # validated below against the existing app lock SHA-256 values.
-      $buildInfoName = "BUILDINFO-video-reverse-$Variant.txt"
-      if ((Get-Hash (Join-Path $extract $buildInfoName)) -cne (Get-Hash (Join-Path $variantDir 'BUILDINFO.txt'))) {
-        throw "Reviewed fallback original BUILDINFO does not match $Variant binary."
-      }
-      foreach ($notice in @('LICENSES/FFmpeg-COPYING.GPLv2',
-          'LICENSES/x264-COPYING','LICENSES/Emscripten-LICENSE','THIRD_PARTY_NOTICES.md')) {
-        if (-not (Test-Path -LiteralPath (Join-Path $variantDir $notice) -PathType Leaf)) {
-          throw "Reviewed fallback missing license notice: $notice"
-        }
-      }
-    }
+    Write-Host "[Reverse WASM] Downloading $Variant from pinned Builder artifact $($lock.artifactId)"
+    Invoke-WebRequest -Uri $url -Headers $headers -UseBasicParsing -OutFile $zip
+    Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+    $variantDir = Join-Path $extract $Variant
   }
 
   $manifestFile = Join-Path $variantDir 'manifest.json'
