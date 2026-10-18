@@ -358,9 +358,7 @@ try {
       # The inner ffmpeg.js, ffmpeg.wasm and browser-ffmpeg.js remain
       # validated below against the existing app lock SHA-256 values.
       $buildInfoName = "BUILDINFO-video-reverse-$Variant.txt"
-      $outerBuildInfo = [IO.File]::ReadAllBytes((Join-Path $extract $buildInfoName))
-      $innerBuildInfo = [IO.File]::ReadAllBytes((Join-Path $variantDir 'BUILDINFO.txt'))
-      if (-not [Linq.Enumerable]::SequenceEqual([byte[]]$outerBuildInfo,[byte[]]$innerBuildInfo)) {
+      if ((Get-Hash (Join-Path $extract $buildInfoName)) -cne (Get-Hash (Join-Path $variantDir 'BUILDINFO.txt'))) {
         throw "Reviewed fallback original BUILDINFO does not match $Variant binary."
       }
       foreach ($notice in @('LICENSES/FFmpeg-COPYING.GPLv2',
