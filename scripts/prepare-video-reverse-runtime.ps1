@@ -2,7 +2,8 @@ param(
   [Parameter(Mandatory=$true)]
   [ValidateSet('single-thread','multi-thread')]
   [string]$Variant,
-  [switch]$ForceDownload
+  [switch]$ForceDownload,
+  [switch]$UseAuditedReviewFallback
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -123,7 +124,7 @@ function Assert-Manifest($m) {
     throw "Pinned $Variant runtime has no pthread pool."
   }
 }
-if (-not $ForceDownload -and (Cached)) {
+if (-not $ForceDownload -and -not $UseAuditedReviewFallback -and (Cached)) {
   Write-Host "[Reverse WASM] Using verified cached $Variant runtime."
   return
 }
@@ -198,9 +199,27 @@ try {
       Authorization = "Bearer $token"
     }
     $url = "https://api.github.com/repos/$($lock.builderRepository)/actions/artifacts/$($lock.artifactId)/zip"
-    Write-Host "[Reverse WASM] Downloading $Variant from pinned Builder artifact $($lock.artifactId)"
-    Invoke-WebRequest -Uri $url -Headers $headers -UseBasicParsing -OutFile $zip
-    Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+    $useBackup = [bool]$UseAuditedReviewFallback
+    if (-not $useBackup) {
+      Write-Host "[Reverse WASM] Downloading $Variant from pinned Builder artifact $($lock.artifactId)"
+      try {
+        Invoke-WebRequest -Uri $url -Headers $headers -UseBasicParsing -OutFile $zip
+      } catch {
+        $code = 0
+        if ($null -ne $_.Exception.Response) {
+          $code = [int]$_.Exception.Response.StatusCode
+        }
+        if ($code -notin @(404,410)) { throw }
+        $useBackup = $true
+        Write-Warning "Original temporary Builder artifact expired (HTTP $code). Checking independent SHA-pinned review-only backup."
+      }
+    }
+    if ($useBackup) {
+      Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
+      & (Join-Path $root 'scripts/restore-reviewed-video-reverse-runtime.ps1') -Variant $Variant -Destination $extract
+    } else {
+      Expand-Archive -LiteralPath $zip -DestinationPath $extract -Force
+    }
     $variantDir = Join-Path $extract $Variant
   }
 
@@ -215,8 +234,13 @@ try {
     Assert-File 'browser-ffmpeg.js' $variantDir $entry.assets
     Copy-Item -LiteralPath (Join-Path $variantDir 'browser-ffmpeg.js') -Destination $loader -Force
   } else {
-    $runtimeUrl = "https://raw.githubusercontent.com/$($lock.builderRepository)/$($lock.builderCommit)/runtime/browser-ffmpeg.js"
-    Invoke-WebRequest -Uri $runtimeUrl -UseBasicParsing -Headers @{'User-Agent'='browser-kitty-reverse-clip/0.1'} -OutFile $loader
+    if (Test-Path -LiteralPath (Join-Path $extract 'REVIEW_ONLY_BACKUP_VERIFIED') -PathType Leaf) {
+      # Backup helper already verified the original locked browser loader.
+      Copy-Item -LiteralPath (Join-Path $variantDir 'browser-ffmpeg.js') -Destination $loader -Force
+    } else {
+      $runtimeUrl = "https://raw.githubusercontent.com/$($lock.builderRepository)/$($lock.builderCommit)/runtime/browser-ffmpeg.js"
+      Invoke-WebRequest -Uri $runtimeUrl -UseBasicParsing -Headers @{'User-Agent'='browser-kitty-reverse-clip/0.1'} -OutFile $loader
+    }
   }
   Assert-File 'browser-ffmpeg.js' $cache $entry.assets
   foreach ($name in @('ffmpeg.js','ffmpeg.wasm')) {
