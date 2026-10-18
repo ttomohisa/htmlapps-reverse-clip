@@ -5,6 +5,16 @@ The RC is not a published release; PR #2, PR #1 and Builder PR #16 remain open D
 
 References: [APP_SPEC.md A-01–A-14](../../APP_SPEC.md), [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md), [historical G2 evidence](../feasibility/G2.md), [v0.8 compatibility matrix](../feasibility/V080_COMPATIBILITY_MATRIX.md), [2026-10-17 Android ST owner smoke](ANDROID_ST_RC_OWNER_SMOKE.md), [latest MT test deployment](MT_QA_BROWSER_EVIDENCE.md), [2026-10-17 Android MT owner smoke](ANDROID_MT_RC_OWNER_SMOKE.md).
 
+## 2026-10-19 — original Actions dependency expires; review-only build fallback verified
+
+The active lock still pins Builder 1.10.6 compiled assets from Actions artifact **11914029733**, expiring **2026-10-21T17:11:44Z**. Without mitigation, a clean build could fail once that artifact disappears, even though a later audited source-complete review archive is retained.
+
+- Added `scripts/restore-reviewed-video-reverse-runtime.ps1` as a **build-time-only, temporary** fallback. The existing importer uses it only after the original artifact returns HTTP **404/410**, or when explicitly requested for an isolated CI test. Authentication/server errors are not silently downgraded.
+- The fallback uses retained Builder review artifact **12145680508**, expiring **2026-11-17T17:48:11Z**. It refuses unexpected/missing stage payloads, compares the original whole ST/MT ZIP and source TAR SHA-256 digests, GPL notice digest, original five `SHA256SUMS` entries, review-only/unapproved metadata, BUILDINFO, and exact existing JS/WASM/browser-loader lock SHA values.
+- [Actual Windows backup test CI #39152055729](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/39152055729) **PASS**: both ST and MT imported from the review archive and subsequently reused their verified caches. No original WASM rebuild, new binary, production import, app runtime downloads, or owner device retest.
+- The application `reverse-runtime.lock.json` remains **unchanged** and **`temporary-not-release`**. This backup is not a durable public GPL distribution or a release-approved source. It too expires on November 17 and remains subordinate to final corresponding-source/licensing review and permanent Release publication.
+
+Gate G3 remains **NOT PASSED**. This protects continued Draft build/QA; it does not authorize PR merges, publication, or calling the runtime released.
 ## 2026-10-17 — Android ST + MT four-action owner smoke
 
 The owner confirmed **「4つともOK」** for the v0.9 **ST** Preview and then separately **「MTも4つOK」** after testing the latest **MT** temporary QA URL on Android Chrome. Both were answers to the same four requested actions: Reverse MP4 save/replay, Ping-pong save/replay, cancel→retry, and audible reversed audio. **ST + MT owner-reported basic Android smoke PASS**, not independently collected phone logs or ffprobe proof. Hardware/browser versions, exact input/output metadata, file-provider details and accurate timings were not supplied. [ST evidence](ANDROID_ST_RC_OWNER_SMOKE.md) · [MT evidence](ANDROID_MT_RC_OWNER_SMOKE.md).
