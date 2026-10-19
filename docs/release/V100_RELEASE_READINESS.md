@@ -4,6 +4,12 @@
 
 **Ordering:** finish v1.0.0 and its app distribution **before touching the Browser Kitty main repository**. This file does not authorize a v1.0.0 tag or app Release. The owner performs merges.
 
+## Release decision for owner review (2026-10-19)
+
+This v1.0.0 distribution PR is prepared from the merged and validated v1.0.0 source in main. **Merging the PR is the explicit owner acceptance of the limited Windows/Android Chrome H.264 release scope** and authorizes the one-shot GitHub Release workflow. The workflow publishes four ST/MT self-contained HTML variants, SHA256SUMS, the application MIT license, GPL runtime notices and release notes. It must fail without publishing on any failed hash/version/asset check.
+
+The original broader G2 matrix (iPhone/full-HD stress) stays NOT PASSED as a historical result; it is not part of the narrower initial support claim. There is no new device matrix or GPL audit. **Browser Kitty must remain unchanged until after a successful v1.0.0 app Release.**
+
 ## Initial supported scope (the previously agreed practical RC scope)
 
 - Windows Chrome and Android Chrome: short H.264 MP4 clips (roughly 0.5–5 seconds, 360/720px-oriented usage), reverse and forward/back ping-pong, optional reversed AAC for recognized inputs.

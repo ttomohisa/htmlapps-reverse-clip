@@ -1,6 +1,6 @@
-# Third-party notices — Reverse Clip v0.9.0 release candidate
+# Third-party notices — Reverse Clip v1.0.0
 
-**Status: Reverse Clip v0.9.0 is an unreleased RC integrated into `main`. Its dedicated FFmpeg WASM dependency is now published.**
+**Status: Reverse Clip v1.0.0 is distributed with the separately published FFmpeg WASM and its matching GPL corresponding source.**
 
 Reverse Clip's original application source is licensed under the repository's MIT license. Its bundled **video-reverse** WebAssembly runtime links **FFmpeg n9.0.1 and x264**, and is separately identified in its binary metadata as **GPL-2.0-or-later**, not MIT. Both the single-thread (ST) and multi-thread (MT/pthreads) variants use the same license classification. The application license does not replace FFmpeg/x264 license requirements. The owner authorized the dedicated Builder profile distribution; the app's separate G3 release acceptance remains pending.
 
@@ -33,4 +33,4 @@ The existing Builder-wide `v1.10.6` Release **does not** contain the `video-reve
 
 The GitHub Pages `/mt/` deployment conditionally loads `coi-serviceworker` **v0.1.7**, by Guido Zuidhof and contributors (MIT). Its exact commit and SHA-256 are pinned in `coi-serviceworker.lock.json`, with its notice in `licenses/coi-serviceworker-MIT.txt`. This helper is **not embedded** in the ST or MT single-HTML artifacts; it is a hosted Pages isolation fallback and is not a media upload or telemetry component.
 
-This document records the published dependency's provenance. Reverse Clip itself remains a Draft RC and has not been publicly released or integrated into Browser Kitty.
+This document records v1.0.0 app/runtime provenance. Browser Kitty integration follows only after the app release and is a separate task.

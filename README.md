@@ -17,7 +17,7 @@ The root page runs the **single-thread (ST)** version. An [isolated multi-thread
 
 [![Reverse Clip showing a generated MP4 in desktop Chrome](assets/screenshot-en.png)](https://ttomohisa.github.io/htmlapps-reverse-clip/)
 
-Desktop Chrome screenshot of an actual locally generated and verified MP4. This screenshot is **not physical Android device certification**. The app is currently an unreleased v0.9.0 release candidate.
+Desktop Chrome screenshot of an actual locally generated and verified MP4. This screenshot is **not physical Android device certification**. This screenshot was captured during v0.9.0 development; some controls have changed in v1.0.0.
 
 ## Features
 
@@ -36,7 +36,7 @@ Open the [GitHub Pages demo](https://ttomohisa.github.io/htmlapps-reverse-clip/)
 
 ### Use a standalone HTML file offline
 
-The readable **ST** build works directly via `file://` after it has been generated. The repository does not currently publish a versioned Reverse Clip app download; v1.0.0 is still being prepared.
+The readable **ST** build works directly via `file://` after it has been generated. Standalone downloads are provided by the [v1.0.0 GitHub Release](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/tag/v1.0.0).
 
 1. Download or clone this repository on Windows.
 2. Run `build-standalone.bat` to generate the self-contained HTML files.
@@ -130,6 +130,6 @@ The matching [FFmpeg/x264/Emscripten corresponding source](https://github.com/tt
 
 ## Project status and contributing
 
-**v0.9.0 RC PREPARATION:** The app code is integrated into `main`, but Reverse Clip itself has **not** had a v1.0.0 GitHub Release. The public FFmpeg WASM dependency is a separate Release. The historic G2 criteria remain unmet and the app's final G3 release decision is pending. [Current release plan](docs/release/V100_RELEASE_READINESS.md) · [Acceptance evidence](docs/release/RC_CHECKLIST.md).
+**v1.0.0:** This app is distributed through its [versioned GitHub Release](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/tag/v1.0.0). The initial scope is short H.264 MP4 workflows in Windows and Android Chrome. The historical broader G2 matrix was not passed; iPhone/HEVC/HDR are not claimed supported. [Release notes](docs/release/V100_RELEASE_NOTES.md) · [Test evidence](docs/release/RC_CHECKLIST.md).
 
 Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance. Reverse Clip will be added to Browser Kitty **after** its v1.0.0 release.
