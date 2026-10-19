@@ -1,9 +1,9 @@
 # Changelog
 
-## [1.0.0] — Release candidate (unreleased; 2026-10-19)
+## [1.0.0] — 2026-10-19
 
 - Update the product-facing HTML version to 1.0.0, remove the developer diagnostics and status panels, and simplify reverse/ping-pong headings and device-test wording. The MP4 error-details panel, format/quality warnings and all conversion safeguards remain.
-- No v1.0.0 app tag, GitHub Release, G3 approval or Browser Kitty integration is implied by this candidate.
+- Package four hash-checked ST/MT standalone HTML variants for v1.0.0 with license notices and a public pointer to GPL corresponding source. Browser Kitty integration follows separately after release.
 
 ## [0.9.0] — RC PREPARATION (2026-10-16 onward; not released)
 
