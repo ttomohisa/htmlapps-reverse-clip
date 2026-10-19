@@ -1,0 +1,128 @@
+name: Finish verified Reverse Clip v1.0.0 Draft Release
+
+# One-shot recovery after owner merged PR #9. The original publish run
+# uploaded all eight verified files but failed checking a not-yet-created
+# draft tag. Reuse the exact artifacts, never rebuild/repack or overwrite.
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/finish-v1.0.0-draft.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: reverse-clip-v1.0.0-release
+  cancel-in-progress: false
+
+jobs:
+  finish:
+    if: github.repository == 'ttomohisa/htmlapps-reverse-clip' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EXPECTED_SOURCE: 38b93935ba71b58d0f0b812fbfd3a225bb7e30b9
+      RELEASE_ID: "416883359"
+    steps:
+      - name: Retrieve exact originally validated source-run artifact
+        uses: actions/download-artifact@v4
+        with:
+          repository: ttomohisa/htmlapps-reverse-clip
+          run-id: 39196460254
+          name: reverse-clip-v1.0.0-release
+          github-token: ${{ github.token }}
+          path: release-dist
+
+      - name: Verify the eight original files and untouched Draft Release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" > /tmp/v1-draft.json
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          root=Path('release-dist')
+          names={
+            'reverse-clip-v1.0.0.html',
+            'reverse-clip-v1.0.0.self-extract.html',
+            'reverse-clip-v1.0.0.mt.html',
+            'reverse-clip-v1.0.0.mt.self-extract.html',
+            'LICENSE', 'THIRD_PARTY_NOTICES.md', 'V100_RELEASE_NOTES.md',
+            'SHA256SUMS.txt'
+          }
+          assert {p.name for p in root.iterdir() if p.is_file()}==names
+          hashes={}
+          for line in (root/'SHA256SUMS.txt').read_text().splitlines():
+            digest,name=line.split(maxsplit=1)
+            assert len(digest)==64 and name not in hashes
+            hashes[name]=digest.lower()
+          assert set(hashes)==names-{'SHA256SUMS.txt'}
+          hashes['SHA256SUMS.txt']=hashlib.sha256((root/'SHA256SUMS.txt').read_bytes()).hexdigest()
+          for name,sha in hashes.items():
+            assert hashlib.sha256((root/name).read_bytes()).hexdigest()==sha,name
+          draft=json.loads(Path('/tmp/v1-draft.json').read_text())
+          assert draft['id']==416883359
+          assert draft['draft'] is True and draft['tag_name']=='v1.0.0'
+          assert draft['target_commitish']==os.environ['EXPECTED_SOURCE']
+          assert draft['prerelease'] is False
+          assets=draft['assets']
+          assert len(assets)==8 and {a['name'] for a in assets}==names
+          for asset in assets:
+            name=asset['name']
+            assert asset['state']=='uploaded',name
+            assert asset['size']==(root/name).stat().st_size,name
+            assert asset['digest']=='sha256:'+hashes[name],name
+          st=(root/'reverse-clip-v1.0.0.html').read_text()
+          mt=(root/'reverse-clip-v1.0.0.mt.html').read_text()
+          for html,mode in ((st,'single-thread'),(mt,'multi-thread')):
+            assert '"version": "1.0.0"' in html or '"version":"1.0.0"' in html
+            assert 'const RUNTIME_VARIANT = "'+mode+'";' in html
+            assert "connect-src 'none'" in html
+            assert 'const PINGPONG_ENABLED = true;' in html
+            assert 'const AUDIO_MUX_ENABLED = true;' in html
+          notice=(root/'THIRD_PARTY_NOTICES.md').read_text()
+          assert 'GPL-2.0-or-later' in notice
+          assert 'ffmpeg-wasm-sources-v1.10.6.tar.gz' in notice
+          print('PASS original CI artifact == eight Draft Release SHA-256 digests, exact source commit and ST/MT metadata')
+          PY
+
+      - name: Publish only the verified existing Draft without creating another Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" -F draft=false \
+            --jq '{id,tag_name,draft,target_commitish}' > /tmp/v1-published.json
+          python3 - <<'PY'
+          import json
+          import os
+          p=json.load(open('/tmp/v1-published.json'))
+          assert p['id']==416883359 and p['tag_name']=='v1.0.0'
+          assert p['draft'] is False and p['target_commitish']==os.environ['EXPECTED_SOURCE']
+          print('PASS exact original Draft Release is now published')
+          PY
+
+      - name: Verify exact published Git tag and anonymous public files
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag_type="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v1.0.0" --jq '.object.type')"
+          tag_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/v1.0.0" --jq '.object.sha')"
+          if [[ "$tag_type" == tag ]]; then
+            tag_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_sha" --jq '.object.sha')"
+          fi
+          test "$tag_sha" = "$EXPECTED_SOURCE"
+          for name in reverse-clip-v1.0.0.html reverse-clip-v1.0.0.self-extract.html reverse-clip-v1.0.0.mt.html reverse-clip-v1.0.0.mt.self-extract.html SHA256SUMS.txt LICENSE THIRD_PARTY_NOTICES.md V100_RELEASE_NOTES.md; do
+            curl --fail --silent --show-error --location --retry 3 \
+              "https://github.com/$GITHUB_REPOSITORY/releases/download/v1.0.0/$name" \
+              --output "/tmp/public-$name"
+            cmp "release-dist/$name" "/tmp/public-$name"
+          done
+          echo 'PASS all eight Release files publicly downloadable, unchanged, from exact v1.0.0 source'
+          echo "Release published: https://github.com/$GITHUB_REPOSITORY/releases/tag/v1.0.0" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Browser Kitty was not modified.' >> "$GITHUB_STEP_SUMMARY"
