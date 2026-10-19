@@ -6,8 +6,8 @@ const read=p=>readFileSync(new URL('../../'+p,import.meta.url),'utf8');
 const config=JSON.parse(read('app.config.json'));
 const lock=JSON.parse(read('reverse-runtime.lock.json'));
 const rc=read('docs/release/RC_CHECKLIST.md');
-test('v0.9 RC preparation is not an approved release or passed gate',()=>{
-  assert.equal(config.version,'0.9.0');
+test('v1.0 candidate is labeled in HTML but has no signed-off app Release',()=>{
+  assert.equal(config.version,'1.0.0');
   assert.match(config.description,/forward-and-back MP4.*browser/);
   assert.match(config.descriptionJa,/動画はブラウザ内で処理します/);
   assert.doesNotMatch(config.description,/G2|G3|RC PREPARATION|not released/);
@@ -51,7 +51,7 @@ test('published Builder runtime is pinned but Reverse Clip app remains RC',()=>{
   assert.equal(lock.supplementalNoticeSha256,'e011d66e3451dbf5ffa5f67f26636749664a69d285a3cfc665a71e36635e15f3');
   assert.match(read('README.md'),/v0\.9\.0 RC PREPARATION/);
   assert.match(read('README.ja.md'),/v0\.9\.0 公開前RC準備版/);
-  assert.match(read('README-FIRST.txt'),/v0\.9\.0 — RC PREPARATION ONLY/);
+  assert.match(read('README-FIRST.txt'),/v1\.0\.0 — UI RELEASE CANDIDATE ONLY/);
   assert.match(read('VERIFY_OFFLINE.md'),/v0\.9\.0 RC PREPARATION/);
   assert.match(read('APP_SPEC.md'),/v0\.9\.0 RC準備中/);
 });

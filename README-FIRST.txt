@@ -1,5 +1,5 @@
-Reverse Clip v0.9.0 — RC PREPARATION ONLY (IN MAIN; APP NOT RELEASED).
-The app code is integrated into main. App Gate G3 remains OPEN; historic G2
+Reverse Clip v1.0.0 — UI RELEASE CANDIDATE ONLY (APP NOT YET RELEASED).
+The previous app code is integrated into main; v1.0.0 UI changes are in PR. App G3 remains OPEN; historic G2
 remains not passed. No Reverse Clip v0.9.0 or v1.0.0 app tag/Release exists.
 
 What is available:

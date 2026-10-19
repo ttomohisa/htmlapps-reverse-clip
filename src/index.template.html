@@ -491,8 +491,7 @@
     #resultArea{margin-top:12px}
     #reverseStatus{min-height:20px}
     #workspaceTitle:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:4px}
-    /* Keep diagnostics and development context accessible without forcing
-       ordinary mobile editing through a long troubleshooting dashboard. */
+    /* Reusable disclosure style for source-format notices. */
     .rc-advanced{margin:0 0 16px;border-radius:14px;overflow:hidden}
     .rc-advanced>summary{min-height:48px;display:list-item;padding:14px 18px;cursor:pointer}
     .rc-advanced>.workspace{margin:0;padding:10px 18px 20px;border:0;border-top:1px solid var(--line);
@@ -506,7 +505,7 @@
     .rc-flow-nav,.rc-mobile-only{display:none}
     @media(max-width:600px){
       /* All ordinary mobile action buttons need an adequate tap area,
-         including load/cancel/convert/save and optional diagnostics. */
+         including load/cancel/convert/save. */
       .button{min-height:44px}
       #workspaceTitle{scroll-margin-top:calc(var(--header-height) + 14px)}
       .rc-flow-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
@@ -570,8 +569,8 @@
   <main class="main">
     <section class="page-intro" aria-labelledby="heroTitle">
       <div>
-        <h2 id="heroTitle" data-i18n="introTitle">動画の逆再生・往復再生（実験版）</h2>
-        <p data-i18n="lead">動画の好きな区間を逆再生・往復再生MP4に。最大10秒、映像のみ。スマートフォンの動作は検証中です。</p>
+        <h2 id="heroTitle" data-i18n="introTitle">動画の逆再生・往復再生</h2>
+        <p data-i18n="lead">好きな区間を逆再生・往復再生MP4に。対応動画では音声も選べます。</p>
     <p id="mtBrowserNotice" class="rc-hint" hidden role="status" aria-live="polite"></p>
       </div>
       <div class="local-badge">
@@ -580,11 +579,11 @@
       </div>
     </section>
 
-    <!-- APP:BEGIN Feasibility diagnostic: no video export until a verified Builder runtime exists. -->
+    <!-- APP:BEGIN Video editor and export -->
 <section class="shell workspace" id="rcWorkflow" data-flow-step="video" aria-labelledby="workspaceTitle">
   <div class="workspace-head">
     <div><h2 id="workspaceTitle" tabindex="-1" data-i18n="workspaceTitle">動画を読み込む</h2>
-      <p id="workspaceBody" data-i18n="workspaceBody">端末内だけで動画の情報とブラウザーの動作を調べます。</p></div>
+      <p id="workspaceBody" data-i18n="workspaceBody">ブラウザー内で動画を確認し、作成する区間を選びます。</p></div>
   </div>
   <nav id="rcFlowNav" class="rc-flow-nav" aria-label="作業の進行" data-i18n-aria-label="flowNavigation">
     <button id="flowVideoButton" data-flow-target="video" type="button" aria-current="step" data-i18n="flowVideo">動画</button>
@@ -648,12 +647,12 @@
     </div>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
     <p id="memoryEstimate" class="rc-hint"></p>
-    <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声付き出力は開発中です。現在のMP4は音声なしで保存されます。</p>
+    <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声トラックを確認しています。音声なしでもMP4を作成できます。</p>
   </div>
 
   <section class="rc-export" id="reversePanel" hidden aria-labelledby="reverseTitle">
-    <h3 id="reverseTitle" data-i18n="reverseTitle">逆再生MP4を作成（実験版）</h3>
-    <p id="reverseDescription" data-i18n="reverseDescription" class="rc-hint">映像のみ・15fps。最大10秒の区間を分割処理し、MP4で保存します。</p>
+    <h3 id="reverseTitle" data-i18n="reverseTitle">逆再生MP4を作成</h3>
+    <p id="reverseDescription" data-i18n="reverseDescription" class="rc-hint">15fps・音声なしが既定。対応動画では音声も逆再生できます。最大10秒（1080p級は5秒）。</p>
     <p id="reverseStatus" class="rc-status" role="status" aria-live="polite"></p>
     <div class="rc-actions">
       <button id="reverseButton" class="button primary" type="button" disabled data-i18n="reverseButton">逆再生MP4を作成</button>
@@ -661,8 +660,7 @@
     </div>
     <progress id="reverseProgress" max="100" value="0" hidden data-i18n-aria-label="conversionProgressLabel" aria-label="MP4変換の進行状況"></progress>
     <details id="reverseErrorDetails" hidden><summary data-i18n="errorDetailTitle">エラー詳細</summary><pre id="reverseErrorDetail" class="rc-report"></pre></details>
-    <button id="openDiagnosticsButton" class="button" type="button" hidden data-i18n="openDiagnostics">診断ログを保存する</button>
-    <div id="resultArea" hidden>
+        <div id="resultArea" hidden>
       <h4 id="resultTitle" data-i18n="resultTitle">逆再生の結果</h4>
       <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="逆再生MP4のプレビュー"></video>
       <p id="resultInfo" class="rc-hint"></p>
@@ -679,44 +677,8 @@
     </div>
   </section>
 </section>
-<details id="diagnosticsDetails" class="rc-advanced">
-  <summary data-i18n="diagnosticsSummary">困ったときの診断</summary>
-<section class="shell workspace" aria-labelledby="probeTitle">
-  <div class="workspace-head">
-    <div><h2 id="probeTitle" data-i18n="probeTitle">動作テスト</h2>
-    <p data-i18n="probeBody">動画を選んでから実行すると、シーク・Worker・基本WASMをまとめて確認します。逆再生やMP4保存の試験ではありません。</p></div>
-  </div>
-  <div class="button-row">
-    <button class="button primary" id="probeButton" type="button" data-i18n="runProbe">ブラウザーの動作を確認</button>
-    <button class="button" id="seekButton" type="button" disabled data-i18n="runSeek">動画のシークを確認</button>
-  </div>
-  <pre class="rc-report" id="probeReport" aria-live="polite"></pre>
-  <div class="export-row">
-    <label class="export-field" for="outputFilename">
-      <span class="export-label" data-i18n="outputFilename">診断ファイル名</span>
-      <span class="filename-control"><input id="outputFilename" class="filename-input" type="text" maxlength="120" autocomplete="off" spellcheck="false" aria-describedby="outputFilenameHint"><span class="filename-extension" aria-hidden="true">.json</span></span>
-      <span class="sr-only" id="outputFilenameHint" data-i18n="outputFilenameHint">拡張子 .json は自動で付きます</span>
-    </label>
-    <button class="button" id="downloadReportButton" type="button" data-i18n="saveReport">診断ログを保存</button>
-  </div>
-  <p class="rc-hint" data-i18n="reportPrivacy">保存されるログにはブラウザー情報が含まれますが、動画の内容やファイル名は含みません。</p>
-</section>
-</details>
 <!-- APP:END -->
 
-    <details id="developmentDetails" class="rc-advanced">
-      <summary data-i18n="developmentSummary">開発中の機能と制限</summary>
-    <section class="shell section" aria-labelledby="guaranteesTitle">
-  <div class="section-head"><h2 class="section-title" id="guaranteesTitle" data-i18n="guaranteesTitle">開発状況：技術検証中</h2>
-  <p data-i18n="guaranteesBody">PCと一部Android実機で逆再生・往復再生を確認済み。動画形式・音声・高解像度は引き続き検証しています。</p></div>
-  <div class="card-grid">
-    <article class="card"><div class="card-number">01</div><h3 data-i18n="card1Title">フレームの反転</h3><p data-i18n="card1Body">ネイティブFFmpegで20フレームの逆順と、折返しが重複しない39フレームの往復を確認。</p></article>
-    <article class="card"><div class="card-number">02</div><h3 data-i18n="card2Title">ブラウザー検証</h3><p data-i18n="card2Body">ファイル読み込み・シーク・Worker・基本WASMの動作を端末別に確認中。</p></article>
-    <article class="card"><div class="card-number">03</div><h3 data-i18n="card3Title">動画書き出し</h3><p data-i18n="card3Body">最大10秒の逆再生・往復再生MP4に対応。高解像度・音声付き出力は検証中です。</p></article>
-  </div>
-</section>
-
-    </details>
     <section class="shell section">
       <details>
         <summary data-i18n="buildInfo">Build information</summary>
@@ -898,8 +860,8 @@
     "brandMeta": "好きな区間を逆再生MP4に",
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
-    "introTitle": "動画の逆再生・往復再生（実験版）",
-    "lead": "動画から最大10秒の区間を選んで逆再生・往復再生MP4に。音声付きは対応動画で選べます。実機検証中です。",
+    "introTitle": "動画の逆再生・往復再生",
+    "lead": "動画の好きな区間を逆再生・往復再生MP4に。対応する動画では音声も選べます。",
     "localBadge": "完全ローカル処理",
     "sourceVideoLabel": "元動画のプレビュー",
     "resultReverseVideoLabel": "逆再生MP4のプレビュー",
@@ -962,7 +924,7 @@
     "audioModeLabel": "音声",
     "audioNone": "音声なし（既定）",
     "audioReverseOption": "音声も逆再生",
-    "audioPreparingNotice": "音声付き出力は開発中です。現在のMP4は音声なしで保存されます。",
+    "audioPreparingNotice": "音声トラックを確認しています。音声なしでもMP4を作成できます。",
     "audioCheckingLater": "選択動画の音声トラックを確認しています。",
     "audioPresent": "元動画に音声トラックがあります。音声付き出力の検証中です。",
     "audioAbsent": "この動画に音声はありません。音声なしのMP4を作成します。",
@@ -976,7 +938,7 @@
     "modeLabel": "作成モード",
     "modeReverse": "逆再生",
     "modePingpong": "往復再生",
-    "qualityLabel": "実験版の画質",
+    "qualityLabel": "出力画質",
     "qualityStandard": "長辺360px",
     "qualityHigh": "長辺720px",
     "qualityHdPilot": "標準720p級（最大10秒・試験）",
@@ -985,43 +947,16 @@
     "rangeFullHdPilotWarning": "1080p級（短辺最大1080px・長辺最大1920px、最大5秒）の試験設定です。実機メモリ負荷は未検証です。",
     "rangeHdPilotTooLong": "720p級は最大10秒です。",
     "rangeFullHdPilotTooLong": "1080p級は最大5秒です。範囲を短くするか720p級を選んでください。自動変更はしません。",
-    "rangeValid": "この範囲は実験版で処理できます。",
+    "rangeValid": "この範囲で処理できます。",
     "rangeInvalid": "開始・終了を確認してください（0.5〜10秒）。",
-    "rangeTooLong": "この実験版は最大10秒です。自動で範囲を短くすることはありません。",
+    "rangeTooLong": "区間は最大10秒までです。自動で短くすることはありません。",
     "memoryNotice": "各区間で保持する映像フレームの概算: 最大約{mib}MiB（実際のメモリ使用量はこれより大きくなります）",
-    "diagnosticsSummary": "困ったときの診断",
-    "openDiagnostics": "診断ログを保存する",
-    "developmentSummary": "開発中の機能と制限",
-    "probeTitle": "動作テスト",
-    "probeBody": "動画を選んでから実行すると、シーク・Worker・基本WASMをまとめて確認します。逆再生やMP4保存の試験ではありません。",
-    "runProbe": "ブラウザーの動作を確認",
-    "runSeek": "動画のシークを確認",
-    "outputFilename": "診断ファイル名",
-    "outputFilenameHint": "拡張子 .json は自動で付きます",
-    "saveReport": "診断ログを保存",
-    "reportPrivacy": "診断ログにはブラウザー情報が含まれますが、動画内容・ファイル名は含みません。",
-    "notRun": "まだテストを実行していません。",
-    "probeStarted": "動作テストを実行しています…",
-    "probeReady": "テストが完了しました。",
-    "probeFailed": "一部の動作を確認できませんでした。",
-    "seekDone": "シーク結果: {ms} ms",
-    "seekFailed": "シークできませんでした。",
-    "reportSaved": "診断ログのダウンロードを開始しました。",
-    "noVideo": "動画を選んでから実行してください。",
-    "guaranteesTitle": "開発状況：技術検証中",
-    "guaranteesBody": "逆再生・往復再生をPCと一部Android実機で確認済み。動画形式や音声、メモリ負荷などの対応範囲は引き続き検証しています。",
-    "card1Title": "反転アルゴリズム",
-    "card1Body": "ネイティブFFmpegで20フレームの逆順と、折返しに重複がない39フレームの往復を確認。",
-    "card2Title": "ブラウザー検証",
-    "card2Body": "動画選択・シーク・Worker・基本WASMを端末別に確認中です。",
-    "card3Title": "MP4作成",
-    "card3Body": "最大10秒の短い区間を逆再生・往復再生MP4に変換します。高解像度や音声付き出力の検証は継続中です。",
     "helpBasicsTitle": "使い方",
     "helpStep1": "動画を選択します。可能な端末では撮影からも取り込めます。",
     "helpStep2": "元動画の直下のハンドルか秒数入力で区間を調整し、「選択範囲を再生」で確認します。",
     "helpStep3": "モード・画質・必要に応じて音声を選び、MP4を作成します。結果を再生してから保存できます。",
     "helpPrivacyTitle": "プライバシー",
-    "helpPrivacyBody": "動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。",
+    "helpPrivacyBody": "動画は端末内で処理し、アプリから外部へ送信しません。生成したMP4は保存操作でダウンロードします。",
     "helpNotesTitle": "制限と注意",
     "helpNoteStorage": "ブラウザーの制限によってMOVやHEVCをプレビューできない場合があります。",
     "helpNoteBrowser": "Androidの一部の写真・クラウドからは動画を直接読み込めない場合があります。64MiB以下で直接読めないときだけ端末のメモリに一時コピーして再試行します。外部には送信しません。",
@@ -1038,8 +973,8 @@
     "cancel": "キャンセル",
     "undo": "元に戻す",
     "rangeMemoryHigh": "推定フレーム保持量が実験版の上限48 MiBを超えています。範囲か画質を下げてください。",
-    "reverseTitle": "短い動画を逆再生（実験版）",
-    "reverseDescription": "15fps・音声なしが既定。対応する動画では音声の逆再生も選べます。区間は最大10秒（1080p級は5秒）で、長い区間や高画質は実機検証中です。",
+    "reverseTitle": "短い動画を逆再生",
+    "reverseDescription": "15fps・音声なしが既定。対応する動画では音声も逆再生できます。区間は最大10秒（1080p級は5秒）です。高画質は端末によって処理に時間がかかる場合があります。",
     "reverseButton": "逆再生MP4を作成",
     "cancelReverse": "処理を中止",
     "reverseFilenameLabel": "保存するMP4の名前",
@@ -1069,7 +1004,7 @@
     "pingpongForwardChunk": "往路の区間 {current}/{total} を処理中… {progress}%",
     "pingpongReturnChunk": "復路の区間 {current}/{total} を処理中… {progress}%",
     "pingpongTitle": "往復再生のMP4を作る",
-    "pingpongDescription": "選択区間を通常再生→逆再生で1本のMP4にします。折り返しの重複フレームを除きます。15fps・音声選択可（対応動画のみ）の実験版です。",
+    "pingpongDescription": "選択区間を通常再生→逆再生で1本のMP4にします。折り返しの重複フレームを除きます。15fps・音声選択可（対応動画のみ）。",
     "pingpongResultTitle": "往復再生の結果",
     "createPingpong": "往復再生MP4を作成",
     "pingpongSuccess": "往復再生MP4を作成しました。結果を確認して保存できます。",
@@ -1085,8 +1020,8 @@
     "brandMeta": "Reverse moments from your videos",
     "helpTitle": "How to use & limitations",
     "close": "Close",
-    "introTitle": "Reverse & ping-pong video (experimental)",
-    "lead": "Turn up to 10 seconds of video into a reversed or forward-and-back MP4. Audio is optional for supported sources; phone support is experimental.",
+    "introTitle": "Reverse & ping-pong video",
+    "lead": "Turn a selected section into a reversed or forward-and-back MP4, with optional audio for supported videos.",
     "localBadge": "Fully local processing",
     "sourceVideoLabel": "Source video preview",
     "resultReverseVideoLabel": "Reversed MP4 preview",
@@ -1149,7 +1084,7 @@
     "audioModeLabel": "Audio",
     "audioNone": "No audio (default)",
     "audioReverseOption": "Reverse audio too",
-    "audioPreparingNotice": "Audio export is under development. Current MP4 exports contain no audio.",
+    "audioPreparingNotice": "Checking the source audio track. You can also create a silent MP4.",
     "audioCheckingLater": "Checking this video's audio track.",
     "audioPresent": "This video has an audio track. Audio export is under validation.",
     "audioAbsent": "This video has no audio; export will be silent.",
@@ -1163,7 +1098,7 @@
     "modeLabel": "Conversion mode",
     "modeReverse": "Reverse",
     "modePingpong": "Ping-pong",
-    "qualityLabel": "Experimental quality",
+    "qualityLabel": "Output quality",
     "qualityStandard": "Long edge 360px",
     "qualityHigh": "Long edge 720px",
     "qualityHdPilot": "Standard 720p-class (up to 10s; pilot)",
@@ -1172,43 +1107,16 @@
     "rangeFullHdPilotWarning": "Experimental 1080p-class (short edge max 1080px, long edge max 1920px), up to 5 seconds; phone RAM use unverified.",
     "rangeHdPilotTooLong": "720p-class is limited to 10 seconds.",
     "rangeFullHdPilotTooLong": "1080p-class is limited to 5 seconds. Shorten the range or select 720p; no automatic changes.",
-    "rangeValid": "This segment is within the experimental limits.",
+    "rangeValid": "This segment is within the supported time limit.",
     "rangeInvalid": "Check start and end (0.5–10 seconds).",
-    "rangeTooLong": "This experimental build supports up to 10 seconds and will not silently shorten the selection.",
+    "rangeTooLong": "The maximum segment is 10 seconds. The app will not shorten your selection automatically.",
     "memoryNotice": "Approximate buffered frames per segment: up to ~{mib}MiB (actual RAM use is higher).",
-    "diagnosticsSummary": "Troubleshooting and diagnostics",
-    "openDiagnostics": "Download a diagnostic report",
-    "developmentSummary": "Development status and limitations",
-    "probeTitle": "Browser checks",
-    "probeBody": "After selecting a video, run one check for seeking, Worker and basic WASM. This does not reverse or export video.",
-    "runProbe": "Check browser capabilities",
-    "runSeek": "Test video seeking",
-    "outputFilename": "Diagnostic filename",
-    "outputFilenameHint": "The .json extension is added automatically",
-    "saveReport": "Download diagnostic JSON",
-    "reportPrivacy": "The report includes browser details, but no media contents or filename.",
-    "notRun": "No tests have run yet.",
-    "probeStarted": "Checking capabilities…",
-    "probeReady": "Checks completed.",
-    "probeFailed": "Some checks were unsuccessful.",
-    "seekDone": "Seek completed in {ms} ms",
-    "seekFailed": "Video seeking failed.",
-    "reportSaved": "Diagnostic JSON download started.",
-    "noVideo": "Choose a video first.",
-    "guaranteesTitle": "Development status: feasibility",
-    "guaranteesBody": "Reverse and ping-pong exports are verified on desktop and selected Android devices. Other codecs, audio and high-memory scenarios are still under review.",
-    "card1Title": "Reverse algorithm",
-    "card1Body": "Native FFmpeg baseline passed 20-frame reversal and 39-frame ping-pong with no repeated turning frame.",
-    "card2Title": "Browser compatibility",
-    "card2Body": "Testing local video selection, seeking, Workers and basic WebAssembly support.",
-    "card3Title": "MP4 export",
-    "card3Body": "Reverse or ping-pong up to 10 seconds. High-resolution and audio modes are still being validated.",
-    "helpBasicsTitle": "How to test",
+    "helpBasicsTitle": "How to use",
     "helpStep1": "Choose a video, or record one where supported.",
     "helpStep2": "Drag the start/end handles below the source video, or enter times; play the selected portion to check it.",
     "helpStep3": "Choose Reverse or Ping-pong, output quality and optional reverse audio when supported. Create the MP4, preview the result and save it.",
     "helpPrivacyTitle": "Privacy",
-    "helpPrivacyBody": "Your video stays in the browser. Only an explicit download creates a diagnostic report.",
+    "helpPrivacyBody": "Your video is processed in the browser and is not uploaded by the app. Saving the generated MP4 starts a browser download.",
     "helpNotesTitle": "Limitations",
     "helpNoteStorage": "MOV or HEVC preview may be unavailable depending on the browser.",
     "helpNoteBrowser": "Some Android photo/cloud providers cannot be read directly. Only if direct access fails, a file up to 64 MiB may be temporarily copied in browser memory to retry. Nothing is uploaded.",
@@ -1225,8 +1133,8 @@
     "cancel": "Cancel",
     "undo": "Undo",
     "rangeMemoryHigh": "Estimated frame cache exceeds the experimental 48 MiB limit. Reduce time or quality.",
-    "reverseTitle": "Reverse a short clip (experimental)",
-    "reverseDescription": "15fps · silent by default, with optional reverse audio for supported videos. Up to 10 seconds (5 seconds at 1080p-class); longer clips and high quality remain experimental on phones.",
+    "reverseTitle": "Reverse a short clip",
+    "reverseDescription": "15fps · silent by default; optional reverse audio for supported videos. Up to 10 seconds (5 seconds at 1080p-class). High-quality output can take longer or fail on some devices.",
     "reverseButton": "Create reversed MP4",
     "cancelReverse": "Cancel conversion",
     "reverseFilenameLabel": "MP4 filename",
@@ -1256,7 +1164,7 @@
     "pingpongForwardChunk": "Processing forward segment {current}/{total}… {progress}%",
     "pingpongReturnChunk": "Processing return segment {current}/{total}… {progress}%",
     "pingpongTitle": "Create a ping-pong MP4",
-    "pingpongDescription": "Forward then backward in one MP4, without duplicate turning/loop frames. Experimental H.264 at 15fps; optional audio for supported sources.",
+    "pingpongDescription": "Forward then backward in one MP4, without duplicate turning/loop frames. H.264 at 15fps; optional audio for supported sources.",
     "pingpongResultTitle": "Ping-pong result",
     "createPingpong": "Create ping-pong MP4",
     "pingpongSuccess": "Ping-pong MP4 created. Preview and save the result.",
@@ -1271,7 +1179,6 @@
 };
       const storageKeys = { language: APP_CONFIG.slug + ':language' };
       const $ = selector => document.querySelector(selector);
-      const outputFilename = $('#outputFilename');
       let language = readStorage(storageKeys.language) || detectLanguage();
 
       // Reusable Promise-based confirmation API. Canonical source: components/confirm-dialog.html.
@@ -1375,7 +1282,7 @@
         lastSelectedMode: 'reverse', audioPresent: null, audioChecked: false,
         audioCodec: null, audioInspectionError: null,
         audioInspectController: null, audioInspectRunner: null,
-        probe: null, seek: null, note: null, validRange: false, conversion: null,
+        validRange: false, conversion: null,
         copiedInput: null, inputPreparePromise: null, inputProbeController: null,
         inputTransport: 'workerfs', inputPrepareError: null };
       // Mobile input-provider failures may require a bounded in-memory
@@ -1530,7 +1437,6 @@
         state.generation += 1;
         state.file = null;
         setSourcePhase('empty');
-        state.seek = null;
         state.copiedInput = null;
         state.inputPreparePromise = null;
         state.inputPrepareError = null;
@@ -1551,7 +1457,6 @@
         $('#audioInput').disabled = true;
         $('#audioReverseOption').disabled = true;
         $('#qualityInput').disabled = true;
-        $('#seekButton').disabled = true;
         $('#reversePanel').hidden = true;
         state.validRange = false;
         $('#reverseFilename').value = 'reverse-clip-reversed';
@@ -1573,7 +1478,7 @@
         video.load();
         $('#videoArea').hidden = true;
         $('#reversePanel').hidden = true;
-        for(const id of ['rangeStart','rangeEnd','modeInput','audioInput','audioReverseOption','qualityInput','seekButton','trimStartSlider','trimEndSlider','previewSelectionButton'])
+        for(const id of ['rangeStart','rangeEnd','modeInput','audioInput','audioReverseOption','qualityInput','trimStartSlider','trimEndSlider','previewSelectionButton'])
           $('#' + id).disabled = true;
         previewSelectionActive = false;
         resetConversion();
@@ -2088,7 +1993,7 @@
         $('#videoArea').hidden = false;
         $('#rangeStart').value = '0';
         $('#rangeEnd').value = String(Math.max(.5,Math.floor(Math.min(5,video.duration)*10)/10).toFixed(1));
-        for (const id of ['rangeStart','rangeEnd','qualityInput','seekButton']) $('#' + id).disabled = false;
+        for (const id of ['rangeStart','rangeEnd','qualityInput']) $('#' + id).disabled = false;
         $('#modeInput').disabled = !PINGPONG_ENABLED;
         $('#pingpongOption').disabled = !PINGPONG_ENABLED;
         // v0.5: defer audio until we have positively identified a source
@@ -2177,7 +2082,6 @@
         setStatus(state.sourcePhase === 'error' ? (state.sourceErrorKey || 'cantRead') :
                   state.sourcePhase === 'ready' ? 'loaded' :
                   state.sourcePhase === 'inspecting' ? 'loading' : 'nothingSelected');
-        $('#probeReport').textContent = (state.probe || state.seek) ? JSON.stringify({capabilities:state.probe,seek:state.seek},null,2) : translate('notRun');
         updateModeUi();
         rangeInfo();
         updateFlowNavigation();
@@ -2189,82 +2093,6 @@
             step:translate(flowStep==='video'?'flowVideo':flowStep==='edit'?'flowEdit':'flowResult')
           });
       }
-      async function probeBrowser() {
-        const probe = { measuredAt: new Date().toISOString(), secureContext: isSecureContext,
-          standaloneFile: location.protocol === 'file:',
-          wasmAvailable: false, workerAvailable: false, blobWorkerPassed: false,
-          note: 'Empty WASM module and blob Worker only; FFmpeg is not tested.' };
-        $('#probeReport').textContent = translate('probeStarted');
-        try {
-          if (typeof WebAssembly === 'object') {
-            const header = new Uint8Array([0,97,115,109,1,0,0,0]);
-            await WebAssembly.instantiate(header);
-            probe.wasmAvailable = true;
-          }
-        } catch (error) { probe.wasmError = String(error); }
-        probe.workerAvailable = typeof Worker === 'function';
-        if (probe.workerAvailable) {
-          const url = URL.createObjectURL(new Blob([
-            "onmessage=()=>postMessage({wasm:typeof WebAssembly === 'object'})"
-          ], { type: 'text/javascript' }));
-          let worker;
-          try {
-            worker = new Worker(url);
-            const reply = await Promise.race([
-              new Promise((resolve,reject)=>{worker.onmessage = e => resolve(e.data);worker.onerror = e => reject(new Error(e.message || 'Worker failed'));worker.postMessage('test');}),
-              new Promise((_,reject)=>setTimeout(()=>reject(new Error('Worker timed out')),5000))
-            ]);
-            probe.blobWorkerPassed = Boolean(reply && reply.wasm);
-          } catch(error) { probe.workerError = String(error); }
-          finally { if(worker) worker.terminate(); URL.revokeObjectURL(url); }
-        }
-        state.probe = probe;
-        // Run seeking as part of the same check when the video is playable.
-        // A null seek in older reports meant "not run" rather than a failed seek.
-        const sourceGeneration = state.generation;
-        if (state.ready) await probeSeek({silent:true});
-        $('#probeReport').textContent = JSON.stringify({capabilities:state.probe,seek:state.seek},null,2);
-        const success = probe.wasmAvailable && probe.blobWorkerPassed &&
-          (sourceGeneration !== state.generation || !state.ready || (state.seek && !state.seek.error));
-        showToast(translate(success ? 'probeReady' : 'probeFailed'));
-      }
-      async function probeSeek({silent = false} = {}) {
-        if (!state.ready) { showToast(translate('noVideo')); return; }
-        const id = state.generation;
-        let target = Math.min(Math.max(.1,Number($('#rangeStart').value)+.2), video.duration-.05);
-        // Seeking to the current position need not emit the seeked event.
-        if (Math.abs(target - video.currentTime) < .1) {
-          target = Math.abs(video.duration - .1 - target) > .25 ? video.duration - .1 : .1;
-        }
-        const started = performance.now();
-        $('#seekButton').disabled = true;
-        let timer, onSeeked, onError;
-        try {
-          video.pause();
-          const elapsed = await new Promise((resolve,reject)=>{
-            const cleanup=()=>{clearTimeout(timer);video.removeEventListener('seeked',onSeeked);video.removeEventListener('error',onError);};
-            onSeeked=()=>{cleanup();resolve(performance.now()-started);};
-            onError=()=>{cleanup();reject(new Error('Video seek failed'));};
-            video.addEventListener('seeked',onSeeked,{once:true});
-            video.addEventListener('error',onError,{once:true});
-            timer=setTimeout(()=>{cleanup();reject(new Error('Seek timed out'));},10000);
-            video.currentTime=target;
-          });
-          if (id !== state.generation) return;
-          state.seek = { targetSeconds:target, actualSeconds:video.currentTime, elapsedMs:Math.round(elapsed) };
-          if (!silent) showToast(format('seekDone',{ms:Math.round(elapsed)}));
-          $('#probeReport').textContent = JSON.stringify({capabilities:state.probe,seek:state.seek},null,2);
-        } catch(error) {
-          if (id === state.generation) {
-            state.seek = {error:String(error)};
-            if (!silent) showToast(translate('seekFailed'));
-            $('#probeReport').textContent = JSON.stringify({capabilities:state.probe,seek:state.seek},null,2);
-          }
-        } finally {
-          if(id === state.generation) $('#seekButton').disabled=false;
-        }
-      }
-
       function suggestOutputFilename(sourceName, mode = 'reverse') {
         let stem = String(sourceName || '').replace(/\.(mp4|m4v|mov)$/i,'')
           .replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').replace(/\.+$/g,'').trim();
@@ -2322,7 +2150,6 @@
         $('#cancelReverseButton').hidden=true;
         $('#reverseErrorDetails').hidden=true;
         $('#reverseErrorDetails').open=false;
-        $('#openDiagnosticsButton').hidden=true;
         $('#reverseErrorDetail').textContent='';
         $('#flowSaveHint').hidden=true;
         $('#resultDimensions').textContent='';
@@ -2616,7 +2443,6 @@
           };
           $('#reverseErrorDetails').hidden=false;
           $('#reverseErrorDetails').open=true;
-          $('#openDiagnosticsButton').hidden=false;
           // Encoder statistics often overwrite the *useful* FFmpeg error in
           // the last few log lines. Keep diagnostic failures visible before
           // recent context, without retaining raw source names/media bytes.
@@ -2680,31 +2506,6 @@
         showToast(translate(state.conversion.mode==='pingpong'?'pingpongSaved':'reverseSaved'),{tone:'success'});
       }
 
-      function reportFilename() {
-        const raw = outputFilename.value.trim().replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').replace(/\.+$/g,'');
-        let name = raw.replace(/\.json$/i,'').trim() || 'reverse-clip-check';
-        if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(name)) name += '-file';
-        return name.slice(0,120);
-      }
-      function saveDiagnostic() {
-        const details = {createdAt:new Date().toISOString(),application:'Reverse Clip',version:APP_CONFIG.version, runtimeThreading:RUNTIME_VARIANT,
-          crossOriginIsolated:globalThis.crossOriginIsolated===true,
-          sharedArrayBuffer:typeof SharedArrayBuffer==='function',
-          userAgent:navigator.userAgent,mode:location.protocol,language,
-          source:{phase:state.sourcePhase,errorKey:state.sourceErrorKey,transport:state.inputTransport},
-          capabilities:state.probe,seek:state.seek,reverseConversion:state.conversion,
-          media:state.ready ? {mime:state.file.type,bytes:state.file.size,duration:video.duration,
-            width:video.videoWidth,height:video.videoHeight,start:Number($('#rangeStart').value),
-            end:Number($('#rangeEnd').value),quality:$('#qualityInput').value,plannedMode:$('#modeInput').value} : null,
-          note:'No raw media bytes or input file name are included. reverseConversion records only observed app output or errors.'};
-        const blob = new Blob([JSON.stringify(details,null,2)],{type:'application/json;charset=utf-8'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        outputFilename.value = reportFilename();
-        a.href = url; a.download = outputFilename.value+'.json'; a.click();
-        setTimeout(()=>URL.revokeObjectURL(url),15000);
-        showToast(translate('reportSaved'));
-      }
       // Navigation only reveals already-created state. Result remains
       // inaccessible until an actual MP4 Blob and metadata are available.
       for(const step of flowSteps){
@@ -2769,16 +2570,6 @@
       });
       $('#saveReverseButton').addEventListener('click',saveReverseResult);
       $('#reverseFilename').addEventListener('blur',normalizeMP4Filename);
-      $('#probeButton').addEventListener('click',probeBrowser);
-      $('#seekButton').addEventListener('click',probeSeek);
-      $('#downloadReportButton').addEventListener('click',saveDiagnostic);
-      $('#openDiagnosticsButton').addEventListener('click',()=>{
-        const details=$('#diagnosticsDetails');
-        details.open=true;
-        details.scrollIntoView({block:'start',behavior:'auto'});
-        details.querySelector('summary').focus({preventScroll:true});
-      });
-      outputFilename.addEventListener('blur',()=>outputFilename.value=reportFilename());
       $('#languageButton').addEventListener('click',()=>{language=language==='ja'?'en':'ja';writeStorage(storageKeys.language,language);applyLanguage();});
       const helpDialog = $('#helpDialog');
       let helpBackgroundScroll=null;
@@ -2820,7 +2611,6 @@
       });
       // bfcache restoration must not point to a revoked source URL.
       window.addEventListener('pagehide',()=>releaseSource());
-      outputFilename.value='reverse-clip-check';
       $('#reverseFilename').value='reverse-clip-reversed';
       $('#versionBadge').textContent='v'+APP_CONFIG.version;
       $('#buildVersion').textContent=APP_CONFIG.version;

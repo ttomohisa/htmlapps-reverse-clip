@@ -7,8 +7,8 @@ const builder=read('build-standalone.ps1');
 const lock=JSON.parse(read('reverse-runtime.lock.json'));
 const cfg=JSON.parse(read('app.config.json'));
 
-test('v0.9 retains v0.5 audio UI and starts disabled unless an audited AAC MP4 mux is pinned',()=>{
-  assert.equal(cfg.version,'0.9.0');
+test('v1 retains pinned AAC support with safe disabled initial selection',()=>{
+  assert.equal(cfg.version,'1.0.0');
   assert.ok(html.includes('id="audioInput" disabled'));
   assert.ok(html.includes('id="audioReverseOption" value="reverse"'));
   assert.ok(html.includes("const AUDIO_MUX_ENABLED = __AUDIO_MUX_ENABLED__"));
@@ -30,7 +30,7 @@ test('audio selection never silently changes silent-only output or retains stale
   assert.ok(html.includes('function inspectSourceAudio()'));
 });
 test('bilingual audio status text avoids falsely promising final functionality',()=>{
-  for(const s of ['音声なし（既定）','音声も逆再生','音声付き出力は開発中です',
-    'No audio (default)','Reverse audio too','Audio export is under development'])
+  for(const s of ['音声なし（既定）','音声も逆再生','音声トラックを確認しています',
+    'No audio (default)','Reverse audio too','Checking the source audio track'])
     assert.ok(html.includes(s),s);
 });

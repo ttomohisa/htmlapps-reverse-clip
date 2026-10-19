@@ -8,8 +8,8 @@ const html=read('src/index.template.html');
 const icon=read('assets/favicon.svg');
 const config=JSON.parse(read('app.config.json'));
 
-test('v0.9 release status stays in documentation instead of consumer UI',()=>{
-  assert.equal(config.version,'0.9.0');
+test('v1.0 UI uses product copy without development gate jargon',()=>{
+  assert.equal(config.version,'1.0.0');
   assert.match(config.description,/forward-and-back MP4.*browser/);
   assert.match(config.descriptionJa,/動画はブラウザ内で処理します/);
   assert.doesNotMatch(config.description,/PREPARATION|G2|G3|not released/);
@@ -34,7 +34,7 @@ test('v0.8 input hardening distinguishes short but decodable source and disclose
 });
 
 test('v0.3.0 version and exact supplied 64px favicon/brand icon',()=>{
-  assert.match(config.version,/^0\.(3|[4-9]|[1-9][0-9]+)\.[0-9]+$/,'v0.3 foundation must persist in later milestones');
+  assert.equal(config.version,'1.0.0');
   assert.equal(createHash('sha256').update(icon).digest('hex'),
     'd0ed25d1c017d253aaf48a3d482e6d60b97e6386edff5fa97bbf13e041af0f7e');
   assert.match(icon,/viewBox="0 0 64 64"/);
@@ -201,7 +201,9 @@ test('v0.7 result, errors, and save guidance are fully localized without false c
   assert.ok(!html.includes('Audio is not yet supported.'));
   assert.ok(html.includes('"reverseDescription": "15fps · silent by default'));
   assert.ok(html.includes('"reverseDescription": "15fps・音声なしが既定'));
-  assert.ok(html.includes('"reportSaved": "Diagnostic JSON download started."'));
+  assert.ok(!html.includes('"reportSaved": "Diagnostic JSON download started."'));
+  assert.ok(html.includes('"helpPrivacyBody": "Your video is processed in the browser'));
+  assert.ok(html.includes('"helpPrivacyBody": "動画は端末内で処理し'));
   assert.ok(!html.includes('Files up to 64 MiB are copied into local browser memory for conversion'));
 });
 
@@ -221,25 +223,22 @@ test('bilingual media labels and failed export focus are accessible',()=>{
   assert.ok(html.includes("if(window.matchMedia?.('(max-width:600px)').matches){"));
 });
 
-test('optional diagnosis and development explanations are collapsed but accessible',()=>{
-  for(const id of ['diagnosticsDetails','developmentDetails','openDiagnosticsButton']){
-    assert.equal(html.split('id="'+id+'"').length-1,1,id);
+test('developer diagnostic and development panels are gone; relevant error details remain',()=>{
+  for(const id of ['diagnosticsDetails','developmentDetails','openDiagnosticsButton',
+                   'downloadReportButton','probeButton','seekButton','probeReport',
+                   'guaranteesTitle','outputFilename']){
+    assert.ok(!html.includes('id="'+id+'"'),id+' should not be in the product HTML');
   }
-  assert.ok(html.includes('<details id="diagnosticsDetails" class="rc-advanced">'));
-  assert.ok(html.includes('<details id="developmentDetails" class="rc-advanced">'));
-  assert.ok(html.includes('"diagnosticsSummary": "困ったときの診断"'));
-  assert.ok(html.includes('"diagnosticsSummary": "Troubleshooting and diagnostics"'));
-  assert.ok(html.includes('"openDiagnostics": "診断ログを保存する"'));
-  assert.ok(html.includes('details.open=true;'));
-  assert.ok(html.includes("details.querySelector('summary').focus({preventScroll:true});"));
-  assert.ok(html.includes("$('#openDiagnosticsButton').hidden=false;"));
-  assert.ok(html.includes("$('#openDiagnosticsButton').hidden=true;"));
-  // Moved to a disclosure, not removed: the original diagnostic export,
-  // JS/WASM test and technical status still exist exactly once.
-  for(const id of ['downloadReportButton','probeButton','seekButton','probeReport',
-                   'guaranteesTitle','buildVersion']){
-    assert.equal(html.split('id="'+id+'"').length-1,1,id);
+  for(const id of ['reverseErrorDetails','reverseErrorDetail','buildVersion']){
+    assert.equal(html.split('id="'+id+'"').length-1,1,id+' must remain');
   }
-  assert.ok(html.includes('data-i18n="guaranteesBody"'));
-
+  assert.ok(html.includes('data-i18n="errorDetailTitle"'));
+  assert.ok(!html.includes('困ったときの診断'));
+  assert.ok(!html.includes('開発中の機能と制限'));
+  assert.ok(!html.includes('実機検証中です。'));
+  assert.ok(html.includes('"introTitle": "動画の逆再生・往復再生"'));
+  assert.ok(html.includes('"introTitle": "Reverse & ping-pong video"'));
+  assert.ok(!html.includes('動画の逆再生・往復再生（実験版）'));
+  assert.ok(html.includes("$('#versionBadge').textContent='v'+APP_CONFIG.version;"));
+  assert.ok(html.includes("$('#reverseErrorDetails').open=true;"));
 });
