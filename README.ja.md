@@ -12,13 +12,9 @@ v0.9.0の[Cloudflare PR #2プレビュー（ST）](https://r1414006067-pr-2-bk-p
 
 [MT版の一時QAページ](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/)は、最新v0.9.0を配布用ST版と分けて試すためのページです。Cloudflareの通常プレビューは隔離ヘッダーが落ちるため、このQAサイトでは既存のSHA-256固定Service Workerを使用します。[CI #38954969819](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38954969819)で、PCの実Chromeからページを開き、隔離・逆再生MP4生成・ダウンロードが成功しました。**Android ChromeのMT版でもユーザーから「MTも4つOK」と報告がありました**（逆再生MP4保存・再生、往復再生、キャンセル後の再試行、音声付き逆再生）。ただし実機ログ・OS/Chromeバージョン・MP4ファイル実物・処理時間は未取得です。[MT実機確認記録](docs/release/ANDROID_MT_RC_OWNER_SMOKE.md)。 このURLは検証専用であり、恒久的な配布先ではありません。[テスト証跡](docs/release/MT_QA_BROWSER_EVIDENCE.md)。
 
-## GPL対応ソース付き配布の準備状況（2026-10-17）
+## FFmpeg WASMと対応ソースの専用Release — 2026-10-19公開済み
 
-通常のBuilder `v1.10.6` は公開済みですが、Reverse Clip用のST・MTバイナリは含まれていません。専用のバージョン付きリリース `video-reverse-v1.10.6` は**提案段階**です。既存のWASM・ライセンス・対応ソースをハッシュ検証し、[審査用CI #39004330416](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39004330416)で一時的な配布候補を確保しました。これは正式な公開ではありません。
-
-将来の公開版を取り込むコードには、ソースとバイナリ両方のSHA-256検証を追加済みですが、現在のWASMロックは期限付きActions成果物のままです。ソース・ライセンスの最終確認、恒久配布、正式リリース承認は未完了です。[Builderの公開前チェック](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_PUBLICATION_HANDOFF.md)。
-
-**GPL表記の追加確認：** 既存の検証済みWASM ZIPにはGPL・x264のライセンス文書と、`video-reverse`をGPL対象とするビルド情報があります。ただし一般的な第三者ライブラリの説明文には専用プロファイル名がありません。[補足文書](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/blob/feat/video-reverse-poc/docs/VIDEO_REVERSE_LICENSE_ADDENDUM.md)を別に作成し、[CI #39006344474](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39006344474)でハッシュ検証のうえ審査候補に含めました。**元のWASM ZIPと対応ソースのバイト列は変更していません。** 将来の公開版取り込み時には、WASM・対応ソース・補足文書の3つを検証します。これで法的審査・正式公開が完了したわけではありません。
+Reverse ClipのST・MT両方のWASMは、正式公開された[Builder `video-reverse-v1.10.6` Release](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/releases/tag/video-reverse-v1.10.6)から取得します。検証済みバイナリ、FFmpeg／x264／Emscriptenの対応ソース、ビルド情報、GPL補足文書が公開されています。`reverse-runtime.lock.json` ではバイナリ・ソース・補足文書のSHA-256を固定しており、新しい環境でも期限付きActions成果物やGitHubトークンは必要ありません。Reverse Clipアプリ自体は引き続きDraft RCで、最終G3受入は別途行います。
 
 ## スクリーンショット — 実際のMP4変換結果
 

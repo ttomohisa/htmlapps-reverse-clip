@@ -29,20 +29,24 @@ test('all 14 specified acceptance IDs are present with explicit blockers',()=>{
   assert.match(rc,/conditional local whole-file copy/);
   assert.match(rc,/64MiB/);
 });
-test('temporary pinned WASM does not masquerade as permanent GPL corresponding source',()=>{
-  assert.equal(lock.kind,'experimental-dual-github-actions-artifact');
-  assert.equal(lock.status,'temporary-not-release');
+test('published Builder runtime is pinned but Reverse Clip app remains RC',()=>{
+  assert.equal(lock.kind,'github-release-st-mt');
+  assert.equal(lock.status,'release-approved');
   assert.equal(lock.builderVersion,'1.10.6');
   const notices=read('THIRD_PARTY_NOTICES.md');
   assert.ok(notices.includes(lock.builderCommit),'Third-party notices must match the compiled Builder commit');
   assert.ok(notices.includes('Builder version: **'+lock.builderVersion+'**'),'Third-party notices must show the current Builder version');
-  assert.ok(notices.includes(String(lock.artifactId)),'Third-party notices must identify the temporary locked artifact');
+  assert.ok(notices.includes(lock.builderTag),'Third-party notices must identify the released Builder profile');
+  assert.ok(notices.includes(lock.correspondingSourceAsset),'Corresponding source must be discoverable');
+  assert.ok(notices.includes(lock.supplementalNoticeAsset),'GPL addendum must be discoverable');
   assert.ok(notices.includes(lock.wasmLicense),'Third-party notices must state the current WASM license');
   assert.match(notices,/single-thread \(ST\).*multi-thread \(MT\/pthreads\)/s);
   assert.doesNotMatch(notices,/Builder 1\.10\.4|11715866319/);
   assert.ok(lock.variants['single-thread'].assets['ffmpeg.wasm']);
   assert.ok(lock.variants['multi-thread'].assets['ffmpeg.wasm']);
   assert.match(rc,/publicly obtainable matching GPL source/);
+  assert.equal(lock.correspondingSourceSha256,'9ceb47a5f46fb3484f8b1f6a8fa37e6d0dc4144aa09d78939ac9d23e8ab5ce92');
+  assert.equal(lock.supplementalNoticeSha256,'e011d66e3451dbf5ffa5f67f26636749664a69d285a3cfc665a71e36635e15f3');
   assert.match(read('README.md'),/v0\.9\.0 RC PREPARATION/);
   assert.match(read('README.ja.md'),/v0\.9\.0 公開前RC準備版/);
   assert.match(read('README-FIRST.txt'),/v0\.9\.0 — RC PREPARATION ONLY/);
@@ -92,5 +96,5 @@ test('actual JA/EN desktop and mobile screenshots match the reviewed CI manifest
   assert.match(read('README.md'),/not physical Android device certification/);
   assert.match(read('README.ja.md'),/Android実機による動作確認を表す画像ではありません/);
   assert.match(rc,/A-13 screenshots PASS/);
-  assert.equal(lock.status,'temporary-not-release');
+  assert.equal(lock.status,'release-approved');
 });

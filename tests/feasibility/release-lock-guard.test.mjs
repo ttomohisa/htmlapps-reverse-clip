@@ -54,7 +54,7 @@ function assertRejectedBeforeNetwork(lock,message){
   }
 }
 test('staged non-activatable kind is rejected by actual PowerShell importer',()=>{
-  assert.equal(current.status,'temporary-not-release');
+  assert.equal(current.status,'release-approved');
   assertRejectedBeforeNetwork(
     releaseCandidate('review-only-proposed-github-release-st-mt','review-only-not-published'),
     /Unsupported reverse runtime source kind/

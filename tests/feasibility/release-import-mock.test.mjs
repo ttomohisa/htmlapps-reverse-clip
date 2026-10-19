@@ -43,7 +43,7 @@ function populateVariant(dir,variant){
 
 test('offline mocked Release importer verifies BOTH ST/MT source, GPL notice, ZIP and cache',()=>{
   // Test only after the standard Windows build has resolved pinned ST/MT
-  // runtime bytes. No GitHub Release exists; all network calls are mocked.
+  // runtime bytes. Mock testing is offline despite the now-published GitHub Release.
   const tmp=mkdtempSync(join(tmpdir(),'rc-public-release-mock-'));
   try{
     const app=join(tmp,'app'),scripts=join(app,'scripts'),assets=join(tmp,'assets');

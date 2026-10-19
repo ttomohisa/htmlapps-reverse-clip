@@ -4,10 +4,10 @@ Desktop ST and isolated MT real H264/AAC Chrome tests:
 https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38864099711
 Physical Android 720p10s/1080p5s repeated device/RAM/audio acceptance missing.
 iPhone Safari hardware acceptance deferred. No tag, merge or release.
-Runtime currently pinned to reverse-runtime.lock.json temporary-not-release
-Builder v1.10.6 GitHub Actions artifact 11914029733 (recorded expiry
-2026-10-21); the reviewed matching permanent GPL source-complete
-binary+corresponding-source distribution is NOT yet available.
+Builder video-reverse-v1.10.6 ST/MT and matching GPL source are now publicly
+released: https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/releases/tag/video-reverse-v1.10.6
+reverse-runtime.lock.json pins public Release ZIPs, source and GPL notice by SHA-256.
+The Reverse Clip APP remains Draft; G3 not yet passed.
 Release notes are in docs/release/RELEASE_NOTES_DRAFT.md (DRAFT ONLY).
 
 HISTORICAL v0.5.0 AAC CHECKPOINT:

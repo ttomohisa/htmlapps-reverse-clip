@@ -4,7 +4,7 @@
 
 ## Build & compare output
 
-1. Run `build-standalone.bat` with a source checkout and pinned runtime cache, or set `GITHUB_TOKEN` with access to the public Builder Actions artifact on the **first build only**. Browser users never need this token.
+1. Run `build-standalone.bat` with a source checkout. The app downloads the fixed ST/MT assets and matching source from the [public Builder video-reverse Release](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/releases/tag/video-reverse-v1.10.6) on the first build. A GitHub token is no longer needed for the FFmpeg WASM runtime; browser users never needed one.
 2. Confirm the template builds `dist/index.html`, `dist/index.self-extract.html` and `reverse-clip.html`. These are separate variants of the same local application, not external-runtime shells.
 3. Confirm `connect-src 'none'`, `worker-src ... blob:`, and `script-src ... 'wasm-unsafe-eval'` in the effective CSP of both standalone files. Verify no external JS/WASM URLs remain.
 4. On Windows Chrome/Edge, open **each** HTML directly through `file://`. Observe the self-extract loader complete without CSP errors, then turn off network and reload. This local URL check is required; tests that use `page.set_content` do **not** replace it.

@@ -68,9 +68,10 @@ test('both variants require the same Builder commit but distinct binaries',()=>{
     lock.variants['multi-thread'].assets['ffmpeg.wasm']);
 });
 
-test('future immutable Builder Release import is fail-closed and current lock stays experimental',()=>{
+test('public Builder Release import is SHA-pinned and fail-closed',()=>{
   const importer=read('scripts/prepare-video-reverse-runtime.ps1');
-  assert.equal(lock.kind,'experimental-dual-github-actions-artifact');
+  assert.equal(lock.kind,'github-release-st-mt');
+  assert.equal(lock.builderTag,'video-reverse-v1.10.6');
   assert.ok(importer.includes("'github-release-st-mt'"));
   for(const token of [
     'releaseArchiveSha256','correspondingSourceSha256',
@@ -85,7 +86,7 @@ test('future immutable Builder Release import is fail-closed and current lock st
   assert.ok(importer.includes("lock.status -cne 'release-approved'"));
   assert.ok(importer.includes('Public Builder Release import requires explicit release-approved status.'));
   // A distinct video-reverse-v1.10.6 release must not collide with the
-  // existing Builder-wide v1.10.6 Release. Do not update today's temp lock.
+  // existing Builder-wide v1.10.6 Release. The lock now uses the public profile Release.
   assert.ok(importer.includes('video-reverse-v$version'));
   assert.ok(importer.includes('Verified-SourceRelease'));
   assert.ok(importer.includes('Verified-ReleaseNotice'));
@@ -104,5 +105,5 @@ test('future immutable Builder Release import is fail-closed and current lock st
   assert.ok(importer.includes('Get-Hash $releaseSourceProof'));
   assert.ok(importer.includes('Invoke-WebRequest -Uri "$releaseBase/$sourceAsset"'));
   assert.ok(importer.includes('Corresponding GPL source archive SHA-256 mismatch.'));
-  assert.equal(lock.status,'temporary-not-release');
+  assert.equal(lock.status,'release-approved');
 });
