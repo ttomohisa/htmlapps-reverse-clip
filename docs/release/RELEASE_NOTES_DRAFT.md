@@ -2,7 +2,7 @@
 
 **NOT FOR PUBLICATION.** RC preparation, NOT a signed-off release candidate; G2/G3 OPEN.
 
-**Builder dependency update (2026-10-19):** Dedicated [FFmpeg WASM video-reverse-v1.10.6](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/releases/tag/video-reverse-v1.10.6) ST/MT binaries, matching source and GPL notice are now published and publicly SHA-256 verified. The Reverse Clip importer is pinned to that Release (not expiring Actions artifacts). Reverse Clip itself remains an unmerged v0.9.0 Draft RC; final app testing/G3 acceptance is separate.
+**Builder dependency update (2026-10-19):** Dedicated [FFmpeg WASM video-reverse-v1.10.6](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/releases/tag/video-reverse-v1.10.6) ST/MT binaries, matching source and GPL notice are now published and publicly SHA-256 verified. The Reverse Clip importer is pinned to that Release (not expiring Actions artifacts). Reverse Clip v0.9.0 has been merged to main as an unreleased RC; final app G3 acceptance and the v1.0.0 app Release are separate.
 
 Reverse Clip creates locally processed reversed or forward-back (Ping-pong) H.264 MP4 clips. Output is 15fps and silent by default; supported source audio can use reverse AAC. Source files are not uploaded.
 

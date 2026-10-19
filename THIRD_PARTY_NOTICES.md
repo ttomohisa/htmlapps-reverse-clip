@@ -1,6 +1,6 @@
 # Third-party notices — Reverse Clip v0.9.0 release candidate
 
-**Status: Reverse Clip v0.9.0 is a Draft app RC. Its dedicated FFmpeg WASM dependency is now published.**
+**Status: Reverse Clip v0.9.0 is an unreleased RC integrated into `main`. Its dedicated FFmpeg WASM dependency is now published.**
 
 Reverse Clip's original application source is licensed under the repository's MIT license. Its bundled **video-reverse** WebAssembly runtime links **FFmpeg n9.0.1 and x264**, and is separately identified in its binary metadata as **GPL-2.0-or-later**, not MIT. Both the single-thread (ST) and multi-thread (MT/pthreads) variants use the same license classification. The application license does not replace FFmpeg/x264 license requirements. The owner authorized the dedicated Builder profile distribution; the app's separate G3 release acceptance remains pending.
 

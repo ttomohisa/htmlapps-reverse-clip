@@ -4,8 +4,8 @@
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
   "version": "0.9.0",
-  "description": "Reverse Clip v0.9.0 RC PREPARATION (Draft; not released). Browser-local ST/MT H.264/AAC Reverse/Ping-pong; G2 and G3 remain OPEN. Android hardware and permanent GPL corresponding-source Builder release are outstanding, iPhone deferred. No publication approved.",
-  "descriptionJa": "Reverse Clip v0.9.0公開前RC準備版（未マージDraft）。ST/MT逆再生・往復再生MP4、対応AAC音声を維持。Android実機G2と公開前G3は未合格。iPhone延期、GPL対応ソース恒久配布も未完了。正式公開は未承認です。",
+  "description": "Reverse a short video or create a forward-and-back MP4 in your browser. Reverse supported audio when needed. Your video stays on your device.",
+  "descriptionJa": "短い動画を逆再生や往復再生のMP4に。対応する動画では音声も逆向きにできます。動画はブラウザ内で処理します。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",
