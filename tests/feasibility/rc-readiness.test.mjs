@@ -12,7 +12,7 @@ test('v0.9 RC preparation is not an approved release or passed gate',()=>{
   assert.match(config.descriptionJa,/動画はブラウザ内で処理します/);
   assert.doesNotMatch(config.description,/G2|G3|RC PREPARATION|not released/);
   assert.doesNotMatch(config.descriptionJa,/G2|G3|Draft|未合格/);
-  assert.match(rc,/PREPARATION \/ NOT APPROVED/);
+  assert.match(rc,/v0\.9\.0 merged to main, app NOT RELEASED/);
   assert.match(rc,/Gate G3 NOT PASSED/);
   assert.match(read('docs/release/RELEASE_NOTES_DRAFT.md'),/NOT FOR PUBLICATION/);
   assert.match(read('CHANGELOG.md'),/\[0\.9\.0\].*not released/);
