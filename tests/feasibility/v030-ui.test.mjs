@@ -201,7 +201,9 @@ test('v0.7 result, errors, and save guidance are fully localized without false c
   assert.ok(!html.includes('Audio is not yet supported.'));
   assert.ok(html.includes('"reverseDescription": "15fps · silent by default'));
   assert.ok(html.includes('"reverseDescription": "15fps・音声なしが既定'));
-  assert.ok(html.includes('"reportSaved": "Diagnostic JSON download started."'));
+  assert.ok(!html.includes('"reportSaved": "Diagnostic JSON download started."'));
+  assert.ok(html.includes('"helpPrivacyBody": "Your video is processed in the browser'));
+  assert.ok(html.includes('"helpPrivacyBody": "動画は端末内で処理し'));
   assert.ok(!html.includes('Files up to 64 MiB are copied into local browser memory for conversion'));
 });
 

@@ -30,7 +30,7 @@ test('audio selection never silently changes silent-only output or retains stale
   assert.ok(html.includes('function inspectSourceAudio()'));
 });
 test('bilingual audio status text avoids falsely promising final functionality',()=>{
-  for(const s of ['音声なし（既定）','音声も逆再生','音声付き出力は開発中です',
-    'No audio (default)','Reverse audio too','Audio export is under development'])
+  for(const s of ['音声なし（既定）','音声も逆再生','音声トラックを確認しています',
+    'No audio (default)','Reverse audio too','Checking the source audio track'])
     assert.ok(html.includes(s),s);
 });
