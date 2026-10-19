@@ -6,6 +6,7 @@ on:
   push:
     branches: [main]
     paths: [".github/workflows/release-v1.0.0.yml"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -107,8 +108,17 @@ jobs:
             -H "Authorization: Bearer $GH_TOKEN" \
             -H 'Accept: application/vnd.github+json' \
             "https://api.github.com/repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG")"
-          if [[ "$code" != 404 ]]; then
-            echo "::error::Tag already present or not provably absent (HTTP $code)"; exit 1
+          if [[ "$code" == 200 ]]; then
+            old_type="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq '.object.type')"
+            old_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq '.object.sha')"
+            if [[ "$old_type" == tag ]]; then
+              old_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$old_sha" --jq '.object.sha')"
+            fi
+            if [[ "$old_sha" != "$GITHUB_SHA" ]]; then
+              echo "::error::Existing tag does not match verified source commit"; exit 1
+            fi
+          elif [[ "$code" != 404 ]]; then
+            echo "::error::Tag status is not authoritative (HTTP $code)"; exit 1
           fi
           gh release create "$TAG" release-dist/* --draft --latest=false \
             --target "$GITHUB_SHA" --title 'Reverse Clip v1.0.0' \
