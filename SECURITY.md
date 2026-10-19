@@ -54,3 +54,21 @@ Before adding or upgrading a package:
 - Refresh the selected lock entry with the dependency scripts; never hand-edit a lock hash to bypass a mismatch.
 - Rebuild with a clean cache.
 - Test with the network disabled.
+
+## Reverse Clip experimental binary boundary
+
+The app embeds a single-thread FFmpeg/x264 WASM core licensed GPL-2.0-or-later, **not MIT**, and a small public-libav runner. The runtime is retrieved only at build time from a pinned Builder GitHub Actions artifact; every core file is SHA-256 verified against `reverse-runtime.lock.json`. There is no per-user runtime fetch: `connect-src 'none'` remains active. Actions artifacts are temporary, not a stable release distribution channel. The final release requires corresponding source and license-notice validation.
+
+Video inputs may be untrusted or provider-backed on Android. Files up to 64MiB may be copied to browser memory, then used by MEMFS to avoid unreliable Worker-side `FileReaderSync` grants. Output bytes and buffers must be released on source change, cancel and page exit. Peak memory must be measured on actual mobile hardware before raising length/resolution limits.
+
+## v0.1.4 frame count / long-running conversion guard
+
+The experimental 10s mode executes no more than 2 seconds per independent WASM reversal segment, then remuxes the completed H.264 chunks. The Builder checks **encoded video packet counts** against the caller's expected frame total for each segment and the final MP4, refusing partial or mismatched results. The original input is still copied into MEMFS on Android only up to 64 MiB; that temporary copy plus the WASM heap and the accumulated compressed MP4 chunks consumes additional memory. Do not interpret a per-chunk YUV420 estimate as a hard peak-memory ceiling. Memory and cancellation/retry on physical Android require validation before stable distribution.
+
+## v0.2.0 local video intake hardening
+
+Untrusted MP4/MOV selection now runs a **bounded 32-byte prefix inspection** before browser preview. This recognizes common ISO-BMFF and QuickTime atoms, but is **not** a substitute for decoder validation: it does not fully parse arbitrary codecs, DRM, corrupt structure or metadata. Original input files up to 1GiB must not be copied wholesale. Android files up to 64MiB may still be intentionally staged once in MEMFS when necessary for provider compatibility; the prefix check reads from that detached Blob, not a second original-provider stream.
+
+A 30-second, generation-scoped timeout prevents indefinitely pending source reads/metadata. Error/source-change paths invalidate previous results, revoke Blob URLs, clear references, and do not permit an old source's delayed promise to alter the newly selected video. Diagnostic JSON records only source phase and error identifiers, never filenames or video bytes. Real-device Android acceptance remains pending.
+
+When a pending input is manually cancelled, the app invalidates its generation and drops selected File/Blob references and any previous export. Browser-provider `File.arrayBuffer()` operations may not themselves support abort and could complete internally; the resolved bytes are ignored for obsolete sources. A drop carrying more than one File is rejected atomically to avoid accidental selection of the wrong input.

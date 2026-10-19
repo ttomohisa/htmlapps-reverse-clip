@@ -3,9 +3,9 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.1.0",
-  "description": "Feasibility test for short, fully local video reversal; MP4 export is not yet implemented.",
-  "descriptionJa": "短い動画の逆再生をブラウザ内で検証する技術テスト版です。MP4書き出しは未実装です。",
+  "version": "0.9.0",
+  "description": "Reverse Clip v0.9.0 RC PREPARATION (Draft; not released). Browser-local ST/MT H.264/AAC Reverse/Ping-pong; G2 and G3 remain OPEN. Android hardware and permanent GPL corresponding-source Builder release are outstanding, iPhone deferred. No publication approved.",
+  "descriptionJa": "Reverse Clip v0.9.0公開前RC準備版（未マージDraft）。ST/MT逆再生・往復再生MP4、対応AAC音声を維持。Android実機G2と公開前G3は未合格。iPhone延期、GPL対応ソース恒久配布も未完了。正式公開は未承認です。",
   "defaultLanguage": "auto",
   "repository": {
     "owner": "ttomohisa",
@@ -16,11 +16,13 @@
     "blockRuntimeNetwork": true,
     "selfExtract": {
       "enabled": true,
-      "output": "dist/index.self-extract.html"
+      "output": "dist/index.self-extract.html",
+      "multiThreadOutput": "dist/index.mt.self-extract.html"
     },
     "sizeBudget": {
       "readableWarningMb": 25,
       "selfExtractWarningMb": 12
-    }
+    },
+    "multiThreadOutput": "dist/index.mt.html"
   }
 }
