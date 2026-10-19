@@ -1,15 +1,15 @@
 # Reverse Clip v0.9.0 — RCチェックリスト / Release Candidate acceptance
 
-**2026-10-17: PREPARATION / NOT APPROVED. Gate G3 NOT PASSED.**
-The RC is not a published release; PR #2, PR #1 and Builder PR #16 remain open Drafts. The user requested **less excessive testing while keeping real safeguards**. Refer to [revised initial-release scope](REVISED_ACCEPTANCE_SCOPE.md) for the proposed P0/P1/P2 criteria. These revised criteria are a proposal applied to RC planning, **not** a retrospective PASS of the original G2 or authorization to publish.
+**Current status 2026-10-19: v0.9.0 merged to main, app NOT RELEASED. Gate G3 NOT PASSED.**
+PR #1, PR #2, PR #6 and Builder PR #16 have all been merged. The dedicated GPL Builder WASM/source Release is public. The RC is not an app GitHub Release. Earlier entries below are retained as dated historical evidence. The user requested **less excessive testing while keeping real safeguards**. Refer to [revised initial-release scope](REVISED_ACCEPTANCE_SCOPE.md) for the proposed P0/P1/P2 criteria. These revised criteria are a proposal applied to RC planning, **not** a retrospective PASS of the original G2 or authorization to publish.
 
 References: [APP_SPEC.md A-01–A-14](../../APP_SPEC.md), [DEVELOPMENT_PLAN.md](../../DEVELOPMENT_PLAN.md), [historical G2 evidence](../feasibility/G2.md), [v0.8 compatibility matrix](../feasibility/V080_COMPATIBILITY_MATRIX.md), [2026-10-17 Android ST owner smoke](ANDROID_ST_RC_OWNER_SMOKE.md), [latest MT test deployment](MT_QA_BROWSER_EVIDENCE.md), [2026-10-17 Android MT owner smoke](ANDROID_MT_RC_OWNER_SMOKE.md).
 
-## 2026-10-19 — Builder dedicated FFmpeg WASM Release PUBLISHED; app RC still Draft
+## 2026-10-19 — Builder dedicated FFmpeg WASM Release PUBLISHED; app RC integrated into main
 
 **Builder dependency release available:** [video-reverse-v1.10.6](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/releases/tag/video-reverse-v1.10.6) with exact ST/MT original binary ZIPs, corresponding source, two BUILDINFO, SHA256SUMS and separately pinned GPL/x264 disclosure. [Builder public publishing CI #39179947875](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/39179947875) **SUCCESS**, including unauthenticated public-download SHA-256 proof. The app's active `reverse-runtime.lock.json` is now `github-release-st-mt` / `release-approved`: this approves **only the published WASM dependency**, not Reverse Clip's own v0.9.0 release.
 
-**Current action:** rebuild app ST/MT from the exact public seven-file distribution, verify Chrome conversions, privacy and hosted MT isolation; then evaluate G3. No new real-phone matrix, binary rebuild or additional licensing review required. Historical October 17–18 notes below describe the *then*-unpublished state and are not the current dependency status.
+**Current action:** App v0.9.0 was built from the public Release and ST/MT desktop Chrome, AAC, isolated MT and preview passed. The merged main Pages build/deploy also passed [CI #39182815120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/39182815120). Prepare the focused [v1.0.0 acceptance](V100_RELEASE_READINESS.md) and app release artifacts. No new real-phone matrix, binary rebuild or additional licensing review requested. Historical October 17–18 notes below describe the *then*-unpublished state and are not the current dependency status.
 
 ## 2026-10-19 — original Actions dependency expires; review-only build fallback verified (historical)
 

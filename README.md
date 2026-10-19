@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**Development status: v0.9.0 RC PREPARATION (Draft, original G2 NOT PASSED, G3 OPEN; not released).** Desktop ST/MT H.264/AAC Chrome tests passed. The owner's 2026-10-17 test-scope review proposes an initial **Windows Chrome / Android Chrome short H.264 MP4** release. Representative Android basic Reverse/Ping-pong/save/retry/audio, safety/privacy, and source-complete GPL licensing stay mandatory. HD 3× stress, iPhone and precision RAM benchmarks are not mandatory for this **limited proposed scope**. Historical G2 remains NOT PASSED. See [acceptance policy](docs/release/REVISED_ACCEPTANCE_SCOPE.md).
+**Development status: v0.9.0 RC PREPARATION on `main` (app not yet released; historical G2 NOT PASSED, G3 OPEN).** Desktop ST/MT H.264/AAC Chrome tests passed. The owner's 2026-10-17 test-scope review proposes an initial **Windows Chrome / Android Chrome short H.264 MP4** release. Representative Android basic Reverse/Ping-pong/save/retry/audio, safety/privacy, and source-complete GPL licensing stay mandatory. HD 3× stress, iPhone and precision RAM benchmarks are not mandatory for this **limited proposed scope**. Historical G2 remains NOT PASSED. See [acceptance policy](docs/release/REVISED_ACCEPTANCE_SCOPE.md) and [v1.0.0 readiness](docs/release/V100_RELEASE_READINESS.md).
 
 [日本語 README](README.ja.md) · [Product specification](APP_SPEC.md) · [Development plan](DEVELOPMENT_PLAN.md) · [Gate G2](docs/feasibility/G2.md) · [MT measurements](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md)
 

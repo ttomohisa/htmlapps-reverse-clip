@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生
 
-**開発状況：v0.9.0 公開前RC準備版（Draft、従来G2・G3未合格、正式版未公開）。** 2026-10-17のユーザー指示により、初期公開を**Windows Chrome／Android Chromeの短いH.264 MP4**中心に絞ったテスト条件案を作成。実機での基本動作、正常なMP4、ローカル処理、エラーの安全性、GPL対応ソースは必須。全画質・全端末の各3回連続負荷試験は追加検証に区分します。[見直し案](docs/release/REVISED_ACCEPTANCE_SCOPE.md)を参照してください。
+**開発状況：v0.9.0 公開前RC準備版（`main`統合済み、アプリは未公開。従来G2・G3未合格）。** 2026-10-17のユーザー指示により、初期公開を**Windows Chrome／Android Chromeの短いH.264 MP4**中心に絞ったテスト条件案を作成。実機での基本動作、正常なMP4、ローカル処理、エラーの安全性、GPL対応ソースは必須。全画質・全端末の各3回連続負荷試験は追加検証に区分します。[公開対象の見直し](docs/release/REVISED_ACCEPTANCE_SCOPE.md)と[v1.0.0準備状況](docs/release/V100_RELEASE_READINESS.md)を参照してください。
 
 [製品仕様](APP_SPEC.md) · [開発計画](DEVELOPMENT_PLAN.md) · [G2受入状況](docs/feasibility/G2.md) · [MTの実測](docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md) · [English README](README.md)
 

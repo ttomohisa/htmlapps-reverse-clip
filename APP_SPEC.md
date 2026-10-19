@@ -1,6 +1,6 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
-> **Status:** v0.9.0 RC準備中（Gate G2/G3未合格、PR未マージ、タグ・正式リリース未実施）  
+> **Status:** v0.9.0 RC準備中（main統合済み、従来Gate G2/G3未合格、アプリのタグ・正式リリース未実施。Builder専用WASMは公開済み）  
 > **作成日:** 2026-10-11  
 > **目標版:** v1.0.0  
 > **アプリ名:** Reverse Clip / 動画逆再生（仮称）  
