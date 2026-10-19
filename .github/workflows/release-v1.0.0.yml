@@ -1,0 +1,141 @@
+name: Publish Reverse Clip v1.0.0 standalone Release
+
+# One-shot publication after owner merges this release PR.
+# Does not merge PRs or change Browser Kitty.
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/release-v1.0.0.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: reverse-clip-v1.0.0-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.repository == 'ttomohisa/htmlapps-reverse-clip' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build and verify pinned ST/MT single-HTML artifacts
+        shell: pwsh
+        run: ./scripts/check-repository.ps1
+      - name: Stage versioned HTML, source notices and checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $dest = Join-Path $PWD 'release-dist'
+          New-Item -ItemType Directory -Path $dest -Force | Out-Null
+          $sources = [ordered]@{
+            'dist/index.html' = 'reverse-clip-v1.0.0.html'
+            'dist/index.self-extract.html' = 'reverse-clip-v1.0.0.self-extract.html'
+            'dist/index.mt.html' = 'reverse-clip-v1.0.0.mt.html'
+            'dist/index.mt.self-extract.html' = 'reverse-clip-v1.0.0.mt.self-extract.html'
+            'LICENSE' = 'LICENSE'
+            'THIRD_PARTY_NOTICES.md' = 'THIRD_PARTY_NOTICES.md'
+            'docs/release/V100_RELEASE_NOTES.md' = 'V100_RELEASE_NOTES.md'
+          }
+          $sum = @()
+          foreach ($pair in $sources.GetEnumerator()) {
+            if (-not (Test-Path -LiteralPath $pair.Key -PathType Leaf)) {
+              throw "Missing Release input: $($pair.Key)"
+            }
+            $target = Join-Path $dest $pair.Value
+            Copy-Item -LiteralPath $pair.Key -Destination $target
+            $hash = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant()
+            $sum += "$hash  $($pair.Value)"
+            if ($pair.Value.EndsWith('.html') -and (Get-Item $target).Length -lt 100000) {
+              throw "Release HTML unreasonably small: $($pair.Value)"
+            }
+          }
+          $lineSep = [Environment]::NewLine
+          [IO.File]::WriteAllText((Join-Path $dest 'SHA256SUMS.txt'), ($sum -join $lineSep) + $lineSep, [Text.UTF8Encoding]::new($false))
+          $st = [IO.File]::ReadAllText((Join-Path $dest 'reverse-clip-v1.0.0.html'))
+          $mt = [IO.File]::ReadAllText((Join-Path $dest 'reverse-clip-v1.0.0.mt.html'))
+          foreach ($html in @($st, $mt)) {
+            if ($html -notmatch '"version"\s*:\s*"1\.0\.0"') { throw 'Wrong app version' }
+            if ($html -notmatch "connect-src 'none'") { throw 'Runtime network is not blocked' }
+            if ($html -notmatch 'const PINGPONG_ENABLED = true;') { throw 'Ping-pong disabled' }
+            if ($html -notmatch 'const AUDIO_MUX_ENABLED = true;') { throw 'AAC disabled' }
+          }
+          if (-not $st.Contains('const RUNTIME_VARIANT = "single-thread";')) { throw 'Missing ST' }
+          if (-not $mt.Contains('const RUNTIME_VARIANT = "multi-thread";')) { throw 'Missing MT' }
+          Write-Host '[PASS] Four ST/MT standalone HTML files, licenses and checksums'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: reverse-clip-v1.0.0-release
+          path: release-dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: reverse-clip-v1.0.0-release
+          path: release-dist
+      - name: Fail closed on asset set, SHA-256 or missing GPL source notice
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(printf '%s\n' LICENSE SHA256SUMS.txt THIRD_PARTY_NOTICES.md V100_RELEASE_NOTES.md reverse-clip-v1.0.0.html reverse-clip-v1.0.0.self-extract.html reverse-clip-v1.0.0.mt.html reverse-clip-v1.0.0.mt.self-extract.html | sort)"
+          actual="$(find release-dist -maxdepth 1 -type f -printf '%f\n' | sort)"
+          test "$actual" = "$expected"
+          (cd release-dist && sha256sum -c SHA256SUMS.txt)
+          grep -Fq 'GPL-2.0-or-later' release-dist/THIRD_PARTY_NOTICES.md
+          grep -Fq 'ffmpeg-wasm-sources-v1.10.6.tar.gz' release-dist/THIRD_PARTY_NOTICES.md
+          echo 'PASS exact eight Release assets and matching GPL source link'
+      - name: Create owner-approved immutable app Release and verify uploaded bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG=v1.0.0
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo '::error::Release exists, refuse overwrite'; exit 1
+          fi
+          code="$(curl -sS -o /tmp/rc-tag-check.json -w '%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG")"
+          if [[ "$code" != 404 ]]; then
+            echo "::error::Tag already present or not provably absent (HTTP $code)"; exit 1
+          fi
+          gh release create "$TAG" release-dist/* --draft --latest=false \
+            --target "$GITHUB_SHA" --title 'Reverse Clip v1.0.0' \
+            --notes-file docs/release/V100_RELEASE_NOTES.md
+          type="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq '.object.type')"
+          sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq '.object.sha')"
+          if [[ "$type" == tag ]]; then
+            sha="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$sha" --jq '.object.sha')"
+          fi
+          test "$sha" = "$GITHUB_SHA"
+          test "$(gh release view "$TAG" --json isDraft --jq .isDraft)" = true
+          test "$(gh release view "$TAG" --json assets --jq '.assets | length')" = 8
+          mkdir -p /tmp/rc-uploaded
+          gh release download "$TAG" -D /tmp/rc-uploaded
+          for file in release-dist/*; do
+            cmp "$file" "/tmp/rc-uploaded/$(basename "$file")"
+          done
+          echo 'PASS all eight uploaded assets are unchanged'
+          gh release edit "$TAG" --draft=false --latest=false
+          echo "Published: https://github.com/$GITHUB_REPOSITORY/releases/tag/$TAG"
+      - name: Confirm anonymous download and SHA-256 from public Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in reverse-clip-v1.0.0.html reverse-clip-v1.0.0.self-extract.html reverse-clip-v1.0.0.mt.html reverse-clip-v1.0.0.mt.self-extract.html SHA256SUMS.txt; do
+            curl -fsSL --retry 3 "https://github.com/$GITHUB_REPOSITORY/releases/download/v1.0.0/$name" -o "/tmp/public-$name"
+            cmp "release-dist/$name" "/tmp/public-$name"
+          done
+          echo 'PASS unauthenticated public standalone asset downloads'
+          echo "Published Release: https://github.com/$GITHUB_REPOSITORY/releases/tag/v1.0.0" >> "$GITHUB_STEP_SUMMARY"
