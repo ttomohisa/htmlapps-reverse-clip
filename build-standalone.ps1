@@ -340,9 +340,8 @@ foreach ($dependency in $dependencies) {
   }
 }
 
-# App-specific immutable local asset import. This is an experimental PoC:
-# a pinned Builder Actions artifact is fetched at build time only, never at runtime.
-# Restore to the template dependency loader when a stable Builder release exists.
+# App-specific immutable asset import. The pinned public Builder Release is
+# downloaded and checked only at build time; runtime stays fully local.
 & (Join-Path $Root 'scripts/prepare-video-reverse-runtime.ps1') -Variant $Variant -ForceDownload:$ForceDownload
 $reverseLock = Get-Json (Join-Path $Root 'reverse-runtime.lock.json')
 # A new application feature must never be enabled with an older binary.
@@ -358,6 +357,245 @@ $pingpongEnabled = $reverseFeatures -contains 'pingpong'
 $audioMuxEnabled = $reverseFeatures -contains 'audio-mux'
 $reverseVariant = $reverseLock.variants.PSObject.Properties[$Variant].Value
 if (-not $reverseVariant) { throw "Reverse runtime lock has no $Variant entry." }
+$reverseIsPublicRelease = [string]$reverseLock.kind -ceq 'github-release-st-mt'
+if ($reverseIsPublicRelease) {
+  if ([string]$reverseLock.status -cne 'release-approved' -or
+      [string]$reverseVariant.releaseArchiveSha256 -cnotmatch '^[a-f0-9]{64}
+$reverseAssets = [ordered]@{}
+$reverseManifestAssets = @()
+foreach ($entry in @(
+  @{ key='coreJs'; file='ffmpeg.js'; mime='text/javascript' },
+  @{ key='coreWasm'; file='ffmpeg.wasm'; mime='application/wasm' },
+  @{ key='runtimeJs'; file='browser-ffmpeg.js'; mime='text/javascript' }
+)) {
+  $key = [string]$entry.key
+  $filename = [string]$entry.file
+  $sourcePath = Join-Path $reverseCache $filename
+  $bytes = Get-AssetBytes $sourcePath $false
+  if ((Get-Sha256FileHex $sourcePath) -ne $(if ($filename -eq 'browser-ffmpeg.js') { [string]$reverseLock.browserRuntimeSha256 } else { [string]$reverseVariant.assets.$filename })) {
+    throw "Reverse runtime SHA-256 mismatch during standalone build: $filename"
+  }
+  $storedBytes = Compress-GzipBytes $bytes
+  $reverseAssets[$key] = [ordered]@{
+    mime = [string]$entry.mime
+    compression = 'gzip'
+    originalBytes = $bytes.Length
+    storedBytes = $storedBytes.Length
+    base64 = [Convert]::ToBase64String($storedBytes)
+  }
+  $reverseManifestAssets += [ordered]@{
+    key = $key
+    path = "$reverseAssetLabel/$filename"
+    mime = [string]$entry.mime
+    compression = 'gzip'
+    bytes = $bytes.Length
+    storedBytes = $storedBytes.Length
+    sha256 = (Get-Sha256FileHex $sourcePath)
+  }
+}
+$assetBundle.dependencies['reverse-wasm'] = [ordered]@{
+  package = [string]$reverseLock.builderRepository
+  version = [string]$reverseLock.builderCommit
+  assets = $reverseAssets
+}
+$manifestDependencies += [ordered]@{
+  id = 'reverse-wasm'
+  package = [string]$reverseLock.builderRepository
+  version = [string]$reverseLock.builderCommit
+  license = [string]$reverseLock.wasmLicense
+  homepage = 'https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder'
+  tarballSha256 = $reversePackageSha
+  locked = $true
+  assets = $reverseManifestAssets
+}
+
+$manifest = [ordered]@{
+  schemaVersion = 2
+  builder = "single-html-app-template/1.3"
+  generatedAtUtc = [DateTime]::UtcNow.ToString("o")
+  app = [ordered]@{
+    name = [string]$appConfig.name
+    slug = [string]$appConfig.slug
+    version = [string]$appConfig.version
+  }
+  runtime = [ordered]@{
+    source = [string]$reverseLock.builderRepository
+    profile = [string]$reverseLock.profile
+    builderCommit = [string]$reverseLock.builderCommit
+    threading = $Variant
+    requiresCrossOriginIsolation = ($Variant -eq 'multi-thread')
+    requiresSharedArrayBuffer = ($Variant -eq 'multi-thread')
+    pingpongEnabled = $pingpongEnabled
+    audioMuxEnabled = $audioMuxEnabled
+  }
+  dependencies = $manifestDependencies
+}
+
+Write-Step "Generating standalone HTML"
+$template = [System.IO.File]::ReadAllText($TemplatePath, [System.Text.Encoding]::UTF8)
+$assetBundleJson = ConvertTo-SafeJson $assetBundle 50
+$replacements = [ordered]@{
+  "__APP_CONFIG_JSON__" = ConvertTo-SafeJson $appConfig 20
+  "__BUILD_MANIFEST_JSON__" = ConvertTo-SafeJson $manifest 40
+  "__EMBEDDED_ASSET_BUNDLE_JSON__" = $assetBundleJson
+  "__APP_ICON_DATA_URI__" = $appIconDataUri
+  "__RUNTIME_VARIANT__" = $Variant
+  "__PINGPONG_ENABLED__" = $(if ($pingpongEnabled) { 'true' } else { 'false' })
+  "__AUDIO_MUX_ENABLED__" = $(if ($audioMuxEnabled) { 'true' } else { 'false' })
+}
+$replacementExpectedCounts = @{
+  "__APP_CONFIG_JSON__" = 1
+  "__BUILD_MANIFEST_JSON__" = 1
+  "__EMBEDDED_ASSET_BUNDLE_JSON__" = 1
+  "__APP_ICON_DATA_URI__" = 2
+  "__RUNTIME_VARIANT__" = 1
+  "__PINGPONG_ENABLED__" = 1
+  "__AUDIO_MUX_ENABLED__" = 1
+}
+
+foreach ($entry in $replacements.GetEnumerator()) {
+  $count = ([regex]::Matches($template, [regex]::Escape($entry.Key))).Count
+  $expectedCount = [int]$replacementExpectedCounts[$entry.Key]
+  if ($count -ne $expectedCount) {
+    throw "Template placeholder $($entry.Key) must occur exactly $expectedCount time(s); found $count."
+  }
+  $template = $template.Replace($entry.Key, [string]$entry.Value)
+}
+
+$outputDirectory = Split-Path -Parent $OutputPath
+New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
+[System.IO.File]::WriteAllText($OutputPath, $template, (New-Object System.Text.UTF8Encoding($false)))
+$dependencyManifestName = if ($Variant -eq "multi-thread") { "dependency-manifest.mt.json" } else { "dependency-manifest.json" }
+[System.IO.File]::WriteAllText((Join-Path $outputDirectory $dependencyManifestName), ($manifest | ConvertTo-Json -Depth 40), (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllText((Join-Path $outputDirectory ".nojekyll"), "", (New-Object System.Text.UTF8Encoding($false)))
+
+& $VerifyPath `
+  -Path $OutputPath `
+  -RequireNetworkBlock ([bool]$appConfig.build.blockRuntimeNetwork) `
+  -ForbiddenPlaceholders @($replacements.Keys)
+
+if (-not [string]::IsNullOrWhiteSpace($rootHtmlOutputPath)) {
+  [System.IO.File]::Copy($OutputPath, $rootHtmlOutputPath, $true)
+}
+
+$selfExtractEnabled = $false
+$selfExtractOutputPath = ""
+if (-not $SkipSelfExtract -and ($appConfig.build.PSObject.Properties.Name -contains "selfExtract")) {
+  $selfExtractConfig = $appConfig.build.selfExtract
+  if ($selfExtractConfig -and ($selfExtractConfig.PSObject.Properties.Name -contains "enabled")) {
+    $selfExtractEnabled = [bool]$selfExtractConfig.enabled
+  }
+  if ($selfExtractEnabled) {
+    if (-not ($selfExtractConfig.PSObject.Properties.Name -contains "output")) {
+      throw "app.config.json: build.selfExtract.output is required when self-extract output is enabled."
+    }
+    if ($OutputPathWasSpecified) {
+      $customDirectory = Split-Path -Parent $OutputPath
+      $customBaseName = [System.IO.Path]::GetFileNameWithoutExtension($OutputPath)
+      $selfExtractOutputPath = Join-Path $customDirectory ($customBaseName + ".self-extract.html")
+    } else {
+      $configuredSelfExtractOutput = if ($Variant -eq "multi-thread") { [string]$selfExtractConfig.multiThreadOutput } else { [string]$selfExtractConfig.output }
+      if ([string]::IsNullOrWhiteSpace($configuredSelfExtractOutput)) {
+        throw "app.config.json: build.selfExtract.output cannot be empty."
+      }
+      $selfExtractOutputPath = if ([System.IO.Path]::IsPathRooted($configuredSelfExtractOutput)) {
+        $configuredSelfExtractOutput
+      } else {
+        Join-Path $Root $configuredSelfExtractOutput
+      }
+    }
+
+    Write-Step "Generating self-extracting HTML"
+    & $SelfExtractBuilderPath `
+      -InputPath $OutputPath `
+      -OutputPath $selfExtractOutputPath `
+      -AppName ([string]$appConfig.name) `
+      -AppNameJa ([string]$appConfig.nameJa)
+  }
+}
+
+$readableBytes = (Get-Item $OutputPath).Length
+$selfExtractBytes = 0
+if ($selfExtractEnabled -and (Test-Path $selfExtractOutputPath)) { $selfExtractBytes = (Get-Item $selfExtractOutputPath).Length }
+$assetRawBytes = 0
+$assetStoredBytes = 0
+$sizeAssets = @()
+foreach ($dependencyEntry in $manifestDependencies) {
+  foreach ($assetEntry in @($dependencyEntry.assets)) {
+    $assetRawBytes += [long]$assetEntry.bytes
+    $assetStoredBytes += [long]$assetEntry.storedBytes
+    $sizeAssets += [ordered]@{
+      dependency = [string]$dependencyEntry.id
+      key = [string]$assetEntry.key
+      compression = [string]$assetEntry.compression
+      originalBytes = [long]$assetEntry.bytes
+      storedBytes = [long]$assetEntry.storedBytes
+    }
+  }
+}
+$sizeReport = [ordered]@{
+  schemaVersion = 1
+  generatedAtUtc = [DateTime]::UtcNow.ToString("o")
+  readableHtmlBytes = [long]$readableBytes
+  selfExtractHtmlBytes = [long]$selfExtractBytes
+  embeddedAssetOriginalBytes = [long]$assetRawBytes
+  embeddedAssetStoredBytes = [long]$assetStoredBytes
+  embeddedAssetSavedBytes = [long]($assetRawBytes - $assetStoredBytes)
+  assets = $sizeAssets
+}
+$sizeReportFile = if ($Variant -eq "multi-thread") { "build-size-report.mt.json" } else { "build-size-report.json" }
+$sizeReportPath = Join-Path (Split-Path -Parent $OutputPath) $sizeReportFile
+[System.IO.File]::WriteAllText($sizeReportPath, ($sizeReport | ConvertTo-Json -Depth 20), (New-Object System.Text.UTF8Encoding($false)))
+
+Write-Host ""
+Write-Host "[Size] Readable HTML: $([Math]::Round($readableBytes / 1MB, 2)) MB"
+if ($selfExtractBytes -gt 0) { Write-Host "[Size] Self-extract HTML: $([Math]::Round($selfExtractBytes / 1MB, 2)) MB" }
+Write-Host "[Size] Embedded assets: $([Math]::Round($assetRawBytes / 1MB, 2)) MB raw -> $([Math]::Round($assetStoredBytes / 1MB, 2)) MB stored"
+Write-Host "[Size] Report: $sizeReportPath"
+
+if ($appConfig.build.PSObject.Properties.Name -contains "sizeBudget" -and $appConfig.build.sizeBudget) {
+  $readableBudget = Get-OptionalNumber $appConfig.build.sizeBudget "readableWarningMb" 0
+  $selfExtractBudget = Get-OptionalNumber $appConfig.build.sizeBudget "selfExtractWarningMb" 0
+  $readableMb = $readableBytes / 1MB
+  $selfExtractMb = $selfExtractBytes / 1MB
+  if ($readableBudget -gt 0 -and $readableMb -gt $readableBudget) {
+    Write-Warning ("Readable HTML size {0:N2} MB exceeds warning budget {1:N2} MB." -f $readableMb, $readableBudget)
+  }
+  if ($selfExtractBytes -gt 0 -and $selfExtractBudget -gt 0 -and $selfExtractMb -gt $selfExtractBudget) {
+    Write-Warning ("Self-extract HTML size {0:N2} MB exceeds warning budget {1:N2} MB." -f $selfExtractMb, $selfExtractBudget)
+  }
+}
+
+$outputHash = Get-Sha256FileHex $OutputPath
+$outputSizeMb = [Math]::Round($readableBytes / 1MB, 2)
+Write-Host ""
+Write-Host "[OK] Standalone HTML: $OutputPath" -ForegroundColor Green
+if (-not [string]::IsNullOrWhiteSpace($rootHtmlOutputPath)) {
+  Write-Host "[OK] Repository-root HTML: $rootHtmlOutputPath" -ForegroundColor Green
+}
+Write-Host "[OK] Size: $outputSizeMb MB"
+Write-Host "[OK] SHA-256: $outputHash"
+Write-Host "[OK] Fetch/XHR/WebSocket-style runtime network access is blocked by CSP."
+if ($selfExtractEnabled) {
+  Write-Host "[OK] Self-extracting HTML: $selfExtractOutputPath" -ForegroundColor Green
+}
+
+if ($Variant -eq 'single-thread' -and -not $OnlyVariant -and -not $OutputPathWasSpecified) {
+  Write-Step "Generating separate multi-thread standalone build"
+  & $PSCommandPath -Variant 'multi-thread' -OnlyVariant -ForceDownload:$ForceDownload -SkipSelfExtract:$SkipSelfExtract
+}
+) {
+    throw 'Public Builder runtime requires an approved Release and pinned ZIP checksum.'
+  }
+  $reversePackageSha = [string]$reverseVariant.releaseArchiveSha256
+  $reverseAssetLabel = "Builder Release/$($reverseLock.builderTag)"
+} elseif ([string]$reverseLock.kind -ceq 'experimental-dual-github-actions-artifact' -and
+        $reverseLock.PSObject.Properties.Name -contains 'artifactId') {
+  $reversePackageSha = 'experimental-artifact-id-' + [string]$reverseLock.artifactId
+  $reverseAssetLabel = "pinned Builder artifact"
+} else {
+  throw 'Unsupported Builder runtime provenance.'
+}
 $reverseCache = Join-Path $CacheRoot "reverse-runtime/$Variant"
 $reverseAssets = [ordered]@{}
 $reverseManifestAssets = @()
