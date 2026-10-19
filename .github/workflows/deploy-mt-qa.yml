@@ -1,0 +1,119 @@
+name: Deploy isolated MT QA (temporary separate Worker)
+
+# Temporary public QA only: no app release, tag, merge or Browser Kitty import.
+on:
+  pull_request:
+    branches:
+      - feat/reverse-clip-feasibility-v0.1
+    paths:
+      - ".github/workflows/deploy-mt-qa.yml"
+      - "wrangler.mt-qa.jsonc"
+      - "scripts/preview-mt-worker.mjs"
+      - "src/**"
+      - "reverse-runtime.lock.json"
+      - "build-standalone.ps1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reverse-clip-mt-qa-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Verify preview MT Worker routing
+        run: node --test tests/feasibility/preview-mt-worker.test.mjs
+      - name: Build and verify locked ST/MT standalones (Windows requirement)
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./scripts/check-repository.ps1
+      - name: Prepare pinned Pages-style MT isolation fallback
+        shell: pwsh
+        run: |
+          ./scripts/prepare-pages.ps1
+          node --test tests/feasibility/pages-dual-thread.test.mjs
+      - name: Pass exact Pages-ready ST/MT files to deployment job
+        uses: actions/upload-artifact@v7
+        with:
+          name: isolated-mt-qa-standalone
+          path: pages-dist/**
+          if-no-files-found: error
+          retention-days: 3
+
+  deploy-verify:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: isolated-mt-qa-standalone
+          path: pages-dist
+      - name: Verify exact built MT Pages-style entrypoint and pinned COI worker
+        run: |
+          test -s pages-dist/index.html
+          test -s pages-dist/mt/index.html
+          test -s pages-dist/mt/coi-serviceworker.js
+          grep -q 'const RUNTIME_VARIANT = "multi-thread";' pages-dist/mt/index.html
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Require QA Cloudflare credentials
+        shell: bash
+        run: |
+          test -n "$CLOUDFLARE_API_TOKEN" && test -n "$CLOUDFLARE_ACCOUNT_ID"
+      - name: Deploy independent Workers.dev QA (not the existing Preview/production Worker)
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes wrangler@4.135.0 deploy --config wrangler.mt-qa.jsonc --name rc-reverse-clip-mt-qa
+      - name: Diagnose exact Workers.dev response headers before browser smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS -D /tmp/rc-mt-headers.txt -o /dev/null \
+            https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/
+          grep -Ei '^(HTTP/|X-RC-Preview-Worker:|Cross-Origin-Opener-Policy:|Cross-Origin-Embedder-Policy:|Cross-Origin-Resource-Policy:|Content-Type:)' /tmp/rc-mt-headers.txt || true
+          if ! grep -Eiq '^X-RC-Preview-Worker:[[:space:]]*active' /tmp/rc-mt-headers.txt; then
+            echo '::warning::Temporary QA Worker was bypassed for MT; check static asset routing.'
+          fi
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2.2.0
+      - name: Install lightweight browser smoke requirements
+        shell: bash
+        run: |
+          python3 -m pip install --disable-pip-version-check playwright
+          command -v ffmpeg >/dev/null && command -v ffprobe >/dev/null || {
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          }
+      - name: Check live Pages-style SW COI, ST isolation and real MT MP4
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+          PAGES_TEST_BASE_URL: https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev
+        run: python3 tests/feasibility/pages-browser-smoke.py
+      - name: Record specific test URL, exact commit and non-release status
+        shell: bash
+        run: |
+          {
+            echo '## Reverse Clip v0.9.0 — temporary MT QA'
+            echo '[MT QA — Service Worker isolated](https://rc-reverse-clip-mt-qa.ttomohisa.workers.dev/mt/)'
+            echo "- Revision: $GITHUB_SHA"
+            echo '- Not a public app release or Android physical-device proof.'
+          } >> "$GITHUB_STEP_SUMMARY"

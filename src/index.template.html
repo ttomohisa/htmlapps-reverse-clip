@@ -294,6 +294,8 @@
       border-bottom: 1px solid var(--line);
     }
     .dialog-header h2 { margin: 0; font-size: 17px; }
+    html.help-modal-open { overflow: hidden; overscroll-behavior: none; }
+    body.help-modal-open { position: fixed; width: 100%; overflow: hidden; }
     .dialog-body {
       min-height: 0;
       flex: 1 1 auto;
@@ -455,6 +457,93 @@
     .rc-report{background:var(--surface-muted);border-radius:10px;min-height:70px;max-height:240px;overflow:auto;font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;padding:12px}
     @media(max-width:600px){.export-row{flex-direction:column;align-items:stretch}.export-field{width:100%;min-width:0}.export-row .button{width:100%}}
     @media(max-width:540px){.rc-grid{grid-template-columns:minmax(0,1fr)}.rc-facts{grid-template-columns:minmax(0,1fr)}.rc-drop .button{min-height:44px}.rc-video{max-height:45vh}.rc-report{max-height:180px}}
+  
+    .rc-export {margin-top:18px;border-top:1px solid var(--line);padding-top:16px}
+    .rc-export h3{font-size:18px;margin:0 0 5px}
+    .rc-export h4{font-size:15px;margin:18px 0 7px}
+    .rc-actions{display:flex;flex-wrap:wrap;gap:9px;margin:14px 0}
+    .rc-save{display:flex;align-items:end;flex-wrap:wrap;gap:9px;padding:10px 0}
+    .rc-trim{background:var(--surface-muted);border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0 14px;min-width:0}
+    .rc-trim-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
+    .rc-trim-head strong{font-size:14px}
+    .rc-trim-head output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:650}
+    .rc-trim-labels{display:flex;justify-content:space-between;gap:14px;font-size:12px;color:var(--muted)}
+    .rc-trim-labels label{cursor:pointer}
+    .rc-trim-sliders{position:relative;height:52px;margin:4px 0 5px}
+    .rc-trim-track{position:absolute;top:20px;left:12px;right:12px;height:12px;border-radius:99px;background:var(--line-strong);pointer-events:none}
+    .rc-trim-selection{position:absolute;top:0;bottom:0;left:0;width:100%;border-radius:99px;background:var(--accent)}
+    .rc-trim-sliders input[type=range]{-webkit-appearance:none;appearance:none;position:absolute;top:4px;left:0;width:100%;height:44px;margin:0;background:transparent;border:0;pointer-events:none}
+    #trimStartSlider{z-index:3}
+    #trimEndSlider{z-index:2}
+    .rc-trim-sliders input[type=range]:focus{z-index:4}
+    .rc-trim-sliders input[type=range]::-webkit-slider-runnable-track{height:44px;background:transparent}
+    .rc-trim-sliders input[type=range]::-moz-range-track{height:44px;background:transparent}
+    .rc-trim-sliders input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:none;width:24px;height:36px;margin-top:4px;border:3px solid #fff;border-radius:10px;background:var(--accent);box-shadow:0 0 0 1px var(--line-strong),var(--shadow-sm);cursor:ew-resize}
+    .rc-trim-sliders input[type=range]::-moz-range-thumb{pointer-events:auto;touch-action:none;width:24px;height:36px;border:3px solid #fff;border-radius:10px;background:var(--accent);box-shadow:0 0 0 1px var(--line-strong),var(--shadow-sm);cursor:ew-resize}
+    .rc-trim .button{min-height:44px}
+    .rc-trim-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:7px}
+    .rc-source-status{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+    .rc-source-status .rc-status{flex:1 1 180px}
+    .rc-source-status .button{flex:0 0 auto}
+    .rc-save .export-field{flex:1 1 200px;min-width:0}
+    .rc-save button{flex:0 0 auto}
+    #reverseProgress{width:100%;height:13px;accent-color:var(--accent);margin:8px 0}
+    #resultArea{margin-top:12px}
+    #reverseStatus{min-height:20px}
+    #workspaceTitle:focus-visible{outline:3px solid var(--focus);outline-offset:3px;border-radius:4px}
+    /* Keep diagnostics and development context accessible without forcing
+       ordinary mobile editing through a long troubleshooting dashboard. */
+    .rc-advanced{margin:0 0 16px;border-radius:14px;overflow:hidden}
+    .rc-advanced>summary{min-height:48px;display:list-item;padding:14px 18px;cursor:pointer}
+    .rc-advanced>.workspace{margin:0;padding:10px 18px 20px;border:0;border-top:1px solid var(--line);
+      border-radius:0;box-shadow:none}
+    .rc-advanced>.section{padding:16px 18px 22px;border-top:1px solid var(--line)}
+    .rc-advanced>summary:focus-visible{outline:3px solid var(--focus);outline-offset:-4px}
+    @media(max-width:520px){
+      .rc-advanced>.workspace,.rc-advanced>.section{padding:12px 14px 18px}
+    }
+    /* Mobile workflow: one focused step at a time, without a bottom overlay. */
+    .rc-flow-nav,.rc-mobile-only{display:none}
+    @media(max-width:600px){
+      /* All ordinary mobile action buttons need an adequate tap area,
+         including load/cancel/convert/save and optional diagnostics. */
+      .button{min-height:44px}
+      #workspaceTitle{scroll-margin-top:calc(var(--header-height) + 14px)}
+      .rc-flow-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;
+        position:sticky;top:var(--header-height);z-index:20;
+        margin:0 -14px 14px;padding:8px 14px 10px;background:var(--surface);
+        border-bottom:1px solid var(--line);scroll-margin-top:var(--header-height)}
+      .rc-flow-nav button{min-width:0;min-height:44px;padding:8px 4px;
+        border:1px solid var(--line);border-radius:10px;background:var(--surface);
+        color:var(--text);font:inherit;font-size:13px;font-weight:720;cursor:pointer}
+      .rc-flow-nav button[aria-current="step"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+      .rc-flow-nav button:disabled{opacity:.43;cursor:not-allowed}
+      .rc-flow-nav button:focus-visible,.rc-selected-summary button:focus-visible{
+        outline:3px solid var(--focus);outline-offset:2px}
+      .rc-mobile-only{display:block}
+      .rc-selected-summary{padding:12px;border-radius:12px;border:1px solid var(--line);
+        background:var(--surface-muted);margin:8px 0 2px;min-width:0}
+      .rc-selected-summary p{margin:0 0 10px;font-size:13px;overflow-wrap:anywhere}
+      .rc-selected-summary .button{min-height:44px;width:100%}
+      #flowBackToEditButton{width:100%;min-height:44px;margin-top:10px}
+      #rcWorkflow[data-flow-step="video"] #videoArea,
+      #rcWorkflow[data-flow-step="video"] #reversePanel{display:none!important}
+      #rcWorkflow[data-flow-step="edit"] #dropZone,
+      #rcWorkflow[data-flow-step="edit"] .rc-source-status,
+      #rcWorkflow[data-flow-step="edit"] #selectedSourceSummary,
+      #rcWorkflow[data-flow-step="edit"] #resultArea{display:none!important}
+      #rcWorkflow[data-flow-step="result"] #dropZone,
+      #rcWorkflow[data-flow-step="result"] .rc-source-status,
+      #rcWorkflow[data-flow-step="result"] #selectedSourceSummary,
+      #rcWorkflow[data-flow-step="result"] #videoArea,
+      #rcWorkflow[data-flow-step="result"] #reversePanel > :not(#resultArea){display:none!important}
+      #rcWorkflow[data-flow-step="result"] #reversePanel{margin:0;padding:0;border:0}
+      #rcWorkflow[data-flow-step="result"] #resultArea{margin-top:0}
+      .rc-save{flex-direction:column;align-items:stretch}
+      .rc-save .export-field{width:100%;flex:auto}
+      .rc-save button{width:100%;min-height:44px}
+      .rc-actions .button{width:100%}
+    }
   </style>
 </head>
 <body>
@@ -466,7 +555,7 @@
         </div>
         <div class="brand-copy">
           <p class="brand-name"><span id="brandName">Reverse Clip</span><span class="version-badge" id="versionBadge">v0.1.0</span></p>
-          <p class="brand-meta" data-i18n="brandMeta">技術検証 · 端末内処理</p>
+          <p class="brand-meta"><span data-i18n="brandMeta">好きな区間を逆再生MP4に</span></p>
         </div>
       </div>
       <div class="header-actions">
@@ -481,50 +570,117 @@
   <main class="main">
     <section class="page-intro" aria-labelledby="heroTitle">
       <div>
-        <h2 id="heroTitle" data-i18n="introTitle">動画逆再生 — 技術検証中</h2>
-        <p data-i18n="lead">動画の読み込み・区間指定・端末の対応を確かめる試験版です。逆再生MP4の出力はまだできません。</p>
+        <h2 id="heroTitle" data-i18n="introTitle">動画の逆再生・往復再生（実験版）</h2>
+        <p data-i18n="lead">動画の好きな区間を逆再生・往復再生MP4に。最大10秒、映像のみ。スマートフォンの動作は検証中です。</p>
+    <p id="mtBrowserNotice" class="rc-hint" hidden role="status" aria-live="polite"></p>
       </div>
       <div class="local-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6z"/><path d="m9 12 2 2 4-5"/></svg>
-        <span data-i18n="localBadge">動画をアップロードしません</span>
+        <span data-i18n="localBadge">完全ローカル処理</span>
       </div>
     </section>
 
     <!-- APP:BEGIN Feasibility diagnostic: no video export until a verified Builder runtime exists. -->
-<section class="shell workspace" aria-labelledby="workspaceTitle">
+<section class="shell workspace" id="rcWorkflow" data-flow-step="video" aria-labelledby="workspaceTitle">
   <div class="workspace-head">
-    <div><h2 id="workspaceTitle" data-i18n="workspaceTitle">動画を読み込む</h2>
-      <p data-i18n="workspaceBody">端末内だけで動画の情報とブラウザーの動作を調べます。</p></div>
+    <div><h2 id="workspaceTitle" tabindex="-1" data-i18n="workspaceTitle">動画を読み込む</h2>
+      <p id="workspaceBody" data-i18n="workspaceBody">端末内だけで動画の情報とブラウザーの動作を調べます。</p></div>
   </div>
-  <div class="rc-drop" id="dropZone" tabindex="0" role="group" aria-labelledby="fileActionHeading">
+  <nav id="rcFlowNav" class="rc-flow-nav" aria-label="作業の進行" data-i18n-aria-label="flowNavigation">
+    <button id="flowVideoButton" data-flow-target="video" type="button" aria-current="step" data-i18n="flowVideo">動画</button>
+    <button id="flowEditButton" data-flow-target="edit" type="button" disabled data-i18n="flowEdit">編集</button>
+    <button id="flowResultButton" data-flow-target="result" type="button" disabled data-i18n="flowResult">結果</button>
+  </nav>
+  <p id="flowAnnouncement" class="sr-only" aria-live="polite"></p>
+  <div class="rc-drop" id="dropZone" role="group" aria-labelledby="fileActionHeading">
     <h3 id="fileActionHeading" data-i18n="dropTitle">動画を選ぶか撮影する</h3>
     <p data-i18n="dropHint">MP4 / MOV · 上限1GiB · ファイルは送信しません</p>
     <div class="button-row rc-center">
       <button class="button primary" type="button" id="pickButton" data-i18n="pick">動画を選ぶ</button>
       <button class="button" type="button" id="captureButton" data-i18n="capture">撮影して取り込む</button>
     </div>
-    <input class="sr-only" id="sourceInput" type="file" accept="video/mp4,video/quicktime,.mp4,.mov">
+    <input class="sr-only" id="sourceInput" type="file" accept="video/mp4,video/quicktime,.mp4,.m4v,.mov">
     <input class="sr-only" id="captureInput" type="file" accept="video/*" capture="environment">
   </div>
-  <p class="rc-status" id="loadStatus" role="status" aria-live="polite" data-i18n="nothingSelected">動画がまだ選択されていません。</p>
+  <div class="rc-source-status">
+    <p class="rc-status" id="loadStatus" role="status" aria-live="polite" data-phase="empty" data-i18n="nothingSelected">動画がまだ選択されていません。</p>
+    <button class="button" id="cancelLoadButton" type="button" hidden data-i18n="cancelLoadButton">読み込みを中止</button>
+  </div>
+  <div id="selectedSourceSummary" class="rc-selected-summary rc-mobile-only" hidden>
+    <p id="selectedSourceText"></p>
+    <button id="flowGoEditButton" class="button primary" type="button" disabled data-i18n="flowGoEdit">区間を編集する</button>
+  </div>
   <div id="videoArea" hidden>
-    <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" aria-label="Source video"></video>
+    <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" data-i18n-aria-label="sourceVideoLabel" aria-label="元動画のプレビュー"></video>
+    <div class="rc-trim" id="trimControls" aria-labelledby="trimTitle">
+      <div class="rc-trim-head">
+        <strong id="trimTitle" data-i18n="trimTitle">逆再生する区間</strong>
+        <output id="trimSummary" aria-live="off">0.0–1.0 秒</output>
+      </div>
+      <div class="rc-trim-sliders">
+        <div class="rc-trim-track" aria-hidden="true"><div class="rc-trim-selection" id="trimSelectedTrack"></div></div>
+        <input id="trimStartSlider" type="range" min="0" max="1" step="0.1" value="0" disabled aria-label="開始ハンドル" data-i18n-aria-label="trimStartLabel" aria-describedby="rangeNotice">
+        <input id="trimEndSlider" type="range" min="0" max="1" step="0.1" value="1" disabled aria-label="終了ハンドル" data-i18n-aria-label="trimEndLabel" aria-describedby="rangeNotice">
+      </div>
+      <div class="rc-trim-labels"><label for="trimStartSlider" data-i18n="trimStartLabel">開始ハンドル</label><label for="trimEndSlider" data-i18n="trimEndLabel">終了ハンドル</label></div>
+      <div class="rc-trim-actions">
+        <button class="button" id="previewSelectionButton" type="button" disabled data-i18n="previewSelectionButton">選択範囲を再生</button>
+        <span class="rc-hint" id="trimPreviewNotice" role="status" aria-live="polite"></span>
+      </div>
+    </div>
     <div class="rc-facts" aria-live="polite">
       <div><span data-i18n="fileName">ファイル名</span><strong id="sourceName">—</strong></div>
       <div><span data-i18n="sourceDuration">長さ</span><strong id="durationLabel">—</strong></div>
       <div><span data-i18n="dimensions">サイズ</span><strong id="dimensionsLabel">—</strong></div>
       <div><span data-i18n="fileSize">容量</span><strong id="filesizeLabel">—</strong></div>
     </div>
+    <details id="sourceCompatibilityDetails" class="rc-advanced">
+      <summary data-i18n="sourceCompatibilitySummary">素材・色についての注意</summary>
+      <p class="rc-hint" data-i18n="sourceCompatibilityBody">HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsで、元のフレームレートは維持しません。</p>
+      <p class="rc-hint" data-i18n="sourceAudioSelectionNote">複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。</p>
+    </details>
     <div class="rc-grid">
       <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
-      <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="5" disabled></label>
-      <label><span data-i18n="modeLabel">作成モード（計画値）</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option value="pingpong" data-i18n="modePingpong">往復再生</option></select></label>
-      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="720" data-i18n="qualityStandard">標準 720p</option><option value="1080" data-i18n="qualityHigh">高画質 1080p</option></select></label>
+      <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
+      <label><span data-i18n="modeLabel">作成モード</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option id="pingpongOption" value="pingpong" data-i18n="modePingpong" disabled>往復再生</option></select></label>
+      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option><option value="1280" data-i18n="qualityHdPilot">標準720p級（試験）</option><option value="1920" data-i18n="qualityFullHdPilot">高画質1080p級（試験）</option></select></label>
+      <label><span data-i18n="audioModeLabel">音声</span><select id="audioInput" disabled><option value="none" data-i18n="audioNone">音声なし（既定）</option><option id="audioReverseOption" value="reverse" data-i18n="audioReverseOption" disabled>音声も逆再生（準備中）</option></select></label>
     </div>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
     <p id="memoryEstimate" class="rc-hint"></p>
+    <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声付き出力は開発中です。現在のMP4は音声なしで保存されます。</p>
   </div>
+
+  <section class="rc-export" id="reversePanel" hidden aria-labelledby="reverseTitle">
+    <h3 id="reverseTitle" data-i18n="reverseTitle">逆再生MP4を作成（実験版）</h3>
+    <p id="reverseDescription" data-i18n="reverseDescription" class="rc-hint">映像のみ・15fps。最大10秒の区間を分割処理し、MP4で保存します。</p>
+    <p id="reverseStatus" class="rc-status" role="status" aria-live="polite"></p>
+    <div class="rc-actions">
+      <button id="reverseButton" class="button primary" type="button" disabled data-i18n="reverseButton">逆再生MP4を作成</button>
+      <button id="cancelReverseButton" class="button" type="button" hidden data-i18n="cancelReverse">処理を中止</button>
+    </div>
+    <progress id="reverseProgress" max="100" value="0" hidden data-i18n-aria-label="conversionProgressLabel" aria-label="MP4変換の進行状況"></progress>
+    <details id="reverseErrorDetails" hidden><summary data-i18n="errorDetailTitle">エラー詳細</summary><pre id="reverseErrorDetail" class="rc-report"></pre></details>
+    <button id="openDiagnosticsButton" class="button" type="button" hidden data-i18n="openDiagnostics">診断ログを保存する</button>
+    <div id="resultArea" hidden>
+      <h4 id="resultTitle" data-i18n="resultTitle">逆再生の結果</h4>
+      <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="逆再生MP4のプレビュー"></video>
+      <p id="resultInfo" class="rc-hint"></p>
+      <p id="resultDimensions" class="rc-hint"></p>
+      <div class="rc-save">
+        <label class="export-field" for="reverseFilename">
+          <span class="export-label" data-i18n="reverseFilenameLabel">保存するMP4の名前</span>
+          <span class="filename-control"><input class="filename-input" id="reverseFilename" type="text" maxlength="120" autocomplete="off" spellcheck="false"><span class="filename-extension" aria-hidden="true">.mp4</span></span>
+        </label>
+        <button class="button primary" id="saveReverseButton" type="button" data-i18n="saveReverse">MP4を保存</button>
+      </div>
+      <p id="flowSaveHint" class="rc-hint" role="status" hidden data-i18n="flowSaveHint">MP4のダウンロードを開始しました。見つからない場合は、ブラウザーのダウンロードを確認するか、もう一度「MP4を保存」を押してください。</p>
+      <button id="flowBackToEditButton" class="button rc-mobile-only" type="button" data-i18n="flowBackEdit">区間・設定を変更する</button>
+    </div>
+  </section>
 </section>
+<details id="diagnosticsDetails" class="rc-advanced">
+  <summary data-i18n="diagnosticsSummary">困ったときの診断</summary>
 <section class="shell workspace" aria-labelledby="probeTitle">
   <div class="workspace-head">
     <div><h2 id="probeTitle" data-i18n="probeTitle">動作テスト</h2>
@@ -545,18 +701,22 @@
   </div>
   <p class="rc-hint" data-i18n="reportPrivacy">保存されるログにはブラウザー情報が含まれますが、動画の内容やファイル名は含みません。</p>
 </section>
+</details>
 <!-- APP:END -->
 
+    <details id="developmentDetails" class="rc-advanced">
+      <summary data-i18n="developmentSummary">開発中の機能と制限</summary>
     <section class="shell section" aria-labelledby="guaranteesTitle">
   <div class="section-head"><h2 class="section-title" id="guaranteesTitle" data-i18n="guaranteesTitle">開発状況：技術検証中</h2>
-  <p data-i18n="guaranteesBody">v0.1.0では専用WASMが未完成のため、逆再生MP4は作成できません。</p></div>
+  <p data-i18n="guaranteesBody">PCと一部Android実機で逆再生・往復再生を確認済み。動画形式・音声・高解像度は引き続き検証しています。</p></div>
   <div class="card-grid">
     <article class="card"><div class="card-number">01</div><h3 data-i18n="card1Title">フレームの反転</h3><p data-i18n="card1Body">ネイティブFFmpegで20フレームの逆順と、折返しが重複しない39フレームの往復を確認。</p></article>
     <article class="card"><div class="card-number">02</div><h3 data-i18n="card2Title">ブラウザー検証</h3><p data-i18n="card2Body">ファイル読み込み・シーク・Worker・基本WASMの動作を端末別に確認中。</p></article>
-    <article class="card"><div class="card-number">03</div><h3 data-i18n="card3Title">動画書き出し</h3><p data-i18n="card3Body">FFmpeg WASM専用ランナーとMP4生成は未実装。実際に動くまでは完成と表示しません。</p></article>
+    <article class="card"><div class="card-number">03</div><h3 data-i18n="card3Title">動画書き出し</h3><p data-i18n="card3Body">最大10秒の逆再生・往復再生MP4に対応。高解像度・音声付き出力は検証中です。</p></article>
   </div>
 </section>
 
+    </details>
     <section class="shell section">
       <details>
         <summary data-i18n="buildInfo">Build information</summary>
@@ -564,12 +724,13 @@
           <div class="build-item"><span data-i18n="appVersion">App version</span><strong id="buildVersion">—</strong></div>
           <div class="build-item"><span data-i18n="builtAt">Built at</span><strong id="builtAt">—</strong></div>
           <div class="build-item"><span data-i18n="dependencies">Embedded dependencies</span><strong id="dependencyCount">0</strong></div>
+          <div class="build-item"><span data-i18n="runtimeThreading">処理方式</span><strong id="runtimeModeLabel">ST</strong></div>
         </div>
       </details>
     </section>
   </main>
 
-  <footer><span id="footerName">Reverse Clip</span> · MIT License · <span data-i18n="footer">逆再生の技術検証版</span></footer>
+  <footer><span id="footerName">Reverse Clip</span> · <span data-i18n="footerLicense">アプリ MIT / FFmpeg・x264 GPL</span></footer>
   <div class="app-toast" id="appToast" role="status" aria-live="polite" aria-atomic="true" data-tone="default">
     <span class="app-toast-message" id="appToastMessage"></span>
     <button class="app-toast-action" id="appToastAction" type="button" hidden></button>
@@ -605,17 +766,18 @@
   <ol>
   <li data-i18n="helpStep1">動画を選択します。可能な端末では撮影からも取り込めます。</li>
   <li data-i18n="helpStep2">元動画をプレビューして、開始・終了秒を設定します。</li>
-  <li data-i18n="helpStep3">動画を選んでから「ブラウザーの動作を確認」を押すと、シーク・Worker・WASMをまとめて測定します。診断JSONは必要に応じて保存できます。逆再生MP4の試験ではありません。</li>
+  <li data-i18n="helpStep3">再生モード・画質・対応する場合は音声を選んでMP4を作成し、結果を確認して保存します。</li>
   </ol>
   <h3 data-i18n="helpPrivacyTitle">プライバシー</h3>
   <p data-i18n="helpPrivacyBody">動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。</p>
   <h3 data-i18n="helpNotesTitle">制限と注意</h3>
   <ul>
+    <li data-i18n="helpNoteReplace">保存前のMP4がある状態で別の動画を選ぶと、結果を破棄するか確認します。</li>
     <li data-i18n="helpNoteStorage">ブラウザーの制限によってMOVやHEVCをプレビューできない場合があります。</li>
-    <li data-i18n="helpNoteBrowser">ここでのWASMテストは小さな空モジュールの読み込み確認であり、FFmpegの動画変換確認ではありません。</li>
-    <li data-i18n="helpNoteTemplate">専用FFmpeg WASMと逆再生MP4保存は技術検証合格後に追加します。</li>
+    <li data-i18n="helpNoteBrowser">Androidの一部の写真・クラウドの動画は直接読み込めないため、64MiB以下で必要な場合だけ端末メモリ内へ一時コピーして再試行します。</li>
+    <li data-i18n="helpNoteTemplate">10秒への拡張は検証中です。予期しないフレーム数の出力は保存できません。</li>
   </ul>
-  <p class="dialog-note" data-i18n="helpOffline">単一HTMLはローカルで開けます。動画のアップロードは不要です。</p>
+  <p id="helpOffline" class="dialog-note" data-i18n="helpOffline">単一HTMLはローカルで開けます。動画のアップロードは不要です。</p>
 <!-- APP:HELP:END -->
     </div>
   </dialog>
@@ -625,6 +787,9 @@
       'use strict';
 
       const APP_CONFIG = __APP_CONFIG_JSON__;
+      const RUNTIME_VARIANT = "__RUNTIME_VARIANT__";
+      const PINGPONG_ENABLED = __PINGPONG_ENABLED__;  // Verifiable Builder binary lock, not app version.
+      const AUDIO_MUX_ENABLED = __AUDIO_MUX_ENABLED__; // Separate audio+A/V acceptance gate.
       const BUILD_MANIFEST = __BUILD_MANIFEST_JSON__;
       // Asset payloads are Base64 exactly once. The JSON bundle itself is embedded directly.
       const assetBundle = __EMBEDDED_ASSET_BUNDLE_JSON__;
@@ -730,12 +895,34 @@
 
       const translations = {
   "ja": {
-    "brandMeta": "動画逆再生 · v0.1.0 技術検証",
+    "brandMeta": "好きな区間を逆再生MP4に",
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
-    "introTitle": "動画逆再生 — 技術検証中",
-    "lead": "動画の読み込み・区間指定・端末の対応を確かめる試験版です。逆再生MP4の出力はまだできません。",
-    "localBadge": "動画をアップロードしません",
+    "introTitle": "動画の逆再生・往復再生（実験版）",
+    "lead": "動画から最大10秒の区間を選んで逆再生・往復再生MP4に。音声付きは対応動画で選べます。実機検証中です。",
+    "localBadge": "完全ローカル処理",
+    "sourceVideoLabel": "元動画のプレビュー",
+    "resultReverseVideoLabel": "逆再生MP4のプレビュー",
+    "resultPingpongVideoLabel": "往復再生MP4のプレビュー",
+    "conversionProgressLabel": "MP4変換の進行状況",
+    "flowNavigation": "作業の進行",
+    "flowVideo": "動画",
+    "flowEdit": "編集",
+    "flowResult": "結果",
+    "flowGoEdit": "区間を編集する",
+    "flowBackEdit": "区間・設定を変更する",
+    "flowSelectedSource": "{name} · {duration}秒",
+    "flowEditTitle": "区間と出力を編集",
+    "flowEditBody": "区間を決め、再生方法・画質・必要に応じて音声を選びます。",
+    "flowResultTitle": "結果を確認・保存",
+    "flowResultBody": "生成したMP4を再生して確認し、ファイル名を決めて保存します。",
+    "flowStepAnnouncement": "{step}を表示しています",
+    "flowSaveHint": "MP4のダウンロードを開始しました。見つからない場合は、ブラウザーのダウンロードを確認するか、もう一度「MP4を保存」を押してください。",
+    "flowReplaceTitle": "作成したMP4を破棄しますか？",
+    "flowReplaceMessage": "まだダウンロードしていない結果があります。別の動画を読み込むと、このMP4は使えなくなります。",
+    "flowReplaceConfirm": "動画を入れ替える",
+    "helpNoteReplace": "保存前のMP4がある状態で別の動画を選ぶと、結果を破棄するか確認します。",
+    "flowOutputDimensions": "出力：{width} × {height}px・{fps}fps",
     "workspaceTitle": "動画を読み込む",
     "workspaceBody": "ブラウザー内でプレビューして短い範囲を選びます。",
     "dropTitle": "動画を選ぶか撮影する",
@@ -747,23 +934,64 @@
     "loaded": "動画を読み込みました。",
     "invalidType": "MP4またはMOVを選んでください。",
     "tooLarge": "ファイルは1GiB以下にしてください。",
+    "emptyInput": "動画ファイルが空です。別のMP4またはMOVを選んでください。",
+    "invalidContainer": "MP4/MOVの動画データを確認できません。拡張子だけを変えたファイルは利用できません。",
+    "sourceTimedOut": "動画の読み込みが完了しませんでした。端末に保存した動画を選び直してください。",
+    "cancelLoadButton": "読み込みを中止",
+    "sourceLoadCancelled": "読み込みを中止しました。別の動画を選択できます。",
+    "multipleFiles": "動画は1つずつ選んでください。複数ファイルは同時に処理できません。",
     "cantRead": "動画をプレビューできません。対応していない形式か破損している可能性があります。",
+    "sourceTooShort": "動画が0.5秒未満のため変換できません。0.5秒以上のMP4またはMOVを選んでください。",
+    "sourceCompatibilitySummary": "素材・色についての注意",
+    "sourceCompatibilityBody": "HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsで、元のフレームレートは維持しません。",
+    "sourceAudioSelectionNote": "複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。",
     "fileName": "ファイル名",
     "sourceDuration": "長さ",
     "dimensions": "画面サイズ",
     "fileSize": "容量",
+    "trimTitle": "逆再生する区間",
+    "trimStartLabel": "開始ハンドル",
+    "trimEndLabel": "終了ハンドル",
+    "trimSummary": "{start}～{end} 秒（{duration} 秒）",
+    "trimInvalidSummary": "開始・終了の時刻を確認してください",
+    "previewSelectionButton": "選択範囲を再生",
+    "trimPreviewPlaying": "元動画の選択区間を再生中",
+    "previewSelectionFailed": "元動画の選択区間を再生できませんでした。",
     "rangeStartLabel": "開始（秒）",
     "rangeEndLabel": "終了（秒）",
-    "modeLabel": "作成モード（計画値）",
+    "audioModeLabel": "音声",
+    "audioNone": "音声なし（既定）",
+    "audioReverseOption": "音声も逆再生",
+    "audioPreparingNotice": "音声付き出力は開発中です。現在のMP4は音声なしで保存されます。",
+    "audioCheckingLater": "選択動画の音声トラックを確認しています。",
+    "audioPresent": "元動画に音声トラックがあります。音声付き出力の検証中です。",
+    "audioAbsent": "この動画に音声はありません。音声なしのMP4を作成します。",
+    "audioUnavailable": "音声付き出力は、この動画と実行環境でまだ利用できません。",
+    "audioUnknown": "音声トラックを確認できません。動画を端末に保存し直すか、音声なしで保存してください。",
+    "audioLoading": "選択動画の音声を確認しています…",
+    "audioEncoding": "選択区間の音声を変換中… {progress}%",
+    "audioMuxing": "映像とAAC音声を結合中… {progress}%",
+    "reverseResultAudio": "{duration}秒・{size}・AAC音声付き・{chunks}区間・処理時間{elapsed}秒",
+    "pingpongResultAudio": "往復再生・{duration}秒・{size}・AAC音声付き・{chunks}区間・処理時間{elapsed}秒",
+    "modeLabel": "作成モード",
     "modeReverse": "逆再生",
     "modePingpong": "往復再生",
-    "qualityLabel": "予定の画質",
-    "qualityStandard": "標準 720p",
-    "qualityHigh": "高画質 1080p",
-    "rangeValid": "この範囲は将来の変換制限内です。",
-    "rangeInvalid": "開始・終了を確認してください（0.5秒以上）。",
-    "rangeTooLong": "この画質で選べる範囲は最大 {limit}秒です。自動では短くしません。",
-    "memoryNotice": "フレーム保持の理論上の下限: 約 {mib} MiB（実際のメモリ使用量はこれより大きくなります）",
+    "qualityLabel": "実験版の画質",
+    "qualityStandard": "長辺360px",
+    "qualityHigh": "長辺720px",
+    "qualityHdPilot": "標準720p級（最大10秒・試験）",
+    "qualityFullHdPilot": "高画質1080p級（最大5秒・試験）",
+    "rangeHdPilotWarning": "720p級（短辺最大720px・長辺最大1280px、最大10秒）の試験設定です。実機の安定性は未確認です。",
+    "rangeFullHdPilotWarning": "1080p級（短辺最大1080px・長辺最大1920px、最大5秒）の試験設定です。実機メモリ負荷は未検証です。",
+    "rangeHdPilotTooLong": "720p級は最大10秒です。",
+    "rangeFullHdPilotTooLong": "1080p級は最大5秒です。範囲を短くするか720p級を選んでください。自動変更はしません。",
+    "rangeValid": "この範囲は実験版で処理できます。",
+    "rangeInvalid": "開始・終了を確認してください（0.5〜10秒）。",
+    "rangeTooLong": "この実験版は最大10秒です。自動で範囲を短くすることはありません。",
+    "memoryNotice": "各区間で保持する映像フレームの概算: 最大約{mib}MiB（実際のメモリ使用量はこれより大きくなります）",
+    "diagnosticsSummary": "困ったときの診断",
+    "openDiagnostics": "診断ログを保存する",
+    "developmentSummary": "開発中の機能と制限",
     "probeTitle": "動作テスト",
     "probeBody": "動画を選んでから実行すると、シーク・Worker・基本WASMをまとめて確認します。逆再生やMP4保存の試験ではありません。",
     "runProbe": "ブラウザーの動作を確認",
@@ -778,44 +1006,110 @@
     "probeFailed": "一部の動作を確認できませんでした。",
     "seekDone": "シーク結果: {ms} ms",
     "seekFailed": "シークできませんでした。",
-    "reportSaved": "診断ログを保存しました。",
+    "reportSaved": "診断ログのダウンロードを開始しました。",
     "noVideo": "動画を選んでから実行してください。",
     "guaranteesTitle": "開発状況：技術検証中",
-    "guaranteesBody": "専用WASMが未実装のため、逆再生MP4はまだ作成できません。",
+    "guaranteesBody": "逆再生・往復再生をPCと一部Android実機で確認済み。動画形式や音声、メモリ負荷などの対応範囲は引き続き検証しています。",
     "card1Title": "反転アルゴリズム",
     "card1Body": "ネイティブFFmpegで20フレームの逆順と、折返しに重複がない39フレームの往復を確認。",
     "card2Title": "ブラウザー検証",
     "card2Body": "動画選択・シーク・Worker・基本WASMを端末別に確認中です。",
     "card3Title": "MP4作成",
-    "card3Body": "専用FFmpeg WASM、MP4保存、スマホ実機の性能は未検証です。",
+    "card3Body": "最大10秒の短い区間を逆再生・往復再生MP4に変換します。高解像度や音声付き出力の検証は継続中です。",
     "helpBasicsTitle": "使い方",
     "helpStep1": "動画を選択します。可能な端末では撮影からも取り込めます。",
-    "helpStep2": "元動画をプレビューして、開始・終了秒を設定します。",
-    "helpStep3": "動画を選んでから「ブラウザーの動作を確認」を押すと、シーク・Worker・WASMをまとめて測定します。診断JSONは必要に応じて保存できます。逆再生MP4の試験ではありません。",
+    "helpStep2": "元動画の直下のハンドルか秒数入力で区間を調整し、「選択範囲を再生」で確認します。",
+    "helpStep3": "モード・画質・必要に応じて音声を選び、MP4を作成します。結果を再生してから保存できます。",
     "helpPrivacyTitle": "プライバシー",
     "helpPrivacyBody": "動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。",
     "helpNotesTitle": "制限と注意",
     "helpNoteStorage": "ブラウザーの制限によってMOVやHEVCをプレビューできない場合があります。",
-    "helpNoteBrowser": "WASMテストは小さな空モジュールの読み込み確認であり、FFmpegの変換確認ではありません。",
-    "helpNoteTemplate": "専用FFmpeg WASMと逆再生MP4保存は技術検証合格後に追加します。",
+    "helpNoteBrowser": "Androidの一部の写真・クラウドからは動画を直接読み込めない場合があります。64MiB以下で直接読めないときだけ端末のメモリに一時コピーして再試行します。外部には送信しません。",
+    "helpNoteTemplate": "10秒対応は実験中です。各区間のフレーム数を確認し、問題があれば出力しません。5秒超は端末によって時間がかかる場合があります。",
     "helpOffline": "単一HTMLはローカルでも開けます。動画のアップロードは不要です。",
     "buildInfo": "ビルド情報",
     "appVersion": "アプリの版数",
     "builtAt": "生成日時",
     "dependencies": "内包依存数",
-    "footer": "逆再生の技術検証版",
+    "footerLicense": "アプリ MIT / FFmpeg・x264 GPL",
+    "runtimeThreading": "処理方式",
     "confirmTitle": "確認",
     "confirmAction": "実行する",
     "cancel": "キャンセル",
-    "undo": "元に戻す"
+    "undo": "元に戻す",
+    "rangeMemoryHigh": "推定フレーム保持量が実験版の上限48 MiBを超えています。範囲か画質を下げてください。",
+    "reverseTitle": "短い動画を逆再生（実験版）",
+    "reverseDescription": "15fps・音声なしが既定。対応する動画では音声の逆再生も選べます。区間は最大10秒（1080p級は5秒）で、長い区間や高画質は実機検証中です。",
+    "reverseButton": "逆再生MP4を作成",
+    "cancelReverse": "処理を中止",
+    "reverseFilenameLabel": "保存するMP4の名前",
+    "saveReverse": "MP4を保存",
+    "errorDetailTitle": "エラー詳細",
+    "resultTitle": "逆再生の結果",
+    "reverseReady": "0.5〜10秒の範囲を指定してください。",
+    "reverseRunning": "逆再生中… {progress}%",
+    "reverseLoading": "変換の準備中…",
+    "reverseInvalid": "範囲・画質を確認してください。",
+    "reverseCancelled": "処理を中止しました。再実行できます。",
+    "reverseFailure": "MP4を作成できませんでした。以下のエラー詳細をご確認ください。不完全な動画は保存されません。",
+    "reverseFrameMismatch": "出力フレーム数が予定と一致しないため、MP4の保存を中止しました。以下のエラー詳細をご確認ください。",
+    "reverseSuccess": "逆再生MP4を作成しました。結果を再生して保存してください。",
+    "reverseUnsupported": "このブラウザーでは逆再生用WASMを起動できません。",
+    "reverseSaved": "逆再生MP4のダウンロードを開始しました。",
+    "pingpongSaved": "往復再生MP4のダウンロードを開始しました。",
+    "resultInfo": "{duration}秒・{size}・映像のみ・{chunks}区間・処理時間{elapsed}秒",
+    "reverseSourcePreparing": "動画を端末内で準備中です…",
+    "reverseSourceUnreadable": "選択した動画を読み込めません。写真・クラウド上の動画を端末に保存してから選び直してください。",
+    "reverseMemoryRetry": "直接読み込めなかったため、端末内の一時コピーで再試行しています…",
+    "reverseMemoryLimit": "この動画は大きいため、読み込み方法を切り替えられません。64MiB以下の動画を端末に保存して選び直してください。",
+    "rangePlan": "{count}区間に分けて逆再生します。出力予定 {duration}秒。",
+    "pingpongRangePlan": "通常再生→逆再生の{count}区間。出力予定 {duration}秒。折り返し・ループ境界の重複フレームを除きます。",
+    "rangeSnapNote": "15fpsのフレーム境界に合わせるため、選択時刻から最大約0.03秒ずれます。",
+    "reverseChunk": "区間 {current}/{total} を逆再生中… {progress}%",
+    "pingpongForwardChunk": "往路の区間 {current}/{total} を処理中… {progress}%",
+    "pingpongReturnChunk": "復路の区間 {current}/{total} を処理中… {progress}%",
+    "pingpongTitle": "往復再生のMP4を作る",
+    "pingpongDescription": "選択区間を通常再生→逆再生で1本のMP4にします。折り返しの重複フレームを除きます。15fps・音声選択可（対応動画のみ）の実験版です。",
+    "pingpongResultTitle": "往復再生の結果",
+    "createPingpong": "往復再生MP4を作成",
+    "pingpongSuccess": "往復再生MP4を作成しました。結果を確認して保存できます。",
+    "pingpongResultInfo": "往復再生・{duration}秒・{size}・映像のみ・{chunks}区間・処理時間{elapsed}秒",
+    "reverseJoin": "MP4を1本に結合しています… {progress}%",
+    "rangeTenSecondWarning": "5秒を超える変換は実機で検証中です。まず長辺360pxをお試しください。",
+    "stVariant": "標準版（ST）",
+    "mtVariant": "マルチスレッド版（MT）",
+    "mtUnavailable": "マルチスレッド版を使うには対応ブラウザーと専用のWebサーバー設定が必要です。GitHub PagesのMTページを開き直すか、標準版をご利用ください。",
+    "mtHelpOffline": "マルチスレッド版はWebサーバーの安全な設定が必要です。HTML単体をfile://で開く場合は標準（ST）版を使用してください。動画は外部に送信しません。"
   },
   "en": {
-    "brandMeta": "Reverse Clip · v0.1.0 feasibility",
+    "brandMeta": "Reverse moments from your videos",
     "helpTitle": "How to use & limitations",
     "close": "Close",
-    "introTitle": "Reverse Clip — feasibility testing",
-    "lead": "This diagnostic build checks video loading, clip ranges, and browser capabilities. It cannot export reversed MP4 files yet.",
-    "localBadge": "No video upload",
+    "introTitle": "Reverse & ping-pong video (experimental)",
+    "lead": "Turn up to 10 seconds of video into a reversed or forward-and-back MP4. Audio is optional for supported sources; phone support is experimental.",
+    "localBadge": "Fully local processing",
+    "sourceVideoLabel": "Source video preview",
+    "resultReverseVideoLabel": "Reversed MP4 preview",
+    "resultPingpongVideoLabel": "Ping-pong MP4 preview",
+    "conversionProgressLabel": "MP4 conversion progress",
+    "flowNavigation": "Video editing steps",
+    "flowVideo": "Video",
+    "flowEdit": "Edit",
+    "flowResult": "Result",
+    "flowGoEdit": "Edit the selected section",
+    "flowBackEdit": "Change section or settings",
+    "flowSelectedSource": "{name} · {duration}s",
+    "flowEditTitle": "Edit section and output",
+    "flowEditBody": "Select a segment, playback mode, output quality and optional audio.",
+    "flowResultTitle": "Preview and save result",
+    "flowResultBody": "Review the generated MP4, choose a filename and download.",
+    "flowStepAnnouncement": "Showing {step}",
+    "flowSaveHint": "MP4 download started. If you cannot find it, check your browser's Downloads or select Save MP4 again.",
+    "flowReplaceTitle": "Discard the generated MP4?",
+    "flowReplaceMessage": "This MP4 has not been downloaded yet. Loading another video will discard the result.",
+    "flowReplaceConfirm": "Replace video",
+    "helpNoteReplace": "When an MP4 has not been downloaded, choosing another video asks before discarding it.",
+    "flowOutputDimensions": "Output: {width} × {height}px · {fps}fps",
     "workspaceTitle": "Load a video",
     "workspaceBody": "Preview locally and select a short section.",
     "dropTitle": "Choose or record a video",
@@ -827,23 +1121,64 @@
     "loaded": "Video loaded.",
     "invalidType": "Choose an MP4 or MOV file.",
     "tooLarge": "Choose a file smaller than 1 GiB.",
+    "emptyInput": "This video file is empty. Choose another MP4 or MOV.",
+    "invalidContainer": "This does not have a recognizable MP4/MOV container header. Renaming a file is not a video conversion.",
+    "sourceTimedOut": "Video loading timed out. Save a local copy on your device and choose it again.",
+    "cancelLoadButton": "Cancel loading",
+    "sourceLoadCancelled": "Video loading was cancelled. You can select another video.",
+    "multipleFiles": "Choose one video at a time. Multiple dropped files cannot be processed together.",
     "cantRead": "This video cannot be previewed. The format may be unsupported or the file damaged.",
+    "sourceTooShort": "This video is shorter than 0.5 seconds. Choose an MP4 or MOV that is at least 0.5 seconds long.",
+    "sourceCompatibilitySummary": "Source format and color limitations",
+    "sourceCompatibilityBody": "HDR/10-bit input is not automatically identified or color-preserved. Colors may change even if the source can be previewed. Output is 15fps and does not retain the source frame rate.",
+    "sourceAudioSelectionNote": "Multiple audio tracks cannot be selected. When audio is available, only a supported track can be processed.",
     "fileName": "File name",
     "sourceDuration": "Duration",
     "dimensions": "Dimensions",
     "fileSize": "File size",
+    "trimTitle": "Choose a section to reverse",
+    "trimStartLabel": "Start handle",
+    "trimEndLabel": "End handle",
+    "trimSummary": "{start}–{end}s ({duration}s)",
+    "trimInvalidSummary": "Check the start and end times",
+    "previewSelectionButton": "Play selected section",
+    "trimPreviewPlaying": "Playing the selected source interval",
+    "previewSelectionFailed": "Could not play the selected part of the source video.",
     "rangeStartLabel": "Start (seconds)",
     "rangeEndLabel": "End (seconds)",
-    "modeLabel": "Planned mode",
+    "audioModeLabel": "Audio",
+    "audioNone": "No audio (default)",
+    "audioReverseOption": "Reverse audio too",
+    "audioPreparingNotice": "Audio export is under development. Current MP4 exports contain no audio.",
+    "audioCheckingLater": "Checking this video's audio track.",
+    "audioPresent": "This video has an audio track. Audio export is under validation.",
+    "audioAbsent": "This video has no audio; export will be silent.",
+    "audioUnavailable": "Audio export is not yet available for this source and runtime.",
+    "audioUnknown": "Could not inspect this video's audio track. Try a locally saved copy, or export without sound.",
+    "audioLoading": "Checking the selected audio stream…",
+    "audioEncoding": "Processing the selected audio… {progress}%",
+    "audioMuxing": "Joining video and AAC audio… {progress}%",
+    "reverseResultAudio": "{duration}s · {size} · AAC audio · {chunks} chunks · {elapsed}s processing",
+    "pingpongResultAudio": "Ping-pong · {duration}s · {size} · AAC audio · {chunks} chunks · {elapsed}s processing",
+    "modeLabel": "Conversion mode",
     "modeReverse": "Reverse",
-    "modePingpong": "Forward & reverse",
-    "qualityLabel": "Planned quality",
-    "qualityStandard": "Standard 720p",
-    "qualityHigh": "High 1080p",
-    "rangeValid": "Selected range is within the planned limits.",
-    "rangeInvalid": "Check start and end (at least 0.5 seconds).",
-    "rangeTooLong": "This quality supports at most {limit} seconds. The range will not be shortened automatically.",
-    "memoryNotice": "Theoretical lower bound for buffered frames: ~{mib} MiB (real usage will be higher).",
+    "modePingpong": "Ping-pong",
+    "qualityLabel": "Experimental quality",
+    "qualityStandard": "Long edge 360px",
+    "qualityHigh": "Long edge 720px",
+    "qualityHdPilot": "Standard 720p-class (up to 10s; pilot)",
+    "qualityFullHdPilot": "High 1080p-class (up to 5s; pilot)",
+    "rangeHdPilotWarning": "Experimental 720p-class (short edge max 720px, long edge max 1280px), up to 10 seconds; phone reliability unverified.",
+    "rangeFullHdPilotWarning": "Experimental 1080p-class (short edge max 1080px, long edge max 1920px), up to 5 seconds; phone RAM use unverified.",
+    "rangeHdPilotTooLong": "720p-class is limited to 10 seconds.",
+    "rangeFullHdPilotTooLong": "1080p-class is limited to 5 seconds. Shorten the range or select 720p; no automatic changes.",
+    "rangeValid": "This segment is within the experimental limits.",
+    "rangeInvalid": "Check start and end (0.5–10 seconds).",
+    "rangeTooLong": "This experimental build supports up to 10 seconds and will not silently shorten the selection.",
+    "memoryNotice": "Approximate buffered frames per segment: up to ~{mib}MiB (actual RAM use is higher).",
+    "diagnosticsSummary": "Troubleshooting and diagnostics",
+    "openDiagnostics": "Download a diagnostic report",
+    "developmentSummary": "Development status and limitations",
     "probeTitle": "Browser checks",
     "probeBody": "After selecting a video, run one check for seeking, Worker and basic WASM. This does not reverse or export video.",
     "runProbe": "Check browser capabilities",
@@ -858,39 +1193,82 @@
     "probeFailed": "Some checks were unsuccessful.",
     "seekDone": "Seek completed in {ms} ms",
     "seekFailed": "Video seeking failed.",
-    "reportSaved": "Diagnostic JSON downloaded.",
+    "reportSaved": "Diagnostic JSON download started.",
     "noVideo": "Choose a video first.",
     "guaranteesTitle": "Development status: feasibility",
-    "guaranteesBody": "Dedicated WASM is not implemented; reversed MP4 export is unavailable.",
+    "guaranteesBody": "Reverse and ping-pong exports are verified on desktop and selected Android devices. Other codecs, audio and high-memory scenarios are still under review.",
     "card1Title": "Reverse algorithm",
     "card1Body": "Native FFmpeg baseline passed 20-frame reversal and 39-frame ping-pong with no repeated turning frame.",
     "card2Title": "Browser compatibility",
     "card2Body": "Testing local video selection, seeking, Workers and basic WebAssembly support.",
     "card3Title": "MP4 export",
-    "card3Body": "Dedicated FFmpeg WASM, MP4 saving and real-phone performance remain unverified.",
+    "card3Body": "Reverse or ping-pong up to 10 seconds. High-resolution and audio modes are still being validated.",
     "helpBasicsTitle": "How to test",
     "helpStep1": "Choose a video, or record one where supported.",
-    "helpStep2": "Preview the source and enter the start/end times.",
-    "helpStep3": "With a video selected, run the single browser check to test seeking, Worker and WASM. Save the optional diagnostic JSON. This is not a reversed MP4.",
+    "helpStep2": "Drag the start/end handles below the source video, or enter times; play the selected portion to check it.",
+    "helpStep3": "Choose Reverse or Ping-pong, output quality and optional reverse audio when supported. Create the MP4, preview the result and save it.",
     "helpPrivacyTitle": "Privacy",
     "helpPrivacyBody": "Your video stays in the browser. Only an explicit download creates a diagnostic report.",
     "helpNotesTitle": "Limitations",
     "helpNoteStorage": "MOV or HEVC preview may be unavailable depending on the browser.",
-    "helpNoteBrowser": "The small WASM check only tests loading an empty module. It does not validate FFmpeg.",
-    "helpNoteTemplate": "Reverse MP4 output will be implemented after the separate feasibility gate.",
+    "helpNoteBrowser": "Some Android photo/cloud providers cannot be read directly. Only if direct access fails, a file up to 64 MiB may be temporarily copied in browser memory to retry. Nothing is uploaded.",
+    "helpNoteTemplate": "10-second support is experimental. Chunks with unexpected frame counts are rejected. More than 5 seconds may take longer or fail on some phones.",
     "helpOffline": "The standalone HTML also opens locally without uploading files.",
     "buildInfo": "Build information",
     "appVersion": "App version",
     "builtAt": "Built at",
     "dependencies": "Embedded dependencies",
-    "footer": "Video reversal feasibility build",
+    "footerLicense": "App MIT / FFmpeg and x264 GPL",
+    "runtimeThreading": "Processing mode",
     "confirmTitle": "Confirm",
     "confirmAction": "Continue",
     "cancel": "Cancel",
-    "undo": "Undo"
+    "undo": "Undo",
+    "rangeMemoryHigh": "Estimated frame cache exceeds the experimental 48 MiB limit. Reduce time or quality.",
+    "reverseTitle": "Reverse a short clip (experimental)",
+    "reverseDescription": "15fps · silent by default, with optional reverse audio for supported videos. Up to 10 seconds (5 seconds at 1080p-class); longer clips and high quality remain experimental on phones.",
+    "reverseButton": "Create reversed MP4",
+    "cancelReverse": "Cancel conversion",
+    "reverseFilenameLabel": "MP4 filename",
+    "saveReverse": "Save MP4",
+    "errorDetailTitle": "Error details",
+    "resultTitle": "Reversed result",
+    "reverseReady": "Select between 0.5 and 10 seconds.",
+    "reverseRunning": "Reversing video… {progress}%",
+    "reverseLoading": "Preparing conversion…",
+    "reverseInvalid": "Check the selected time range and quality.",
+    "reverseCancelled": "Conversion cancelled. You can retry.",
+    "reverseFailure": "MP4 creation failed. Review the error details below. An incomplete video will not be saved.",
+    "reverseFrameMismatch": "The output frame count did not match the expected count, so saving was stopped. See the error details below.",
+    "reverseSuccess": "Reversed MP4 ready. Preview and save it.",
+    "reverseUnsupported": "This browser cannot start the reverse WASM.",
+    "reverseSaved": "Reversed MP4 download started.",
+    "pingpongSaved": "Ping-pong MP4 download started.",
+    "resultInfo": "{duration}s · {size} · silent video · {chunks} chunks · {elapsed}s processing",
+    "reverseSourcePreparing": "Preparing a local copy of the selected video…",
+    "reverseSourceUnreadable": "Could not read the selected video. Save it locally on your device, then select it again instead of selecting it directly from a cloud or photo provider.",
+    "reverseMemoryRetry": "Direct reading failed. Retrying with a temporary local copy…",
+    "reverseMemoryLimit": "This file is too large for safe in-memory fallback. Save a local video under 64 MiB and select it again.",
+    "rangePlan": "Reversing {count} segments; expected output {duration}s.",
+    "pingpongRangePlan": "{count} forward/return segments; expected output {duration}s. Duplicate turn and loop-end frames are excluded.",
+    "rangeSnapNote": "15fps output may shift selection boundaries by up to about 0.03s to align frames.",
+    "reverseChunk": "Reversing segment {current}/{total}… {progress}%",
+    "pingpongForwardChunk": "Processing forward segment {current}/{total}… {progress}%",
+    "pingpongReturnChunk": "Processing return segment {current}/{total}… {progress}%",
+    "pingpongTitle": "Create a ping-pong MP4",
+    "pingpongDescription": "Forward then backward in one MP4, without duplicate turning/loop frames. Experimental H.264 at 15fps; optional audio for supported sources.",
+    "pingpongResultTitle": "Ping-pong result",
+    "createPingpong": "Create ping-pong MP4",
+    "pingpongSuccess": "Ping-pong MP4 created. Preview and save the result.",
+    "pingpongResultInfo": "Ping-pong · {duration}s · {size} · silent video · {chunks} chunks · {elapsed}s processing",
+    "reverseJoin": "Joining MP4 segments… {progress}%",
+    "rangeTenSecondWarning": "More than 5 seconds is not yet tested on real phones. Try long edge 360px first.",
+    "stVariant": "Standard (ST)",
+    "mtVariant": "Multi-thread (MT)",
+    "mtUnavailable": "Multi-thread mode requires a supported browser and cross-origin isolation. Reload the GitHub Pages MT page or use the standard single-thread build.",
+    "mtHelpOffline": "The multi-thread build needs cross-origin isolation from a configured web server. Use the ST HTML for direct file:// access. Videos are not uploaded."
   }
 };
-
       const storageKeys = { language: APP_CONFIG.slug + ':language' };
       const $ = selector => document.querySelector(selector);
       const outputFilename = $('#outputFilename');
@@ -993,17 +1371,170 @@
       window.AppToast = AppToast;
       function showToast(message, options = {}) { AppToast.show({ message, ...options }); }
       const video = $('#sourceVideo');
-      const state = { generation: 0, file: null, url: null, ready: false, probe: null, seek: null, note: null };
+      const state = { generation: 0, file: null, url: null, ready: false, sourcePhase: 'empty', sourceErrorKey: null,
+        lastSelectedMode: 'reverse', audioPresent: null, audioChecked: false,
+        audioCodec: null, audioInspectionError: null,
+        audioInspectController: null, audioInspectRunner: null,
+        probe: null, seek: null, note: null, validRange: false, conversion: null,
+        copiedInput: null, inputPreparePromise: null, inputProbeController: null,
+        inputTransport: 'workerfs', inputPrepareError: null };
+      // Mobile input-provider failures may require a bounded in-memory
+      // fallback. Probe tiny Worker reads first to avoid eagerly copying
+      // ordinary local files. Keep the existing fallback for providers that
+      // reject FileReaderSync; it still needs real Android G2 acceptance.
+      const INPUT_MEMORY_LIMIT = 64 * 1024 * 1024;
+      const MOBILE_INPUT = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+        (navigator.userAgentData?.mobile === true);
+      let conversionEpoch = 0, conversionController = null, conversionRunner = null, resultUrl = null;
+      let resultDownloadStarted = false, sourceSelectionSequence = 0;
+      // Keep a localization key for finished/error/cancelled states, rather
+      // than preserving a string from the language used when they occurred.
+      let conversionMessageKey = null;
+      // v0.7 preparation: an explicit, mobile-only three-step display.
+      // The source, WASM output and conversion state are NOT duplicated or
+      // persisted when navigating. Desktop keeps the continuous form.
+      let flowStep = 'video';
+      const flowSteps = Object.freeze(['video','edit','result']);
+      const flowButtons = {
+        video: $('#flowVideoButton'),
+        edit: $('#flowEditButton'),
+        result: $('#flowResultButton')
+      };
+      function flowResultReady() {
+        return Boolean(state.ready && state.conversion?.ok && resultUrl &&
+          !$('#resultArea').hidden);
+      }
+      function updateFlowNavigation() {
+        const canEdit = state.sourcePhase === 'ready';
+        // A conversion may take minutes on a phone. Do not allow Video
+        // navigation to hide its progress and Cancel controls mid-job.
+        const busy=Boolean(conversionController);
+        const canResult = canEdit && flowResultReady();
+        if (flowStep === 'edit' && !canEdit) flowStep='video';
+        if (flowStep === 'result' && !canResult) flowStep=canEdit?'edit':'video';
+        $('#rcWorkflow').dataset.flowStep=flowStep;
+        const onMobile=window.matchMedia?.('(max-width:600px)').matches===true;
+        $('#workspaceTitle').textContent=translate(!onMobile||flowStep==='video'?
+          'workspaceTitle':flowStep==='edit'?'flowEditTitle':'flowResultTitle');
+        $('#workspaceBody').textContent=translate(!onMobile||flowStep==='video'?
+          'workspaceBody':flowStep==='edit'?'flowEditBody':'flowResultBody');
+        for (const step of flowSteps) {
+          const button=flowButtons[step];
+          button.disabled=step==='video'?busy:step==='edit'?!canEdit:!canResult;
+          if(step===flowStep) button.setAttribute('aria-current','step');
+          else button.removeAttribute('aria-current');
+        }
+        $('#selectedSourceSummary').hidden=!canEdit;
+        $('#flowGoEditButton').disabled=!canEdit;
+        if(canEdit) {
+          $('#selectedSourceText').textContent=format('flowSelectedSource',{
+            name:state.file?.name||'',duration:Number.isFinite(video.duration)?
+              video.duration.toFixed(1):'—'
+          });
+        } else {
+          $('#selectedSourceText').textContent='';
+        }
+      }
+      function setFlowStep(step,{scroll=true,focus=false}={}) {
+        if(!flowSteps.includes(step))return false;
+        if(step==='video'&&conversionController)return false;
+        if(step==='edit'&&!state.ready)return false;
+        if(step==='result'&&!flowResultReady())return false;
+        if(flowStep==='edit'&&step!=='edit'){
+          previewSelectionActive=false;
+          video.pause();
+          $('#trimPreviewNotice').textContent='';
+        }
+        // Hide the result only after stopping its playback; AAC audio must
+        // not continue invisibly on Video/Edit. Retain the verified MP4 Blob.
+        if(flowStep==='result'&&step!=='result')$('#resultVideo').pause();
+        flowStep=step;
+        updateFlowNavigation();
+        $('#flowAnnouncement').textContent=format('flowStepAnnouncement',{
+          step:translate(step==='video'?'flowVideo':step==='edit'?'flowEdit':'flowResult')
+        });
+        const onMobile=window.matchMedia?.('(max-width:600px)').matches===true;
+        // Automatic transitions must not strand keyboard focus in a hidden
+        // panel. Manual nav taps leave focus on the visible nav button.
+        if(onMobile&&focus)$('#workspaceTitle').focus({preventScroll:true});
+        // html {scroll-behavior:smooth} makes behavior:auto animate.
+        // Stop a focused heading from remaining hidden during that animation.
+        // Restore the template's normal scroll preference immediately.
+        if(scroll&&onMobile){
+          const root=document.documentElement, previous=root.style.scrollBehavior;
+          root.style.scrollBehavior='auto';
+          try{
+            (focus?$('#workspaceTitle'):$('#rcFlowNav'))
+              .scrollIntoView({block:'start',behavior:'auto'});
+          }finally{root.style.scrollBehavior=previous;}
+        }
+        return true;
+      }
+      // A slow cloud/photo provider or a media decoder that never returns
+      // metadata must not trap the UI in "inspecting" forever.
+      const SOURCE_LOAD_TIMEOUT_MS = 30000;
+      let sourceTimeout = 0;
+      function clearSourceTimeout() {
+        if (sourceTimeout) clearTimeout(sourceTimeout);
+        sourceTimeout = 0;
+      }
+      let previewSelectionActive = false;
       const memoryRate = 1.5; // YUV420p approximation; it is not a memory budget.
       const format = (key, vars = {}) => translate(key).replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ''));
       function setStatus(key) {
         $('#loadStatus').textContent = translate(key);
       }
+      // v0.2.0 App Foundation: one explicit source lifecycle. Every transition
+      // is tied to a file generation so an old async provider read, seek or
+      // metadata event cannot revive a previously selected video.
+      const SOURCE_PHASES = Object.freeze(['empty', 'inspecting', 'ready', 'error']);
+      function setSourcePhase(phase, generation = state.generation, errorKey = null) {
+        if (generation !== state.generation) return false;
+        if (!SOURCE_PHASES.includes(phase)) throw new RangeError('Invalid source phase: ' + phase);
+        if (phase !== 'inspecting') clearSourceTimeout();
+        state.sourcePhase = phase;
+        state.ready = phase === 'ready';
+        state.sourceErrorKey = phase === 'error' ? (errorKey || 'cantRead') : null;
+        $('#loadStatus').dataset.phase = phase;
+        $('#cancelLoadButton').hidden = phase !== 'inspecting';
+        setStatus(phase === 'empty' ? 'nothingSelected' :
+                  phase === 'inspecting' ? 'loading' :
+                  phase === 'ready' ? 'loaded' : state.sourceErrorKey);
+        if(phase==='ready') updateFlowNavigation();
+        else setFlowStep('video',{scroll:phase==='error',focus:phase==='error'});
+        return true;
+      }
       function releaseSource() {
+        // Source-specific disclosures must not accidentally carry their
+        // expanded state over to the next (potentially different) video.
+        $('#sourceCompatibilityDetails').open=false;
+        // Invalidate pending asynchronous source-replacement dialogs.
+        sourceSelectionSequence+=1;
+        previewSelectionActive=false;
+        if(state.inputProbeController)state.inputProbeController.abort();
+        state.inputProbeController=null;
+        resetConversion();
+        if(state.audioInspectController)state.audioInspectController.abort();
+        state.audioInspectController=null;
+        if(state.audioInspectRunner){
+          state.audioInspectRunner.dispose();
+          state.audioInspectRunner=null;
+        }
+        state.audioPresent=null;
+        state.audioChecked=false;
+        state.audioCodec=null;
+        state.audioInspectionError=null;
+        $('#audioInput').value='none';
+        $('#audioInput').disabled=true;
+        $('#audioReverseOption').disabled=true;
         state.generation += 1;
         state.file = null;
-        state.ready = false;
+        setSourcePhase('empty');
         state.seek = null;
+        state.copiedInput = null;
+        state.inputPreparePromise = null;
+        state.inputPrepareError = null;
+        state.inputTransport = 'workerfs';
         if (state.url) URL.revokeObjectURL(state.url);
         state.url = null;
         video.pause();
@@ -1012,74 +1543,651 @@
         $('#videoArea').hidden = true;
         $('#rangeStart').disabled = true;
         $('#rangeEnd').disabled = true;
+        $('#trimStartSlider').disabled = true;
+        $('#trimEndSlider').disabled = true;
+        $('#previewSelectionButton').disabled = true;
+        $('#trimPreviewNotice').textContent = '';
         $('#modeInput').disabled = true;
+        $('#audioInput').disabled = true;
+        $('#audioReverseOption').disabled = true;
         $('#qualityInput').disabled = true;
         $('#seekButton').disabled = true;
+        $('#reversePanel').hidden = true;
+        state.validRange = false;
+        $('#reverseFilename').value = 'reverse-clip-reversed';
+      }
+      function failSource(errorKey, generation = state.generation) {
+        if (generation !== state.generation || state.sourcePhase !== 'inspecting') return;
+        if(state.inputProbeController)state.inputProbeController.abort();
+        state.inputProbeController=null;
+        // Clear the object URL and selected File before any pending async
+        // provider read can resolve. This also invalidates stale decoder events.
+        state.validRange = false;
+        state.file = null;
+        state.copiedInput = null;
+        state.inputPreparePromise = null;
+        if (state.url) URL.revokeObjectURL(state.url);
+        state.url = null;
+        video.pause();
+        video.removeAttribute('src');
+        video.load();
+        $('#videoArea').hidden = true;
+        $('#reversePanel').hidden = true;
+        for(const id of ['rangeStart','rangeEnd','modeInput','audioInput','audioReverseOption','qualityInput','seekButton','trimStartSlider','trimEndSlider','previewSelectionButton'])
+          $('#' + id).disabled = true;
+        previewSelectionActive = false;
+        resetConversion();
+        setSourcePhase('error', generation, errorKey);
+      }
+      function armSourceTimeout(file, generation) {
+        clearSourceTimeout();
+        sourceTimeout = setTimeout(() => {
+          if (sourceIsCurrent(file, generation) && state.sourcePhase === 'inspecting')
+            failSource('sourceTimedOut', generation);
+        }, SOURCE_LOAD_TIMEOUT_MS);
       }
       function humanSize(bytes) {
         return (bytes / 1048576).toFixed(1) + ' MiB';
       }
+      function threadingReady() {
+        return RUNTIME_VARIANT === 'single-thread' ||
+          (globalThis.crossOriginIsolated === true &&
+           typeof SharedArrayBuffer === 'function');
+      }
+      const OUTPUT_FPS = 15;
+      // Estimate a <=48MiB YUV420 frame cache per chunk. This does not bound
+      // decoder/FFmpeg graphs, WASM heap, or JS memory: G2 requires measurements.
+      function chunkFrameLimit(width,height,fps=15) {
+        const bytesPerFrame=width*height*1.5;
+        if(!(bytesPerFrame>0)||!Number.isFinite(bytesPerFrame))
+          throw new RangeError('Invalid output dimensions');
+        return Math.min(2*fps,Math.max(3,Math.floor(48*1048576/bytesPerFrame)));
+      }
+      const MAX_CLIP_SECONDS = 10; // Experimental: 10s needs Android/PC real-device verification.
+      // Pure and testable: split at the output's 15fps cadence. Evenly sized
+      // chunks prevent a trailing <0.1s segment that the WASM refuses.
+      function planReverseFrames(start, end, fps = 15, maxChunkFrames = fps*2) {
+        if (!Number.isFinite(start) || !Number.isFinite(end) ||
+            !Number.isInteger(fps) || fps < 1 || fps > 60 ||
+            !Number.isInteger(maxChunkFrames) || maxChunkFrames < 3 || maxChunkFrames > fps*2 ||
+            start < 0 || end - start < .5 - 1e-8 || end - start > 10 + 1e-8)
+          throw new RangeError('Select 0.5–10 seconds for experimental reverse output.');
+        const first = Math.round(start * fps), last = Math.round(end * fps);
+        const frameCount = last - first;
+        const chunkCount = Math.ceil(frameCount / maxChunkFrames);
+        if (frameCount < 2 || chunkCount < 1 || chunkCount > 8)
+          throw new RangeError('Invalid number of output frames.');
+        let cursor = first, remaining = frameCount;
+        const chronological = [];
+        for (let i = 0; i < chunkCount; i++) {
+          let frames = Math.min(maxChunkFrames, remaining);
+          // Use near-integer-second boundaries; avoid a 1-frame final fragment.
+          if (remaining - frames === 1) frames -= 1;
+          if (frames < 2 || frames > maxChunkFrames)
+            throw new RangeError('Unsafe reverse chunk duration.');
+          remaining -= frames;
+          chronological.push({
+            start: Number((cursor / fps).toFixed(6)),
+            duration: Number((frames / fps).toFixed(6)),
+            frames
+          });
+          cursor += frames;
+        }
+        if (cursor !== last) throw new Error('Reverse chunk frame accounting failed.');
+        return {
+          segments: chronological.reverse(),
+          frameCount,
+          expectedDuration: frameCount / fps,
+          selectedStart: first / fps, selectedEnd: last / fps
+        };
+      }
+      // In ping-pong, source frames f0..f(N-1) are encoded as:
+      //   f0 ... f(N-1), f(N-2) ... f1    (total 2*N-2)
+      // The last movement back to f0 happens as the loop repeats. This
+      // prevents a doubled turning frame AND a doubled loop-boundary frame.
+      // Short chunks are balanced so subtracting endpoint frames never
+      // produces a 1-frame reverse chunk rejected by the WASM runner.
+      function planModeFrames(start, end, mode = 'reverse', fps = 15, maxChunkFrames = fps*2) {
+        const ordinary = planReverseFrames(start,end,fps,maxChunkFrames);
+        if (mode === 'reverse') {
+          return {...ordinary, mode, sourceFrames:ordinary.frameCount};
+        }
+        if (mode !== 'pingpong') throw new RangeError('Unknown conversion mode.');
+        const total=ordinary.frameCount;
+        if (total < 4) throw new RangeError('Too few frames for ping-pong.');
+        const nChunks=Math.ceil(total/maxChunkFrames);
+        if (nChunks<1 || nChunks*2>16) throw new RangeError('Unsafe ping-pong chunk count.');
+        const chronological=[];
+        let left=total, cursor=Math.round(start*fps);
+        for(let i=0;i<nChunks;i++){
+          const frames=Math.ceil(left/(nChunks-i));
+          if(frames<3 || frames>maxChunkFrames)
+            throw new RangeError('Unsafe ping-pong segment frame count.');
+          chronological.push({
+            start:Number((cursor/fps).toFixed(6)),
+            duration:Number((frames/fps).toFixed(6)),
+            frames, direction:'forward', firstFrame:cursor
+          });
+          cursor+=frames;
+          left-=frames;
+        }
+        const reverse=[];
+        for(let i=chronological.length-1;i>=0;i--){
+          const source=chronological[i];
+          const skipLast=i===chronological.length-1?1:0;
+          const skipFirst=i===0?1:0;
+          const frames=source.frames-skipLast-skipFirst;
+          if(frames<2) throw new RangeError('Unsafe ping-pong return segment.');
+          reverse.push({
+            start:Number(((source.firstFrame+skipFirst)/fps).toFixed(6)),
+            duration:Number((frames/fps).toFixed(6)),
+            frames, direction:'reverse'
+          });
+        }
+        const segments=[
+          ...chronological.map(({firstFrame,...chunk})=>chunk),
+          ...reverse
+        ];
+        const framesOut=2*total-2;
+        if(segments.reduce((sum,chunk)=>sum+chunk.frames,0)!==framesOut)
+          throw new Error('Ping-pong frame accounting failed.');
+        return {
+          segments, frameCount:framesOut, sourceFrames:total,
+          expectedDuration:framesOut/fps, selectedStart:ordinary.selectedStart,
+          selectedEnd:ordinary.selectedEnd, mode
+        };
+      }
+      function outputDimensions() {
+        const width=video.videoWidth,height=video.videoHeight;
+        const edge=Number($('#qualityInput').value);
+        // 720p/1080p cap BOTH edges, even for portrait or square footage.
+        const shortEdge=edge===1280?720:edge===1920?1080:edge;
+        const scale=Math.min(1,edge/Math.max(1,width,height),
+                             shortEdge/Math.max(1,Math.min(width,height)));
+        return {width:Math.max(16,Math.floor(width*scale/2)*2),
+                height:Math.max(16,Math.floor(height*scale/2)*2)};
+      }
+      // Two real native range thumbs share one highlighted track. Both are
+      // usable via touch/pointer or keyboard, synchronized with the numeric
+      // fields. Slider moves preserve 0.5s minimum and maximum 10s (5s HD),
+      // while *manual numeric edits* are only validated, never silently fixed.
+      function roundTrim(value) { return Math.round(value * 10) / 10; }
+      function sliderMaxTime() { return Math.max(.5, Math.floor(video.duration * 10 + 1e-7) / 10); }
+      function syncTrimControls() {
+        if (!state.ready) return;
+        const maxTime = sliderMaxTime();
+        const a=$('#trimStartSlider'), b=$('#trimEndSlider');
+        for (const control of [a,b]) { control.min='0'; control.max=String(maxTime); control.disabled=false; }
+        const rawStart=$('#rangeStart').value.trim(), rawEnd=$('#rangeEnd').value.trim();
+        const start=Number(rawStart), end=Number(rawEnd);
+        const valid=Boolean(rawStart && rawEnd && Number.isFinite(start) && Number.isFinite(end) &&
+          start>=0 && end<=video.duration+.001 && end-start>=.5-1e-8);
+        if (valid) {
+          a.value=String(Math.max(0,Math.min(maxTime,roundTrim(start))));
+          b.value=String(Math.max(0,Math.min(maxTime,roundTrim(end))));
+          const begin=Number(a.value) / maxTime * 100, finish=Number(b.value) / maxTime * 100;
+          $('#trimSelectedTrack').style.left=begin+'%';
+          $('#trimSelectedTrack').style.width=Math.max(0,finish-begin)+'%';
+          a.setAttribute('aria-valuetext',start.toFixed(1)+' s');
+          b.setAttribute('aria-valuetext',end.toFixed(1)+' s');
+          $('#trimSummary').textContent=format('trimSummary',{
+            start:start.toFixed(1),end:end.toFixed(1),duration:(end-start).toFixed(1)
+          });
+        } else {
+          $('#trimSummary').textContent=translate('trimInvalidSummary');
+        }
+      }
+      function moveTrimHandle(which) {
+        if (!state.ready) return;
+        const maxTime=sliderMaxTime(), maxSpan=$('#qualityInput').value==='1920'?5:MAX_CLIP_SECONDS;
+        const oldStart=Number($('#rangeStart').value), oldEnd=Number($('#rangeEnd').value);
+        let start=Number.isFinite(oldStart)?roundTrim(oldStart):Number($('#trimStartSlider').value);
+        let end=Number.isFinite(oldEnd)?roundTrim(oldEnd):Number($('#trimEndSlider').value);
+        if (which==='start') {
+          end=Math.max(.5,Math.min(maxTime,end));
+          const requested=roundTrim(Number($('#trimStartSlider').value));
+          start=Math.min(end-.5,Math.max(Math.max(0,end-maxSpan),requested));
+        } else {
+          start=Math.max(0,Math.min(maxTime-.5,start));
+          const requested=roundTrim(Number($('#trimEndSlider').value));
+          end=Math.max(start+.5,Math.min(Math.min(maxTime,start+maxSpan),requested));
+        }
+        start=roundTrim(start); end=roundTrim(end);
+        if (!(start>=0 && end-start>=.5-1e-8 && end<=video.duration+.001)) return;
+        previewSelectionActive=false;
+        video.pause();
+        $('#trimPreviewNotice').textContent='';
+        $('#rangeStart').value=start.toFixed(1);
+        $('#rangeEnd').value=end.toFixed(1);
+        resetConversion();
+        rangeInfo();
+      }
+      function previewSelectedSource() {
+        if (!state.ready || !state.validRange) return;
+        const start=Number($('#rangeStart').value);
+        previewSelectionActive=true;
+        video.pause();
+        video.currentTime=start;
+        $('#trimPreviewNotice').textContent=translate('trimPreviewPlaying');
+        const played=video.play();
+        if (played?.catch) played.catch(()=>{
+          previewSelectionActive=false;
+          $('#trimPreviewNotice').textContent=translate('previewSelectionFailed');
+        });
+      }
+      video.addEventListener('timeupdate',()=>{
+        if (!previewSelectionActive) return;
+        const end=Number($('#rangeEnd').value);
+        if (Number.isFinite(end) && video.currentTime>=end-.025) {
+          video.pause();
+          previewSelectionActive=false;
+          $('#trimPreviewNotice').textContent='';
+        }
+      });
+      video.addEventListener('ended',()=>{
+        previewSelectionActive=false;
+        $('#trimPreviewNotice').textContent='';
+      });
       function rangeInfo() {
         if (!state.ready) return;
-        const start = Number($('#rangeStart').value);
-        const end = Number($('#rangeEnd').value);
-        const max = $('#qualityInput').value === '1080' ? 5 : 10;
-        let notice = 'rangeValid';
-        if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end > video.duration + .001 || end - start < .5) notice = 'rangeInvalid';
-        else if (end - start > max + .001) notice = 'rangeTooLong';
-        $('#rangeNotice').textContent = format(notice, {limit: max});
-        const shortEdge = Math.max(1, Math.min(video.videoWidth, video.videoHeight));
-        const scale = Math.min(1, Number($('#qualityInput').value) / shortEdge);
-        const w = Math.max(2, 2 * Math.floor(video.videoWidth * scale / 2));
-        const h = Math.max(2, 2 * Math.floor(video.videoHeight * scale / 2));
-        const mib = (w * h * memoryRate * 30 * Math.max(0,end-start) / 1048576).toFixed(0);
-        $('#memoryEstimate').textContent = format('memoryNotice',{mib});
+        const rawStart = $('#rangeStart').value.trim(), rawEnd = $('#rangeEnd').value.trim();
+        const start = Number(rawStart), end = Number(rawEnd), duration = end-start;
+        const dims = outputDimensions();
+        const mode=$('#modeInput').value;
+        const modeAvailable=mode==='reverse' || (mode==='pingpong' && PINGPONG_ENABLED);
+        let plan = null;
+        if (rawStart && rawEnd && Number.isFinite(start) && Number.isFinite(end) &&
+            start >= 0 && end <= video.duration+.001 &&
+            duration >= .5 && duration <= MAX_CLIP_SECONDS && modeAvailable) {
+          try { plan = planModeFrames(start,end,mode,OUTPUT_FPS,
+                                      chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)); } catch (_) {}
+        }
+        const largestFrames = plan ? Math.max(...plan.segments.map(s=>s.frames)) : 0;
+        const mib = dims.width * dims.height * 1.5 * largestFrames / 1048576;
+        // No automatic time trimming or quality downgrade.
+        const quality=Number($('#qualityInput').value);
+        const standardHd=quality===1280, fullHd=quality===1920;
+        const highTooLong=fullHd && duration>5+1e-8;
+        const audioRequested=$('#audioInput').value==='reverse';
+        const audioAvailable=!audioRequested ||
+          (AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent);
+        const safe = Boolean(plan && mib <= 48 && dims.width <= 2048 &&
+                             dims.height <= 2048 && !highTooLong &&
+                             modeAvailable && audioAvailable);
+        state.validRange = safe;
+        syncTrimControls();
+        $('#previewSelectionButton').disabled=!safe || Boolean(conversionController);
+        if (safe) {
+          $('#rangeNotice').textContent = format(mode==='pingpong'?'pingpongRangePlan':'rangePlan',{
+            count:plan.segments.length,duration:plan.expectedDuration.toFixed(2)
+          }) + ((Math.abs(plan.selectedStart-start)>.001 || Math.abs(plan.selectedEnd-end)>.001)
+               ? ' '+translate('rangeSnapNote') : '') +
+               (plan.expectedDuration>5 ? ' '+translate('rangeTenSecondWarning') : '') +
+               (standardHd ? ' '+translate('rangeHdPilotWarning') : '') +
+               (fullHd ? ' '+translate('rangeFullHdPilotWarning') : '');
+        } else {
+          const notice = highTooLong ? 'rangeFullHdPilotTooLong' :
+                         !plan ? duration > MAX_CLIP_SECONDS ? 'rangeTooLong' : 'rangeInvalid'
+                               : 'rangeMemoryHigh';
+          $('#rangeNotice').textContent = translate(notice);
+        }
+        $('#memoryEstimate').textContent = format('memoryNotice',{mib:mib.toFixed(0)});
+        const preparing = state.inputTransport === 'preparing';
+        const unreadable = state.inputTransport === 'unreadable';
+        // Silent rendering must remain usable while the separate, optional
+        // audio-track probe runs. Only choosing audio requires a known codec.
+        $('#reverseButton').disabled = !safe || Boolean(conversionController) ||
+                                       preparing || unreadable || !threadingReady();
+        if (!conversionController && !state.conversion)
+          $('#reverseStatus').textContent =
+            translate(!threadingReady()?'mtUnavailable':unreadable?'reverseSourceUnreadable':preparing?'reverseSourcePreparing':
+                      safe?'reverseReady':'reverseInvalid');
       }
-      function chooseFile(file) {
-        if (!file) return;
-        releaseSource();
-        const isVideo = /\.(mp4|m4v|mov)$/i.test(file.name) || /^(video\/mp4|video\/quicktime)$/i.test(file.type);
-        if (!isVideo) { setStatus('invalidType'); return; }
-        if (file.size > 1073741824) { setStatus('tooLarge'); return; }
-        state.file = file;
-        state.url = URL.createObjectURL(file);
-        setStatus('loading');
+      function sourceIsCurrent(file, generation) {
+        return generation === state.generation && file === state.file;
+      }
+      // An Android picker can supply a File that refuses Worker FileReaderSync
+      // (or loses provider permissions later). Copy only as a bounded fallback
+      // when a tiny Worker access check fails, or when conversion encounters
+      // a genuine WORKERFS read error. That is NOT a fully copy-free G2 path.
+      async function copySelectedFile(file, generation) {
+        if (file.size > INPUT_MEMORY_LIMIT)
+          throw new RangeError('Selected file exceeds in-memory input limit.');
+        const buffer = await file.arrayBuffer();
+        if (!sourceIsCurrent(file, generation)) return null;
+        if (buffer.byteLength !== file.size)
+          throw new Error('The selected file was read incompletely.');
+        return new Blob([buffer], {type:file.type || 'application/octet-stream'});
+      }
+      function plausibleVideoContainer(bytes) {
+        // Minimum non-destructive ISO-BMFF/QuickTime atom preflight. A 32-byte
+        // prefix is enough to reject obvious renamed WebM/RIFF/text files;
+        // successful decoding still determines true codec support.
+        if (!(bytes instanceof Uint8Array) || bytes.length < 8) return false;
+        const size = bytes[0] * 16777216 + bytes[1] * 65536 + bytes[2] * 256 + bytes[3];
+        const atom = String.fromCharCode(bytes[4], bytes[5], bytes[6], bytes[7]);
+        if (size !== 0 && size !== 1 && size < 8) return false;
+        if (size === 1 && bytes.length < 16) return false;
+        if (atom === 'ftyp') return bytes.length >= 16 && (size === 0 || size === 1 || size >= 16);
+        // Some legacy QuickTime MOV files have no ftyp atom at the start.
+        // Permit normal QuickTime boxes and defer final validation to <video>.
+        return ['moov','mdat','wide','free','skip'].includes(atom);
+      }
+      async function inspectSourceBlob(blob, file, generation) {
+        try {
+          // Never read/copy the entire original file just to check its header.
+          // In the fallback case, inspect the detached local Blob; on a
+          // successful Worker probe, inspect only 32 bytes of the original.
+          const header = new Uint8Array(await blob.slice(0, 32).arrayBuffer());
+          if (!sourceIsCurrent(file, generation) || state.sourcePhase !== 'inspecting') return;
+          if (!plausibleVideoContainer(header)) {
+            failSource('invalidContainer', generation);
+            return;
+          }
+          attachSourcePreview(blob);
+        } catch (error) {
+          if (sourceIsCurrent(file, generation) && state.sourcePhase === 'inspecting') {
+            state.inputPrepareError = String(error?.message || error);
+            state.inputTransport = 'unreadable';
+            failSource('reverseSourceUnreadable', generation);
+          }
+        }
+      }
+      function attachSourcePreview(blob) {
+        if (state.url) URL.revokeObjectURL(state.url);
+        state.url = URL.createObjectURL(blob);
         video.src = state.url;
         video.load();
       }
+      // Probe two tiny ranges before the original File is handed to the
+      // media decoder. WorkerFS internally relies on FileReaderSync and may
+      // fail for a photo/cloud provider even if <video> can preview it.
+      // This check transfers only a structured-cloned File handle; never a
+      // whole-file ArrayBuffer. It is a feasibility hint, not a guarantee
+      // the provider remains readable for the entire export.
+      function probeMobileWorkerRead(file, signal) {
+        if(signal?.aborted || typeof Worker!=='function')return Promise.resolve(false);
+        return new Promise(resolve => {
+          let worker=null,url=null,timer=0,settled=false;
+          const abort=()=>finish(false);
+          function finish(ok) {
+            if(settled)return;
+            settled=true;
+            clearTimeout(timer);
+            signal?.removeEventListener('abort',abort);
+            if(worker)worker.terminate();
+            if(url)URL.revokeObjectURL(url);
+            resolve(Boolean(ok));
+          }
+          try {
+            const script=`self.onmessage=e=>{try{
+              const file=e.data, reader=new FileReaderSync();
+              const head=reader.readAsArrayBuffer(file.slice(0,32));
+              const tail=reader.readAsArrayBuffer(file.slice(Math.max(0,file.size-32),file.size));
+              self.postMessage({ok:head.byteLength>0&&tail.byteLength>0});
+            }catch(_){self.postMessage({ok:false});}}`;
+            url=URL.createObjectURL(new Blob([script],{type:'text/javascript'}));
+            worker=new Worker(url);
+            worker.onmessage=e=>finish(e.data?.ok===true);
+            worker.onerror=()=>finish(false);
+            worker.onmessageerror=()=>finish(false);
+            signal?.addEventListener('abort',abort,{once:true});
+            timer=setTimeout(()=>finish(false),2500);
+            if(signal?.aborted){finish(false);return;}
+            worker.postMessage(file);
+          }catch(_){finish(false);}
+        });
+      }
+      function prepareMobileInput(file) {
+        if (!MOBILE_INPUT || file.size > INPUT_MEMORY_LIMIT) return false;
+        const generation=state.generation, controller=new AbortController();
+        state.inputProbeController=controller;
+        state.inputTransport='preparing';
+        // Do not preview and read provider-backed files concurrently.
+        // Most readable local Files can use WORKERFS directly, preserving
+        // its zero-copy input transport. Unsupported providers retain the
+        // previous <=64MiB detached-Blob fallback, but only when necessary.
+        state.inputPreparePromise=probeMobileWorkerRead(file,controller.signal).then(async canRead => {
+          if(!sourceIsCurrent(file,generation)||state.sourcePhase!=='inspecting')return;
+          if(canRead){
+            state.inputTransport='workerfs';
+            return inspectSourceBlob(file,file,generation);
+          }
+          if(controller.signal.aborted)return;
+          const copy=await copySelectedFile(file,generation);
+          if(!copy||!sourceIsCurrent(file,generation)||state.sourcePhase!=='inspecting')return;
+          state.copiedInput=copy;
+          state.inputTransport='memory';
+          return inspectSourceBlob(copy,file,generation);
+        }).catch(error => {
+          if(!sourceIsCurrent(file,generation)||state.sourcePhase!=='inspecting')return;
+          state.inputPrepareError=String(error?.message||error);
+          state.inputTransport='unreadable';
+          failSource('reverseSourceUnreadable',generation);
+        }).finally(()=>{
+          if(state.inputProbeController===controller)state.inputProbeController=null;
+        });
+        return true;
+      }
+      function isWorkerFileReadError(error) {
+        return /FileReaderSync|readAsArrayBuffer|NotReadableError|requested file could not be read/i
+          .test(String(error?.message || error));
+      }
+
+      async function chooseFile(file) {
+        if (!file) return;
+        const attempt=++sourceSelectionSequence;
+        // Guard an MP4 that has not yet been downloaded against an
+        // accidental file-picker replacement. Cancelling keeps both Blobs.
+        if(flowResultReady()&&!resultDownloadStarted){
+          const approved=await AppConfirm.ask({
+            title:translate('flowReplaceTitle'),
+            message:translate('flowReplaceMessage'),
+            confirmLabel:translate('flowReplaceConfirm'),
+            tone:'danger'
+          });
+          if(!approved||attempt!==sourceSelectionSequence){
+            if(!approved&&attempt===sourceSelectionSequence&&flowResultReady())
+              setFlowStep('result',{focus:true});
+            return;
+          }
+        }
+        if(attempt!==sourceSelectionSequence)return;
+        releaseSource();
+        const isVideo = /\.(mp4|m4v|mov)$/i.test(file.name) || /^(video\/mp4|video\/quicktime)$/i.test(file.type);
+        if (!isVideo) { setSourcePhase('error', state.generation, 'invalidType'); return; }
+        if (file.size === 0) { setSourcePhase('error', state.generation, 'emptyInput'); return; }
+        if (file.size > 1073741824) { setSourcePhase('error', state.generation, 'tooLarge'); return; }
+        state.file = file;
+        $('#reverseFilename').value = suggestOutputFilename(file.name,$('#modeInput').value);
+        setSourcePhase('inspecting');
+        const generation = state.generation;
+        armSourceTimeout(file, generation);
+        if (!prepareMobileInput(file)) void inspectSourceBlob(file, file, generation);
+      }
+      async function inspectSourceAudio() {
+        if(!AUDIO_MUX_ENABLED || !state.ready || !state.file)return;
+        const file=state.file, generation=state.generation;
+        const controller=new AbortController();
+        state.audioInspectController=controller;
+        state.audioChecked=false;
+        state.audioPresent=null;
+        state.audioInspectionError=null;
+        updateModeUi();
+        rangeInfo();
+        const current=()=>generation===state.generation &&
+          state.file===file && state.ready && !controller.signal.aborted;
+        let inspector=null;
+        try {
+          if(!window.BrowserFFmpeg)
+            await window.StandaloneAssets.loadClassicScript('reverse-wasm','runtimeJs','BrowserFFmpeg');
+          const [coreJsText,wasmBytes]=await Promise.all([
+            window.StandaloneAssets.textAsync('reverse-wasm','coreJs'),
+            window.StandaloneAssets.bytesAsync('reverse-wasm','coreWasm')
+          ]);
+          if(!current())return;
+          inspector=await window.BrowserFFmpeg.loadEmbedded({
+            coreJsText,wasmBytes,threading:RUNTIME_VARIANT
+          });
+          if(!current())return;
+          state.audioInspectRunner=inspector;
+          const memory=Boolean(state.copiedInput);
+          const inputPath=memory?'/source.mp4':'/workerfs/source.mp4';
+          const inspected=await inspector.run({
+            files:[{name:inputPath,data:state.copiedInput||file,workerfs:!memory}],
+            outputs:['/audio-info.json'],
+            args:['--inspect-audio','--input',inputPath,'--output','/audio-info.json'],
+            signal:controller.signal
+          });
+          if(!current())return;
+          const bytes=inspected?.files?.[0]?.data;
+          if(inspected.exitCode!==0 || !bytes || bytes.byteLength>4096)
+            throw new Error('Audio track inspection failed');
+          const info=JSON.parse(new TextDecoder().decode(bytes));
+          const codec=info.audio?.codec||null, channels=info.audio?.channels;
+          const supported=['aac','mp3','opus','flac'].includes(codec) &&
+            Number.isInteger(channels) && channels>=1 && channels<=2;
+          state.audioPresent=Boolean(supported);
+          state.audioCodec=supported?codec:null;
+          if(codec && !supported)state.audioInspectionError='Unsupported audio codec/channels';
+        }catch(error){
+          if(current()){
+            state.audioPresent=false;
+            state.audioCodec=null;
+            state.audioInspectionError=String(error?.message||error);
+          }
+        }finally{
+          // A stale probe must dispose *only* its own runner and must not
+          // overwrite a new video's audio state after source replacement.
+          if(inspector){
+            try{inspector.dispose();}catch(_){}
+            if(state.audioInspectRunner===inspector)state.audioInspectRunner=null;
+          }
+          if(state.audioInspectController===controller)
+            state.audioInspectController=null;
+          if(current()){
+            state.audioChecked=true;
+            updateModeUi();
+            rangeInfo();
+          }
+        }
+      }
       video.addEventListener('loadedmetadata', () => {
         if (!state.file || !state.url || video.currentSrc !== state.url) return;
-        if (!Number.isFinite(video.duration) || video.duration < .5 || !video.videoWidth || !video.videoHeight) {
-          $('#videoArea').hidden = true;
-          setStatus('cantRead');
+        if(Number.isFinite(video.duration) && video.duration > 0 && video.duration < .5){
+          // A decodable but too-short source is not a corrupt/unsupported
+          // codec. The shortest output interval is strictly 0.5 seconds.
+          failSource('sourceTooShort');
           return;
         }
-        state.ready = true;
+        if (!Number.isFinite(video.duration) || !video.videoWidth || !video.videoHeight) {
+          failSource('cantRead');
+          return;
+        }
+        setSourcePhase('ready');
         $('#videoArea').hidden = false;
         $('#rangeStart').value = '0';
-        $('#rangeEnd').value = String(Math.min(5,video.duration).toFixed(1));
-        for (const id of ['rangeStart','rangeEnd','modeInput','qualityInput','seekButton']) $('#' + id).disabled = false;
+        $('#rangeEnd').value = String(Math.max(.5,Math.floor(Math.min(5,video.duration)*10)/10).toFixed(1));
+        for (const id of ['rangeStart','rangeEnd','qualityInput','seekButton']) $('#' + id).disabled = false;
+        $('#modeInput').disabled = !PINGPONG_ENABLED;
+        $('#pingpongOption').disabled = !PINGPONG_ENABLED;
+        // v0.5: defer audio until we have positively identified a source
+        // audio track AND the embedded core supports frame-aligned A/V mux.
+        $('#audioInput').disabled = !AUDIO_MUX_ENABLED || state.audioPresent!==true;
+        $('#audioReverseOption').disabled = !AUDIO_MUX_ENABLED || state.audioPresent!==true;
+        $('#reversePanel').hidden = false;
         $('#sourceName').textContent = state.file.name;
         $('#durationLabel').textContent = video.duration.toFixed(1) + ' s';
         $('#dimensionsLabel').textContent = video.videoWidth + ' × ' + video.videoHeight;
         $('#filesizeLabel').textContent = humanSize(state.file.size);
-        setStatus('loaded');
         rangeInfo();
+        // Advance only after the preview, trim controls and output controls
+        // are all ready; a stale file-generation cannot move to Edit.
+        setFlowStep('edit',{focus:true});
+        if(AUDIO_MUX_ENABLED)void inspectSourceAudio();
       });
-      video.addEventListener('error', () => { if (state.file) { state.ready = false; setStatus('cantRead'); }});
+      video.addEventListener('error', () => {
+        if (!state.file || !state.url || video.currentSrc !== state.url ||
+            state.sourcePhase !== 'inspecting') return;
+        failSource('cantRead');
+      });
+      function updateModeUi() {
+        const mode=$('#modeInput').value;
+        const isPingpong=mode==='pingpong' && PINGPONG_ENABLED;
+        $('#pingpongOption').disabled=!PINGPONG_ENABLED;
+        $('#reverseButton').textContent=translate(isPingpong?'createPingpong':'reverseButton');
+        $('#reverseTitle').textContent=translate(isPingpong?'pingpongTitle':'reverseTitle');
+        $('#reverseDescription').textContent=translate(isPingpong?'pingpongDescription':'reverseDescription');
+        $('#resultTitle').textContent=translate(isPingpong?'pingpongResultTitle':'resultTitle');
+        $('#resultVideo').setAttribute('aria-label',
+          translate(isPingpong?'resultPingpongVideoLabel':'resultReverseVideoLabel'));
+        $('#modeInput').setAttribute('aria-label',translate('modeLabel'));
+        const canUseAudio=Boolean(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent);
+        $('#audioInput').disabled=!state.ready || !canUseAudio;
+        $('#audioReverseOption').disabled=!canUseAudio;
+        $('#audioNotice').textContent=translate(!AUDIO_MUX_ENABLED?'audioPreparingNotice':
+          !state.audioChecked?'audioCheckingLater':
+          state.audioPresent?'audioPresent':
+          state.audioInspectionError?'audioUnknown':'audioAbsent');
+      }
+      function onAudioModeChanged() {
+        if($('#audioInput').value!=='none' &&
+          !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
+          $('#audioInput').value='none';
+          return;
+        }
+        resetConversion();
+        updateModeUi();
+        rangeInfo();
+      }
+      function renderResultDetails() {
+        const result=state.conversion;
+        if(!result?.ok)return;
+        const isPingpong=result.mode==='pingpong', withAudio=result.audio==='reverse';
+        $('#resultTitle').textContent=translate(isPingpong?'pingpongResultTitle':'resultTitle');
+        $('#resultVideo').setAttribute('aria-label',
+          translate(isPingpong?'resultPingpongVideoLabel':'resultReverseVideoLabel'));
+        $('#resultInfo').textContent=format(withAudio?
+          (isPingpong?'pingpongResultAudio':'reverseResultAudio'):
+          (isPingpong?'pingpongResultInfo':'resultInfo'),{
+          duration:result.outputDuration.toFixed(2),
+          size:humanSize(result.outputBytes),chunks:result.chunkCount,
+          elapsed:result.elapsedSeconds.toFixed(2)
+        });
+        $('#resultDimensions').textContent=format('flowOutputDimensions',{
+          width:result.outputWidth,height:result.outputHeight,fps:result.fps
+        });
+      }
       function applyLanguage() {
         document.documentElement.lang = language;
+        $('#runtimeModeLabel').textContent = translate(RUNTIME_VARIANT === 'multi-thread' ? 'mtVariant' : 'stVariant');
+        $('#mtBrowserNotice').hidden = threadingReady();
+        $('#mtBrowserNotice').textContent = translate('mtUnavailable');
+        $('#helpOffline').textContent = translate(RUNTIME_VARIANT === 'multi-thread' ? 'mtHelpOffline' : 'helpOffline');
         document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = translate(el.dataset.i18n); });
         document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = translate(el.dataset.i18nTitle); });
         document.querySelectorAll('[data-i18n-aria-label]').forEach(el => { el.setAttribute('aria-label',translate(el.dataset.i18nAriaLabel)); });
-        $('#languageButton').textContent = language === 'ja' ? 'EN' : '日本語';
+        $('#languageButton').textContent = language === 'ja' ? 'EN' : 'JA';
         $('#languageButton').setAttribute('aria-label',language === 'ja' ? '英語に切り替え' : 'Switch to Japanese');
         document.title = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
         $('#brandName').textContent = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
         $('#footerName').textContent = language === 'ja' ? APP_CONFIG.nameJa : APP_CONFIG.name;
-        setStatus(state.ready ? 'loaded' : state.file ? 'loading' : 'nothingSelected');
+        // Preserve the specific validation/decoder failure across JA/EN
+        // switching. A previously failed source must not look empty or ready.
+        setStatus(state.sourcePhase === 'error' ? (state.sourceErrorKey || 'cantRead') :
+                  state.sourcePhase === 'ready' ? 'loaded' :
+                  state.sourcePhase === 'inspecting' ? 'loading' : 'nothingSelected');
         $('#probeReport').textContent = (state.probe || state.seek) ? JSON.stringify({capabilities:state.probe,seek:state.seek},null,2) : translate('notRun');
+        updateModeUi();
         rangeInfo();
+        updateFlowNavigation();
+        renderResultDetails();
+        if(conversionMessageKey && !conversionController)
+          $('#reverseStatus').textContent=translate(conversionMessageKey);
+        if($('#flowAnnouncement').textContent)
+          $('#flowAnnouncement').textContent=format('flowStepAnnouncement',{
+            step:translate(flowStep==='video'?'flowVideo':flowStep==='edit'?'flowEdit':'flowResult')
+          });
       }
       async function probeBrowser() {
         const probe = { measuredAt: new Date().toISOString(), secureContext: isSecureContext,
@@ -1156,6 +2264,422 @@
           if(id === state.generation) $('#seekButton').disabled=false;
         }
       }
+
+      function suggestOutputFilename(sourceName, mode = 'reverse') {
+        let stem = String(sourceName || '').replace(/\.(mp4|m4v|mov)$/i,'')
+          .replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').replace(/\.+$/g,'').trim();
+        if (!stem || stem === '.' || stem === '..') stem = 'reverse-clip';
+        if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(stem)) stem += '-file';
+        return stem.slice(0,112) + (mode==='pingpong'?'-pingpong':'-reverse');
+      }
+      function onConversionModeChanged() {
+        const selected=$('#modeInput').value;
+        const previous=state.lastSelectedMode;
+        const oldName=suggestOutputFilename(state.file?.name,previous);
+        const newName=suggestOutputFilename(state.file?.name,selected);
+        const field=$('#reverseFilename');
+        // Only replace the machine-suggested filename; keep user edits.
+        if(field.value===oldName) field.value=newName;
+        state.lastSelectedMode=selected;
+        previewSelectionActive=false;
+        video.pause();
+        $('#trimPreviewNotice').textContent='';
+        resetConversion();
+        updateModeUi();
+        rangeInfo();
+      }
+      function normalizeMP4Filename() {
+        const field=$('#reverseFilename');
+        let name=field.value.trim().replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-')
+          .replace(/\.+$/g,'').replace(/\.mp4$/i,'').trim()||'reverse-clip';
+        if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(name)) name+='-file';
+        field.value=name.slice(0,120);
+        return field.value+'.mp4';
+      }
+      function stopInFlightAudioInspection() {
+        if(state.audioInspectController){
+          state.audioInspectController.abort();
+          state.audioInspectController=null;
+        }
+        if(state.audioInspectRunner){
+          try{state.audioInspectRunner.dispose();}catch(_){}
+          state.audioInspectRunner=null;
+        }
+      }
+      function resetConversion() {
+        conversionEpoch+=1;
+        if(conversionController) conversionController.abort();
+        conversionController=null;
+        if(conversionRunner) conversionRunner.dispose();
+        conversionRunner=null;
+        if(resultUrl) URL.revokeObjectURL(resultUrl);
+        resultUrl=null;
+        $('#resultVideo').pause();
+        $('#resultVideo').removeAttribute('src');
+        $('#resultVideo').load();
+        $('#resultArea').hidden=true;
+        $('#reverseProgress').hidden=true;
+        $('#cancelReverseButton').hidden=true;
+        $('#reverseErrorDetails').hidden=true;
+        $('#reverseErrorDetails').open=false;
+        $('#openDiagnosticsButton').hidden=true;
+        $('#reverseErrorDetail').textContent='';
+        $('#flowSaveHint').hidden=true;
+        $('#resultDimensions').textContent='';
+        state.conversion=null;
+        conversionMessageKey=null;
+        resultDownloadStarted=false;
+        updateFlowNavigation();
+        $('#reverseButton').disabled=!state.validRange||!state.ready;
+      }
+      async function reverseShortClip() {
+        if(conversionController)return; // never overlap two encoder jobs
+        previewSelectionActive=false;
+        video.pause();
+        if (!state.ready || !state.file || !state.validRange) {
+          showToast(translate('reverseInvalid')); return;
+        }
+        if (state.inputTransport === 'preparing') {
+          showToast(translate('reverseSourcePreparing')); return;
+        }
+        if (state.inputTransport === 'unreadable') {
+          showToast(translate('reverseSourceUnreadable')); return;
+        }
+        const start=Number($('#rangeStart').value), end=Number($('#rangeEnd').value);
+        const dims=outputDimensions();
+        if (!threadingReady()) {
+          showToast(translate('mtUnavailable'));
+          $('#reverseStatus').textContent=translate('mtUnavailable');
+          return;
+        }
+        const mode=$('#modeInput').value;
+        if(mode==='pingpong' && !PINGPONG_ENABLED){
+          showToast(translate('reverseUnsupported'));return;
+        }
+        if($('#audioInput').value==='reverse' &&
+          !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
+          showToast(translate('audioUnavailable'));return;
+        }
+        const wantsAudio=$('#audioInput').value==='reverse';
+        let plan;
+        try { plan=planModeFrames(start,end,mode,OUTPUT_FPS,
+                                  chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)); }
+        catch (_) { showToast(translate('reverseInvalid'));return; }
+
+        stopInFlightAudioInspection(); // optional probe uses a separate WASM heap
+        setFlowStep('edit',{scroll:false});
+        resetConversion();
+        const generation=state.generation, job=++conversionEpoch, file=state.file;
+        const controller=new AbortController();
+        conversionController=controller;
+        updateFlowNavigation();
+        $('#reverseButton').disabled=true;
+        $('#cancelReverseButton').hidden=false;
+        $('#reverseProgress').hidden=false;
+        $('#reverseProgress').value=0;
+        $('#reverseStatus').textContent=translate('reverseLoading');
+        const started=performance.now(), logs=[];
+        let inputMode=state.copiedInput?'memory':'workerfs';
+        let allChunks=[],currentStage='wasm-load', currentChunkIndex=-1;
+        // An invalidated job must never publish a late-loaded WASM runner.
+        // Keep ownership local as well: a stale finally block must not dispose
+        // a new job's runner after a cancel, file switch or pagehide.
+        let jobRunner=null;
+        const isCurrentJob=()=>job===conversionEpoch &&
+          generation===state.generation && !controller.signal.aborted;
+        try {
+          if(!window.StandaloneAssets.has('reverse-wasm','coreWasm'))
+            throw new Error('Pinned reverse WASM was not embedded.');
+          if(!window.BrowserFFmpeg)
+            await window.StandaloneAssets.loadClassicScript('reverse-wasm','runtimeJs','BrowserFFmpeg');
+          if(!window.BrowserFFmpeg?.loadEmbedded)
+            throw new Error('BrowserFFmpeg runtime is unavailable.');
+          const [coreJsText,wasmBytes]=await Promise.all([
+            window.StandaloneAssets.textAsync('reverse-wasm','coreJs'),
+            window.StandaloneAssets.bytesAsync('reverse-wasm','coreWasm')
+          ]);
+          if(!isCurrentJob())return;
+          const runner=await window.BrowserFFmpeg.loadEmbedded({coreJsText,wasmBytes,threading:RUNTIME_VARIANT});
+          // loadEmbedded may resolve after the user has cancelled or selected
+          // another file. Dispose that runner even when it was never published.
+          jobRunner=runner;
+          if(!isCurrentJob())return;
+          conversionRunner=runner;
+
+          const count=plan.segments.length, stages=count+(count>1?1:0)+(wantsAudio?2:0);
+          function setJobProgress(stage,partial,key,params) {
+            if(job!==conversionEpoch)return;
+            const pc=Math.max(0,Math.min(100,Math.round(partial*100)));
+            $('#reverseProgress').value=Math.round(100*(stage+Math.max(0,Math.min(1,partial)))/stages);
+            $('#reverseStatus').textContent=format(key,{...params,progress:pc});
+          }
+          async function runSegment(chunk,i){
+            const runWithInput=(data,memoryBacked)=>{
+              const inputPath=memoryBacked?'/input.mp4':'/workerfs/input.mp4';
+              return runner.run({
+                files:[{name:inputPath,data,workerfs:!memoryBacked}],
+                outputs:['/reverse.mp4'],
+                args:['--input',inputPath,'--output','/reverse.mp4',
+                  '--start-time',String(chunk.start),'--duration',String(chunk.duration),
+                  '--width',String(dims.width),'--height',String(dims.height),
+                  '--fps',String(OUTPUT_FPS),'--frames',String(chunk.frames),'--crf','28',
+                  ...(mode==='pingpong'?['--direction',chunk.direction]:[])],
+                signal:controller.signal,
+                onProgress:p=>setJobProgress(i,p,
+                  mode==='pingpong'?(chunk.direction==='forward'?'pingpongForwardChunk':'pingpongReturnChunk'):'reverseChunk',
+                  {current:i+1,total:count}),
+                onLog:({message})=>{if(logs.length>=40)logs.shift();logs.push(String(message).slice(0,180));}
+              });
+            };
+            try {
+              return await runWithInput(state.copiedInput||file,Boolean(state.copiedInput));
+            }catch(error){
+              if(!isWorkerFileReadError(error)||state.copiedInput||controller.signal.aborted)
+                throw error;
+              if(file.size>INPUT_MEMORY_LIMIT)
+                throw new Error(translate('reverseMemoryLimit'));
+              if(job!==conversionEpoch||generation!==state.generation)return null;
+              $('#reverseStatus').textContent=translate('reverseMemoryRetry');
+              const copy=await copySelectedFile(file,generation).catch(()=>{
+                throw new Error(translate('reverseSourceUnreadable'));
+              });
+              if(!copy||job!==conversionEpoch||generation!==state.generation)return null;
+              state.copiedInput=copy;
+              state.inputTransport='memory';
+              inputMode='memory-fallback';
+              return runWithInput(copy,true);
+            }
+          }
+
+          currentStage='video-segments';
+          // plan.segments already lists the presentation order. Reverse
+          // uses reverse-chronological parts; ping-pong uses forward chunks
+          // followed by return chunks with both endpoints omitted. The join
+          // remuxes complete chunks and refuses a wrong total frame count.
+          for(let i=0;i<count;i++){
+            currentChunkIndex=i;
+            const partKey=mode==='pingpong'?
+              (plan.segments[i].direction==='forward'?'pingpongForwardChunk':'pingpongReturnChunk'):'reverseChunk';
+            setJobProgress(i,0,partKey,{current:i+1,total:count});
+            const part=await runSegment(plan.segments[i],i);
+            if(job!==conversionEpoch||generation!==state.generation)return;
+            const bytes=part?.files?.[0]?.data;
+            if(!part||part.exitCode!==0||!bytes||bytes.byteLength<500||
+                String.fromCharCode(...bytes.slice(4,8))!=='ftyp')
+              throw new Error('MP4 segment failed validation ('+(i+1)+'/'+count+').');
+            allChunks.push(bytes);
+          }
+
+          let bytes=allChunks[0];
+          currentChunkIndex=-1;
+          if(count>1){
+            currentStage='video-join';
+            setJobProgress(count,0,'reverseJoin',{});
+            const files=allChunks.map((data,i)=>({name:'/parts/chunk-'+i+'.mp4',data}));
+            const args=['--concat'];
+            for(let i=0;i<files.length;i++)args.push('--input',files[i].name);
+            args.push('--output','/joined.mp4','--expected-frames',String(plan.frameCount));
+            const joined=await runner.run({
+              files,outputs:['/joined.mp4'],args,signal:controller.signal,
+              onProgress:p=>setJobProgress(count,p,'reverseJoin',{}),
+              onLog:({message})=>{if(logs.length>=40)logs.shift();logs.push(String(message).slice(0,180));}
+            });
+            if(job!==conversionEpoch||generation!==state.generation)return;
+            if(joined.exitCode!==0||!joined.files?.length)
+              throw new Error('MP4 join did not complete.');
+            bytes=joined.files[0].data;
+          }
+          allChunks=[];
+          if(wantsAudio){
+            const audioStage=count+(count>1?1:0);
+            const memory=Boolean(state.copiedInput);
+            const inputPath=memory?'/input.mp4':'/workerfs/input.mp4';
+            currentStage='audio-encode';
+            setJobProgress(audioStage,0,'audioEncoding',{});
+            const audioArgs=[
+              '--audio-segment','--input',inputPath,'--output','/sound.mp4',
+              '--start-time',String(plan.selectedStart),
+              '--duration',String(plan.sourceFrames/OUTPUT_FPS),
+              '--direction',mode==='pingpong'?'pingpong':'reverse',
+              ...(mode==='pingpong'?['--fps',String(OUTPUT_FPS),
+                                    '--frames',String(plan.sourceFrames)]:[])
+            ];
+            const encoded=await runner.run({
+              files:[{name:inputPath,data:state.copiedInput||file,workerfs:!memory}],
+              outputs:['/sound.mp4'],args:audioArgs,signal:controller.signal,
+              onProgress:p=>setJobProgress(audioStage,p,'audioEncoding',{}),
+              onLog:({message})=>{if(logs.length>=40)logs.shift();logs.push(String(message).slice(0,180))}
+            });
+            if(!isCurrentJob())return;
+            const sound=encoded?.files?.[0]?.data;
+            if(encoded.exitCode!==0||!sound||sound.byteLength<500 ||
+               !String.fromCharCode(...sound.slice(4,8)).includes('ftyp'))
+              throw new Error('Audio segment did not produce a valid AAC candidate.');
+            currentStage='av-mux';
+            setJobProgress(audioStage+1,0,'audioMuxing',{});
+            const mixed=await runner.run({
+              files:[{name:'/video.mp4',data:bytes},{name:'/sound.mp4',data:sound}],
+              outputs:['/video-with-audio.mp4'],
+              args:['--mux-audio','--video','/video.mp4',
+                '--audio','/sound.mp4','--output','/video-with-audio.mp4',
+                '--expected-frames',String(plan.frameCount),
+                '--expected-duration',String(plan.expectedDuration)],
+              signal:controller.signal,
+              onProgress:p=>setJobProgress(audioStage+1,p,'audioMuxing',{}),
+              onLog:({message})=>{if(logs.length>=40)logs.shift();logs.push(String(message).slice(0,180))}
+            });
+            if(!isCurrentJob())return;
+            if(mixed.exitCode!==0||!mixed.files?.[0]?.data ||
+               mixed.files[0].data.byteLength<500)
+              throw new Error('The video and reversed AAC audio could not be joined.');
+            bytes=mixed.files[0].data;
+          }
+          if(!bytes||bytes.byteLength<500||
+              String.fromCharCode(...bytes.slice(4,8))!=='ftyp')
+            throw new Error('Joined output does not have a valid MP4 header.');
+          currentStage='preview';
+          // Blob construction creates its own immutable backing bytes.
+          // Drop the returned WASM output buffer before media metadata awaits;
+          // retaining both increases transient memory on constrained phones.
+          const outputSize=bytes.byteLength;
+          resultUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));
+          bytes=null;
+          const resultVideo=$('#resultVideo');
+          await new Promise((resolve,reject)=>{
+            let timer;
+            function clean(){
+              clearTimeout(timer);
+              resultVideo.removeEventListener('loadedmetadata',ok);
+              resultVideo.removeEventListener('error',bad);
+              controller.signal.removeEventListener('abort',onAbort);
+            }
+            function ok(){clean();resolve();}
+            function bad(){clean();reject(new Error('Browser cannot preview the reversed MP4.'));}
+            function onAbort(){clean();reject(new DOMException('Reverse MP4 preview cancelled.','AbortError'));}
+            resultVideo.addEventListener('loadedmetadata',ok);
+            resultVideo.addEventListener('error',bad);
+            controller.signal.addEventListener('abort',onAbort,{once:true});
+            if(!isCurrentJob()){onAbort();return;}
+            timer=setTimeout(()=>{clean();reject(new Error('Reverse MP4 preview timed out.'));},15000);
+            resultVideo.src=resultUrl;
+            resultVideo.load();
+          });
+          if(job!==conversionEpoch||generation!==state.generation)return;
+          const duration=resultVideo.duration;
+          if(!Number.isFinite(duration) ||
+              Math.abs(duration-plan.expectedDuration)>1.2/OUTPUT_FPS)
+            throw new Error('Joined MP4 duration differs from selection: '+duration+' / '+plan.expectedDuration);
+          const elapsed=(performance.now()-started)/1000;
+          state.conversion={
+            ok:true,elapsedSeconds:Number(elapsed.toFixed(2)),
+            outputBytes:outputSize,outputDuration:duration,
+            outputWidth:resultVideo.videoWidth,outputHeight:resultVideo.videoHeight,
+            selectedStart:plan.selectedStart,selectedEnd:plan.selectedEnd,
+            duration:plan.expectedDuration,estimatedOutputFrames:plan.frameCount,
+            chunkCount:count,quality:$('#qualityInput').value,mode,
+            sourceFrames:plan.sourceFrames,
+            fps:OUTPUT_FPS,audio:wantsAudio?'reverse':'none',
+            audioCodec:wantsAudio?'aac':null,inputTransport:inputMode
+          };
+          $('#resultArea').hidden=false;
+          renderResultDetails();
+          $('#flowSaveHint').hidden=true;
+          // Do not claim result readiness until the MP4 header, duration and
+          // actual browser preview have all been checked.
+          if(flowStep==='edit')setFlowStep('result',{focus:true});
+          else updateFlowNavigation();
+          conversionMessageKey=mode==='pingpong'?'pingpongSuccess':'reverseSuccess';
+          const successText=translate(conversionMessageKey);
+          $('#reverseStatus').textContent=successText;
+          showToast(successText,{tone:'success'});
+        }catch(error){
+          if(job!==conversionEpoch)return;
+          if(resultUrl){URL.revokeObjectURL(resultUrl);resultUrl=null;}
+          $('#resultVideo').pause();
+          $('#resultVideo').removeAttribute('src');
+          $('#resultVideo').load();
+          $('#resultArea').hidden=true;
+          allChunks=[];
+          const mismatchLine=logs.find(line=>
+            /Reverse frame count mismatch: expected=\d+ actual=\d+/.test(line));
+          const mismatchMatch=mismatchLine?.match(/expected=(\d+) actual=(\d+)/);
+          const currentChunk=currentChunkIndex>=0?plan.segments[currentChunkIndex]:null;
+          state.conversion={
+            ok:false,error:String(error?.message||error),stage:currentStage,
+            elapsedSeconds:Number(((performance.now()-started)/1000).toFixed(2)),
+            chunkCount:plan.segments.length,mode,inputTransport:inputMode,
+            ...(currentChunk?{failedChunkIndex:currentChunkIndex+1,
+              failedChunkStart:currentChunk.start,failedChunkDuration:currentChunk.duration,
+              failedChunkDirection:currentChunk.direction||'reverse'}:{}),
+            ...(mismatchMatch?{expectedFrames:Number(mismatchMatch[1]),
+              actualFrames:Number(mismatchMatch[2]),errorCode:'frame-count-mismatch'}:{})
+          };
+          $('#reverseErrorDetails').hidden=false;
+          $('#reverseErrorDetails').open=true;
+          $('#openDiagnosticsButton').hidden=false;
+          // Encoder statistics often overwrite the *useful* FFmpeg error in
+          // the last few log lines. Keep diagnostic failures visible before
+          // recent context, without retaining raw source names/media bytes.
+          const diagnosticLines=logs.filter(line=>
+            /error|fail|invalid|exceed|cannot|unable|unsupported|filter.*end|non.monoton|buffer|mismatch|duration|dts|pts/i.test(line)
+          ).slice(-8);
+          $('#reverseErrorDetail').textContent=[
+            'Stage: '+currentStage+' · Runtime: '+(RUNTIME_VARIANT==='multi-thread'?'MT':'ST'),
+            ...(currentChunk?[ 'Chunk: '+(currentChunkIndex+1)+'/'+plan.segments.length+
+              ' · sourceStart='+currentChunk.start.toFixed(3)+'s'+
+              ' · duration='+currentChunk.duration.toFixed(3)+'s'+
+              ' · direction='+(currentChunk.direction||'reverse') ]:[]),
+            String(error?.message||error).split('\n')[0],
+            ...diagnosticLines,
+            ...logs.slice(-5)
+          ].join('\n').slice(0,2200);
+          const failureKey=controller.signal.aborted?'reverseCancelled':
+            mismatchLine?'reverseFrameMismatch':'reverseFailure';
+          conversionMessageKey=failureKey;
+          $('#reverseStatus').textContent=translate(failureKey);
+          if(flowStep==='result')setFlowStep('edit');
+          else updateFlowNavigation();
+          // A failed export must not leave keyboard focus on the now
+          // disabled Create button or a hidden Cancel control. Offer the
+          // expanded error details as the next reachable mobile action.
+          if(window.matchMedia?.('(max-width:600px)').matches){
+            const summary=$('#reverseErrorDetails > summary');
+            summary.focus({preventScroll:true});
+            const root=document.documentElement, previous=root.style.scrollBehavior;
+            root.style.scrollBehavior='auto';
+            try{summary.scrollIntoView({block:'nearest',behavior:'auto'});}
+            finally{root.style.scrollBehavior=previous;}
+          }
+          showToast(translate(failureKey));
+        }finally{
+          // Dispose only this job's runner. resetConversion() may already have
+          // disposed it, while a newer conversion now owns conversionRunner.
+          if(jobRunner){
+            jobRunner.dispose();
+            if(conversionRunner===jobRunner)conversionRunner=null;
+          }
+          if(job===conversionEpoch){
+            conversionController=null;
+            updateFlowNavigation();
+            $('#cancelReverseButton').hidden=true;
+            $('#reverseProgress').hidden=true;
+            rangeInfo();
+            if(AUDIO_MUX_ENABLED && state.ready && !state.audioChecked &&
+               !state.audioInspectController)void inspectSourceAudio();
+          }
+        }
+      }
+      function saveReverseResult() {
+        if(!resultUrl||!state.conversion?.ok)return;
+        const a=document.createElement('a');
+        a.href=resultUrl;
+        a.download=normalizeMP4Filename();
+        a.click();
+        resultDownloadStarted=true; // Request, not proof of OS save completion.
+        $('#flowSaveHint').hidden=false;
+        showToast(translate(state.conversion.mode==='pingpong'?'pingpongSaved':'reverseSaved'),{tone:'success'});
+      }
+
       function reportFilename() {
         const raw = outputFilename.value.trim().replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').replace(/\.+$/g,'');
         let name = raw.replace(/\.json$/i,'').trim() || 'reverse-clip-check';
@@ -1163,12 +2687,16 @@
         return name.slice(0,120);
       }
       function saveDiagnostic() {
-        const details = {createdAt:new Date().toISOString(),application:'Reverse Clip',version:APP_CONFIG.version,
-          userAgent:navigator.userAgent,mode:location.protocol,language,capabilities:state.probe,seek:state.seek,
+        const details = {createdAt:new Date().toISOString(),application:'Reverse Clip',version:APP_CONFIG.version, runtimeThreading:RUNTIME_VARIANT,
+          crossOriginIsolated:globalThis.crossOriginIsolated===true,
+          sharedArrayBuffer:typeof SharedArrayBuffer==='function',
+          userAgent:navigator.userAgent,mode:location.protocol,language,
+          source:{phase:state.sourcePhase,errorKey:state.sourceErrorKey,transport:state.inputTransport},
+          capabilities:state.probe,seek:state.seek,reverseConversion:state.conversion,
           media:state.ready ? {mime:state.file.type,bytes:state.file.size,duration:video.duration,
             width:video.videoWidth,height:video.videoHeight,start:Number($('#rangeStart').value),
             end:Number($('#rangeEnd').value),quality:$('#qualityInput').value,plannedMode:$('#modeInput').value} : null,
-          note:'Does not contain file name or video contents; no FFmpeg reverse conversion was performed.'};
+          note:'No raw media bytes or input file name are included. reverseConversion records only observed app output or errors.'};
         const blob = new Blob([JSON.stringify(details,null,2)],{type:'application/json;charset=utf-8'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1177,29 +2705,123 @@
         setTimeout(()=>URL.revokeObjectURL(url),15000);
         showToast(translate('reportSaved'));
       }
+      // Navigation only reveals already-created state. Result remains
+      // inaccessible until an actual MP4 Blob and metadata are available.
+      for(const step of flowSteps){
+        flowButtons[step].addEventListener('click',()=>setFlowStep(step));
+      }
+      $('#flowGoEditButton').addEventListener('click',()=>setFlowStep('edit',{focus:true}));
+      $('#flowBackToEditButton').addEventListener('click',()=>setFlowStep('edit',{focus:true}));
+      window.addEventListener('resize',updateFlowNavigation);
       $('#pickButton').addEventListener('click',()=>$('#sourceInput').click());
+      $('#cancelLoadButton').addEventListener('click', () => {
+        if (state.sourcePhase !== 'inspecting') return;
+        releaseSource();
+        setStatus('sourceLoadCancelled');
+      });
       $('#captureButton').addEventListener('click',()=>$('#captureInput').click());
-      $('#sourceInput').addEventListener('change',e=>{chooseFile(e.target.files?.[0]);e.target.value='';});
-      $('#captureInput').addEventListener('change',e=>{chooseFile(e.target.files?.[0]);e.target.value='';});
+      $('#sourceInput').addEventListener('change',e=>{void chooseFile(e.target.files?.[0]);e.target.value='';});
+      $('#captureInput').addEventListener('change',e=>{void chooseFile(e.target.files?.[0]);e.target.value='';});
       const drop=$('#dropZone');
       drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('is-dragover');});
       drop.addEventListener('dragleave',()=>drop.classList.remove('is-dragover'));
-      drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('is-dragover');chooseFile(e.dataTransfer?.files?.[0]);});
-      for(const id of ['rangeStart','rangeEnd','modeInput','qualityInput']) $('#'+id).addEventListener('change',rangeInfo);
+      drop.addEventListener('drop',e=>{
+        e.preventDefault();
+        drop.classList.remove('is-dragover');
+        const files=e.dataTransfer?.files;
+        if(!files?.length)return;
+        if(files.length!==1){
+          if(flowResultReady()&&!resultDownloadStarted){
+            showToast(translate('multipleFiles'));
+            setFlowStep('result',{focus:true});
+            return; // Reject an accidental multi-drop without losing the MP4.
+          }
+          releaseSource();
+          setSourcePhase('error',state.generation,'multipleFiles');
+          return;
+        }
+        void chooseFile(files[0]);
+      });
+      $('#modeInput').addEventListener('change',onConversionModeChanged);
+      $('#audioInput').addEventListener('change',onAudioModeChanged);
+      function onOutputSettingsEdited(){
+        previewSelectionActive=false;video.pause();$('#trimPreviewNotice').textContent='';
+        resetConversion();rangeInfo();
+      }
+      // Number fields can change long before blur. Immediately revoke any
+      // previous MP4 instead of exposing output for an outdated selection.
+      for(const id of ['rangeStart','rangeEnd']){
+        $('#'+id).addEventListener('input',onOutputSettingsEdited);
+        $('#'+id).addEventListener('change',onOutputSettingsEdited);
+      }
+      $('#qualityInput').addEventListener('change',onOutputSettingsEdited);
+      for(const [id,which] of [['trimStartSlider','start'],['trimEndSlider','end']])
+        $('#'+id).addEventListener('input',()=>moveTrimHandle(which));
+      $('#previewSelectionButton').addEventListener('click',previewSelectedSource);
+      $('#reverseButton').addEventListener('click',reverseShortClip);
+      $('#cancelReverseButton').addEventListener('click',()=>{
+        resetConversion();rangeInfo();
+        conversionMessageKey='reverseCancelled';
+        $('#reverseStatus').textContent=translate(conversionMessageKey);
+        // The Cancel button is now hidden; restore keyboard focus safely.
+        const target=$('#reverseButton').disabled?$('#workspaceTitle'):$('#reverseButton');
+        target.focus({preventScroll:true});
+      });
+      $('#saveReverseButton').addEventListener('click',saveReverseResult);
+      $('#reverseFilename').addEventListener('blur',normalizeMP4Filename);
       $('#probeButton').addEventListener('click',probeBrowser);
       $('#seekButton').addEventListener('click',probeSeek);
       $('#downloadReportButton').addEventListener('click',saveDiagnostic);
+      $('#openDiagnosticsButton').addEventListener('click',()=>{
+        const details=$('#diagnosticsDetails');
+        details.open=true;
+        details.scrollIntoView({block:'start',behavior:'auto'});
+        details.querySelector('summary').focus({preventScroll:true});
+      });
       outputFilename.addEventListener('blur',()=>outputFilename.value=reportFilename());
       $('#languageButton').addEventListener('click',()=>{language=language==='ja'?'en':'ja';writeStorage(storageKeys.language,language);applyLanguage();});
       const helpDialog = $('#helpDialog');
-      $('#helpButton').addEventListener('click',()=>helpDialog.showModal());
-      $('#closeHelpButton').addEventListener('click',()=>helpDialog.close());
+      let helpBackgroundScroll=null;
+      function lockHelpBackground(){
+        if(helpBackgroundScroll!==null)return;
+        helpBackgroundScroll=window.scrollY;
+        document.body.style.top='-'+helpBackgroundScroll+'px';
+        document.documentElement.classList.add('help-modal-open');
+        document.body.classList.add('help-modal-open');
+      }
+      function unlockHelpBackground(){
+        if(helpBackgroundScroll===null)return;
+        const restoreY=helpBackgroundScroll;
+        helpBackgroundScroll=null;
+        document.body.classList.remove('help-modal-open');
+        document.body.style.top='';
+        document.documentElement.classList.remove('help-modal-open');
+        const originalBehavior=document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior='auto';
+        window.scrollTo(0,restoreY);
+        document.documentElement.style.scrollBehavior=originalBehavior;
+      }
+      $('#helpButton').addEventListener('click',()=>{
+        lockHelpBackground();
+        try{helpDialog.showModal();}catch(error){unlockHelpBackground();throw error;}
+      });
+      // Close handlers restore the background position immediately; native
+      // dialog "close" events are dispatched asynchronously on some browsers.
+      function closeHelpDialog(){
+        if(helpDialog.open) helpDialog.close();
+        unlockHelpBackground();
+      }
+      $('#closeHelpButton').addEventListener('click',closeHelpDialog);
+      helpDialog.addEventListener('cancel',unlockHelpBackground);
+      helpDialog.addEventListener('close',unlockHelpBackground);
       helpDialog.addEventListener('click',event=>{
         const rect=helpDialog.getBoundingClientRect();
-        if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)helpDialog.close();
+        if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)closeHelpDialog();
       });
-      window.addEventListener('pagehide',()=>{if(state.url)URL.revokeObjectURL(state.url);});
+      // bfcache restoration must not point to a revoked source URL.
+      window.addEventListener('pagehide',()=>releaseSource());
       outputFilename.value='reverse-clip-check';
+      $('#reverseFilename').value='reverse-clip-reversed';
       $('#versionBadge').textContent='v'+APP_CONFIG.version;
       $('#buildVersion').textContent=APP_CONFIG.version;
       $('#builtAt').textContent=BUILD_MANIFEST.generatedAtUtc||'—';

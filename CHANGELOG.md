@@ -1,8 +1,202 @@
 # Changelog
 
-## [0.1.0] - 2026-10-11 (development spike)
+## [0.9.0] — RC PREPARATION (2026-10-16 onward; not released)
 
-- Started reverse-video feasibility work from the current Browser Kitty HTML template.
-- Added reproducible native FFmpeg frame-order tests and an explicit G1 decision log.
-- Replaced generic starter documentation and branding with Reverse Clip.
-- Dedicated video-reversal WASM, MP4 export, real-device proof and G1 approval remain pending.
+- 2026-10-19: replace expiring experimental Builder Actions lock with publicly released, SHA-256-pinned `video-reverse-v1.10.6` ST/MT binaries, corresponding source and separate GPL notice. The app is still a Draft RC; Builder dependency release does not imply app G3 sign-off.
+
+- **2026-10-17 P0/P1/P2 acceptance review:** proposed initial Windows Chrome + Android Chrome short H.264 scope. [P0 essential safety and representative real-device checks](docs/release/REVISED_ACCEPTANCE_SCOPE.md) retained; P1 extra provider/Edge checks and P2 unadvertised Android/iPhone full-HD repeated stress separated. The original G2 remains historically NOT PASSED. A <=64MiB conditional local whole-source-copy fallback is proposed instead of the prior unconditional no-copy rule, while zero uploads, valid MP4 output, source generation guards and GPL source completeness remain requirements.
+
+- Advance the development version on existing unmerged Draft PR #2; **not** a signed-off RC or Gate G2/G3 PASS, no tag, release or Browser Kitty integration.
+- Freeze new features. Preserve the verified H.264/AAC Reverse/Ping-pong, mobile Video→Edit→Result, 15fps limits, local-only privacy and standalone ST/isolated MT behavior.
+- Create `docs/release/RC_CHECKLIST.md` with explicit A-01–A-14 PASS/PARTIAL/PENDING evidence, platform limits, Android no-whole-copy G2 deviation, immutable GPL Builder source-distribution blocker, true screenshots and manual acceptance.
+- Create `docs/release/RELEASE_NOTES_DRAFT.md`, and run `tests/feasibility/rc-readiness.test.mjs` in Windows validation to prevent a version bump from being misrepresented as release acceptance.
+- Keep actual Android high-resolution hardware/RAM/audio tests, iPhone scope (deferred), Edge manual QA, JA/EN rendered screenshots and permanent GPL corresponding-source distribution unresolved.
+
+## [0.8.0] — Compatibility / Hardening (development started 2026-10-16; not released)
+
+- **180° and 270° actual visual rotation:** [real ST/MT Chrome CI #38863445237](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445237) ALL SUCCESS. Asymmetric RGB markers verify that actual decoded output matches autorotated source pixels for both display-matrix angles (mean RGB MAE 0.46), not simply matching resolution. Existing 90° case remains PASS; output is upright H.264 MP4 with no display rotation tag.
+- **HEVC/HDR safe handling:** locally generated 8-bit HEVC/H.265 MOV and 10-bit BT.2020/PQ-tagged HEVC MOV were correctly identified as HEVC by ffprobe. This desktop Chrome build rejected their previews and exposed no stale Result/Save, ST and MT. Neither HEVC conversion nor HDR color fidelity has been verified. iPhone hardware is deferred.
+- [PR preview #38863445204](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38863445204) also SUCCESS. Existing H.264 reverse/ping-pong/AAC, source generation, invalid MP4, multi-audio silence, file:// offline and no-upload regression tests were preserved. G2, physical phone verification and matching permanent Builder corresponding-source GPL release remain OPEN.
+
+- **Real MOV and rotation QA:** [CI #38857118532](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118532) ALL SUCCESS, [PR preview #38857118536](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38857118536) SUCCESS. True ST and COI MT generated/decoded valid H.264 QuickTime MOV, plus a 90° display-matrix MOV. Source stored as 160×90 / presented 90×160 became an upright coded 90×160 H.264 MP4 with no residual rotation metadata. Other rotation angles, real-camera HEVC/HDR and iOS remain unverified.
+- **Corrupt-media fail closed:** a 128-byte truncated but plausible MP4 header fails source decode without exposing old Result/Save in both ST/MT Chrome. More malformed variants still pending.
+- **Two-audio-track safe default:** synthetic MP4 with 2 AAC streams produced a real silent H.264-only MP4 in the default No audio mode, zero audio streams. This does not introduce a multi-track selector or establish which source track optional audio mode uses; track selection/preservation unverified. Existing video/AAC processing paths unchanged.
+
+- **Version and scope:** advance to `0.8.0` on existing unmerged Draft PR #2. Preserve v0.7 phone UX, Reverse/Ping-pong/AAC, original file privacy and strict MP4 integrity safeguards; G2 remains OPEN, no merge/release/Browser Kitty integration.
+- **Short source classification:** a decodable input below 0.5 seconds now gets specific JA/EN guidance, not an inaccurate damaged/unsupported-file diagnosis. Longer playable inputs retain the prior checks.
+- **Factual limitations:** a collapsed source-format note discloses that HDR/10-bit detection and color-fidelity preservation are not guaranteed, output is fixed at 15fps even for 30/60fps inputs, and users cannot select from multiple source audio tracks.
+- **Verified regression:** [App CI #38853679777](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679777) ALL SUCCESS and [PR preview #38853679768](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38853679768) SUCCESS. Generated valid ~0.27s, 30fps and 60fps H.264 MP4s: both real ST/isolated MT browser variants refuse sub-0.5s with distinct translated error, and save/probe 30/60fps inputs as 15fps 1-second/15-frame H.264 MP4. Prior invalid-header, VFR/low-FPS, AAC/Ping-pong, cancellation, `file://` and no-network tests remain PASS. Source compatibility disclosure resets on each new video. Detailed evidence: `docs/feasibility/V080_COMPATIBILITY_MATRIX.md`.
+- **Still outstanding:** physical Android extended/performance tests, iPhone/HEVC MOV (deferred), true HDR/10-bit color, all rotation metadata cases, multi-track audio fidelity, G2 no-whole-file-copy condition and durable GPL source-complete Builder release. This milestone is **in progress**, not ready for RC or stable publication.
+
+## [0.7.0] — Mobile UX / Save Flow (implementation complete 2026-10-16; not released)
+
+- **Code complete / automated PASS:** [ST/isolated MT, actual H.264/AAC MP4 + 320×420px UX CI #38850394911](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394911) and [PR preview #38850394895](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38850394895) succeeded. No app/Builder merge, tag, stable Release or Browser Kitty import.
+- **Localization:** after a real reverse or ping-pong MP4 is created, re-render output duration/bytes/chunks/elapsed, audio/silent status and mode in the newly selected JA/EN language while retaining the verified Blob, editable filename and downloadable result. Update failed/cancelled status text on locale changes.
+- **Recoverable error states:** on mobile, failed conversion opens detailed errors and moves focus to the summary; a simulated missing-core test proves failure/language switch/retry behavior before a subsequent genuine MP4 run. The simulator does not imply a real FFmpeg defect.
+- **Truthful save and accessible controls:** Save MP4 says browser download started, suggests retry/checking Downloads, and never guarantees OS completion. Native confirmation / output filename remains usable on 320×420px; source/result video aria labels and progress aria names are localized and mode-aware. In-app help accurately describes optional reverse audio and bounded Android <=64MiB input-copy fallback.
+- **Hardware and release gates unchanged:** the Android user-reported PASS is the earlier pinned v0.6.0 Pages candidate, not these v0.7 bytes. Full Android/iPhone device matrix (iPhone deferred), G2 720p/1080p repeat/memory/audio/provider tests and matching immutable GPL corresponding-source Builder release remain outstanding. The expensive MT HD endurance test was skipped in normal CI.
+
+- **Processing navigation guard:** the Video step is disabled while an MP4 conversion is active so progress and Cancel cannot be hidden by normal mobile navigation. The action is available again after success, failure or cancellation; old-job invalidation remains functional. Manually invoking the Video step during a job is guarded.
+- **Visible keyboard focus:** automatic navigation scrolls the focused step heading into view below the sticky app header rather than hiding it above the sticky step buttons. Added 320×568 mobile viewport coverage, ST/MT conversion/cancel checks. No encoding/FFmpeg asset changes.
+
+- **Unsaved result protection:** ask before discarding a generated MP4 when selecting another video before download; cancellation preserves the original result/filename, confirmation revokes it. Accidental multi-file drop also retains an undownloaded output. A download request is never described as guaranteed OS save completion.
+- **Mobile focus recovery:** after auto step transitions and back-to-edit actions, focus the new visible workflow heading; keyboard-focused Cancel returns to the available action. Includes JA/EN help and real-browser regression coverage. FFmpeg assets and encoding are unchanged.
+
+- **Owner-directed milestone:** begin v0.7.0 work while **G2 remains OPEN**. This is not G2 sign-off, stable publication, PR merge, a tag or a Browser Kitty import.
+- Existing three-step mobile Video → Edit → Result, real MP4 result preview/download, truthful save notice, collapsed diagnostics, JA/EN and 44px tap targets now belong to the v0.7 development milestone. Changing typed trim values invalidates old results immediately; navigating away from a result pauses playback without revoking a valid output.
+- Actual ST and cross-origin-isolated MT Chrome regressions passed [CI #38830712274](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38830712274); the prior public Pages UI snapshot [PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5) passed [live CI #38834461219](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38834461219) and had an owner-reported basic Android UX success. That pinned Pages build was **v0.6.0**, not this new Draft v0.7 version.
+- Preserve unresolved original G2 high-resolution Android/iPhone hardware repeats (iPhone deferred), real RAM/time, audio listening, cancel/provider checks, and Android <=64MiB full-copy fallback. The separately necessary immutable GPL source-complete Builder release remains pending. Runtime binaries, codecs and safety limits are unchanged by this version update.
+
+## [0.6.0] — Adaptive quality guard / memory and reliability (development, 2026-10-13)
+- **2026-10-15 mobile UX/diagnostic disclosure verification:** Keep Browser checks and Development status behind native collapsed disclosures; expose an error-only button that expands/focuses diagnostic JSON export. Full [ST/MT App CI #38688780206](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38688780206) PASS with JS state/response tests, real H.264/AAC MP4 conversion and download, existing cancellation, frame count and VFR regression, JA/EN/320–390px mobile UI. [Pages test-only PR #5](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/5) prepares actual hosted MT UI verification without merging development PRs. Physical Android UX and Gate G2 remain unapproved; no v0.7.0 version bump.
+
+- **2026-10-15 (v0.7 UX preparation; v0.6.0 unchanged):** Add 3-step responsive mobile navigation (Video/Edit/Result), enable Edit only after source metadata is ready and Result only after validated MP4 output; automatically advance after source load/export. Keep PC continuous layout. Invalidate any stale Result on source/settings changes, cancel or failure; preserve output when merely revisiting Edit. Use sticky top (not obscuring bottom) 44px navigation with JA/EN labels, actual result pixel dimensions and FPS, and truthfully describe download initiation rather than asserting successful OS save. Add mobile automated source/result/navigation/MP4 regressions; Android physical mobile UX acceptance and G2 remain open.
+
+- **2026-10-15 actual PC and Android acceptance report:** The owner confirmed that the original H.264 High ~1.03fps presentation-video source, which had produced `expected=30 actual=24` on old MT, now succeeds on **both PC and Android** after the 1.10.6 Pages update. [Live Pages CI #38667384368](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38667384368) separately verifies true isolated MT 2s/58-frame and 10s/298-frame saved MP4s. Treat the user-specific defect as **user-reported resolved**, not a pass on every G2 platform/mode/quality/physical-memory condition. No real-device timing or audio details were provided; Android <=64MiB whole-file fallback and permanent GPL Release remain open.
+
+- **2026-10-15 sparse-VFR and MT memory follow-up:** Builder 1.10.6 first normalizes presentation timestamps to 15fps then extracts bounded frame-grid windows; its wrapper explicitly shuts down the MT pthread pool before marking each job done. In real Chrome [CI #38618083612](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38618083612), isolated ST/MT 39-frame/37.806s H.264 High tests and **three consecutive 10s MT Ping-pong exports on the same page** passed. Earlier overlong mixed-fixture Chrome stress had memory allocation failures after dozens of conversions, so no global leak-free or phone-RAM claim is made. Pages-only experimental binary update [PR #4](https://github.com/ttomohisa/htmlapps-reverse-clip/pull/4) prepares live 2s/10s sparse-VFR Chrome verification without merging this Draft. Matching Builder 1.10.6 GPL source review candidate passed checksum audit, but no permanent public Release exists. Physical Android G2 and no-whole-source-copy criteria remain outstanding.
+
+- **2026-10-14 user-reported MT frame-loss regression (OPEN):** physical Android/PC MT returned `Stage: video-segments` and `Reverse frame count mismatch: expected=30 actual=24` for a 37.89s/396kbps MP4 while ST succeeded. The fail-closed integrity check stays enforced. Introduce an actual ST/isolated MT H.264 29.97fps/VFR reproduction test and expand structured diagnostics (chunk index, start, runtime, expected/actual frames), automatically opening error detail on failure. Do not claim a fix until real MT/browser reruns succeed for the affected source.
+
+- **2026-10-14 (Android source memory path):** Add generation-aware, cancellable, <=2.5s FileReaderSync Worker probe of only the first/last 32 source bytes before preview of eligible <=64MiB mobile files. Use zero-eager-copy original File/WORKERFS when readable; keep the original bounded full-file MEMFS fallback on failed/unsupported Worker reads, plus the existing conversion-time provider retry. Abort/terminate probe and revoke URL on source switch, failure or timeout. **Full-copy-free G2 is still not satisfied** for fallbacks; physical Android testing is pending.
+- Test real MP4 exports under a desktop Android-like UA for both unmodified WORKERFS and deliberately forced Worker-probe failure/MEMFS fallback. Add Node success/failure/abort/probe cleanup coverage. Maintain ST/MT standalone and silent/AAC regressions.
+
+- **2026-10-14 isolated MT full-resolution:** [App CI #38464029860](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38464029860) PASSED cross-origin-isolated MT 720p10s Ping-pong with AAC (298 frames/19.867s, 11.20s processing) and 1080p5s silent Reverse (75 frames/5.000s, 5.87s processing). Real MP4s were saved, decoded and validated frame-by-frame. One run of each scenario only. Summed Chrome-related RSS (~3,203 / 2,846 MiB) may double-count shared pages and does NOT represent Android RAM. Full evidence: `docs/feasibility/V060_DESKTOP_MT_MEASUREMENTS.md`.
+- Expensive MT HD job now requires explicit `workflow_dispatch` input `run_hd_mt=true` instead of running on every pull-request push. Routine ST/MT regression remains.
+- Opt-in desktop performance harness can also collect Linux process-tree PSS/USS where supported; these are not device/tab RAM measurements. Release finished MP4 Uint8Array once its preview Blob takes ownership, shortening redundant buffering during metadata waits. Actual peak reduction needs separate proof.
+
+- Tested the pinned real ST standalone in Linux Chromium at full 1280×720/10s and 1920×1080/5s: **11 real downloaded/decoded MP4 successes**, including three consecutive silent Ping-pong conversions per quality, two high-resolution AAC exports and 720p in-progress cancellation followed by successful retry. Frame identity and stream duration verified; precise observations and limitations in `docs/feasibility/V060_DESKTOP_ST_MEASUREMENTS.md`. This is not real-device/MT G2 approval.
+- Strengthened the opt-in high-resolution stress harness to validate **every decoded frame against its expected original source position**, check optional AAC duration and cancel after real conversion progress rather than only at startup. Default CI still syntax-checks this potentially expensive test without running it.
+
+- Introduce separate 720p-class (short edge <=720px / long edge <=1280px, 0.5–10s) and 1080p-class (short edge <=1080px / long edge <=1920px, 0.5–5s) experimental output settings, retaining compact 360/720px long-edge presets and no upscaling.
+- Plan each Reverse/Ping-pong segment with an estimated YUV420 frame-buffer target <=48MiB instead of always up to 2 seconds. 1920x1080 at 15fps uses up to 16 frames per segment; 1280x720 uses up to 30. Frame-boundary and expected-frame-count safeguards stay enabled.
+- Do not silently shorten user ranges or lower quality. On source replacement, cancellation or pagehide, discard old URLs/Worker; preempt separate audio-inspector WASM before exporting, restart after when necessary; reject repeated Create clicks and clean failed result previews.
+- Synthetic timeline planning checks added. Real 720p10s/1080p5s files, repeated conversions on physical phones, actual memory peaks, human listening and GPL source-complete permanent distribution remain **PENDING**. See docs/feasibility/G2.md. No v0.6 acceptance claim, merge or Browser Kitty integration.
+
+
+### v0.5.0 — Verified ST/MT AAC MP4 regression (2026-10-13)
+- App [CI 38358181120](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38358181120) **passed** real ST/MT reverse audio and ping-pong MP4 exports: mono 0.5s/1s, independent stereo L/R 440/660Hz reverse at 5s, 10s stereo ping-pong 298 frames/19.867s, and silent input fallback. AAC was decoded to PCM and stream count/duration checked with FFmpeg/ffprobe.
+- Builder [CI 38357268611](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38357268611) passed ST/MT after fixing an accidental 120-frame-per-segment validation limit applied to full 298-frame A/V MP4 output. Individual chunk guard stays 120 frames; joined-output guard stays 960 with exact expected count.
+- Audio defaults to No audio; the optional reverse-audio choice activates only after local supported source audio is verified. Runtime ST/MT hashes remain pinned to the temporary Actions artifact expiring October 20, 2026.
+- Physical Android audio quality and repeated memory use, true HD target durations, 44.1kHz sources and camera display-rotation, and permanent corresponding-source GPL Release are still pending. No portal integration or merges.
+
+
+### v0.5.0 — Audio A/V proof path and acceptance tests
+- Implement source-scoped lightweight FFmpeg audio stream inspection (generation-aware, cancelable, no whole-file copy). Select audio only if a supported AAC/MP3/Opus/FLAC mono/stereo stream is positively identified.
+- When the future pinned ST/MT core advertises `audio-mux`, render the original selected audio range in reverse or as a forward/return ping-pong track, then remux only the AAC into the already finished exact-frame H.264 MP4. All failures discard the pending result; existing no-audio exports stay unchanged.
+- Add full real-Chrome ST/MT regression that, when gated on, decodes the AAC MP4 and checks actual reversed 300Hz/990Hz source tones, waveform direction in ping-pong, approximate 150ms audio/video duration alignment, and silent-source/cancel rejection. When gated off, it asserts users cannot select unverified audio.
+- **Do not enable audio-mux solely on source code or compilation evidence.** Await Builder's actual A/V smoke, pin reviewed ST/MT SHA-256, run the app's real A/V CI, then review audio quality and mobile limitations.
+
+
+## [0.5.0] - 2026-10-13 (Audio modes — implementation in progress)
+- Start the real AAC audio pipeline in the dedicated FFmpeg WASM Builder while preserving the working video-only Reverse and Ping-pong modes.
+- Add a bilingual audio choice UI (default no audio), state generation resets, capability checks and a strict fail-closed output gate. **The audio option stays disabled** until actual ST+MT A/V multiplexing, stream inspection and playback pass; availability of an AAC encoder alone is not sufficient.
+- Record audio support explicitly in the embedded runtime manifest, without changing the pinned v0.4 video-only binary. Never claim old reverse-only assets contain AAC or a synced mux.
+- In Builder Draft PR #16, develop a bounded AAC source-audio encoder with selectable forward/reverse filters, requiring a genuine audio stream; actual A/V mux, click-free joins, physical Android acceptance, permanent GPL Release and audio waveform verification remain future acceptance conditions.
+
+
+## [0.4.0] - 2026-10-13 (experimental silent ping-pong implementation)
+
+- Stage a real `pingpong` video mode (forward H.264 chunks followed by reverse return), next to existing reverse mode. The dedicated Builder `video-reverse` profile now supports a bounded `--direction forward` chunk, using the same x264 encoder and scale/fps settings, and extends the public-libav MP4 remux join to at most **16** chunks.
+- The frame-exact composition for N selected source frames is **0..N-1, N-2..1** (2N-2 frames). Skip the turning frame on the return, and the starting frame at the end so repeated playback has no doubled loop-boundary frame. Do not skip arbitrary H.264 packets. No audio yet.
+- A pure shared timeline planner balances chunks to avoid a 1-frame reverse tail, preserves 0.5–10s trim and HD pilot <=5s, counts all output frames before saving, and rejects missing or excess encoded packets in the Builder.
+- Modes are exclusive; changing mode clears stale output and updates the suggested suffix between `-reverse.mp4` and `-pingpong.mp4` without overwriting a user-edited filename. UI previews only the completed MP4 and shows expected duration.
+- The Ping-pong control remains **fail-closed** unless real Builder ST/MT binaries are SHA-256 pinned. Those checks now pass: Builder commit `fa52f86b27675f5c7b6c7fba52a73d38ac766687`, passing ST/MT smoke run [38346351559](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/actions/runs/38346351559), and corresponding embedded asset hashes in `reverse-runtime.lock.json`. This is a **temporary Actions artifact expiring October 20, 2026**, not a stable GPL corresponding-source release.
+- Real ST/MT Chrome acceptance passed [app run 38347038030](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38347038030): 15→28, 31→60, 150→298 frames, saved and decoded H.264 MP4, exact turning-frame and source-boundary order, mode changes, cancel/retry.
+- Additional [app run 38347758127](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38347758127) passed ST/MT: minimum 0.5s→14 frames, *genuinely* VFR video, intentional black footage, and native portrait 90×160 output, all via actual MP4 export/decode. No external video transfer.
+- v0.4.0 remains a development milestone: real Android MT, camera rotation metadata, full-size 720p10s/1080p5s and immutable corresponding-source GPL release require further acceptance. Do not update Browser Kitty.
+
+
+## [0.3.0] - 2026-10-13 (Trim & Reverse development)
+- Add two native, touch/keyboard-accessible trim handles directly below the source video, synchronized with numeric start/end fields and an illustrated selected interval. Keep user-typed invalid numeric ranges invalid rather than silently shortening them. Moving a handle enforces 0.5s minimum and current output quality limits.
+- Add "Play selected section" of the **original** source; playback stops at the end boundary. Actual reversed MP4 remains previewed only after conversion and may be saved with a user-edited filename.
+- Replace favicon and header icon with the user-supplied 64x64 green/white SVG (verified SHA-256), change JA language button label from 日本語 to JA, change local badge to 完全ローカル処理, replace technical branding subtitle with an app-purpose description, remove obsolete feasibility footer suffix, and show ST/MT only under Build information.
+- Prevent background scrolling on the Help dialog via fixed-body scroll lock; preserve scrolling inside the dialog and restore body position on Close/Escape/backdrop.
+- Add real Chrome ST/MT test cases for middle/tail selections, downloaded MP4 frame order, handle keyboard interaction, source play range, content/icon/lang labels, modal background lock and responsive viewports.
+- The actual Android device, full 720p10s / 1080p5s, ping-pong, audio and stable source-complete GPL distribution remain separate acceptance gates. Do not open a Browser Kitty integration PR yet.
+
+
+### v0.2.0 — 2026-10-13 App Foundation follow-up (safe import and recovery)
+- Validate only the first 32 bytes of an MP4/MOV's ISO-BMFF/QuickTime atom structure before handing it to browser playback. Reject obvious renamed text/RIFF/EBML without reading or copying a 1GiB video; full codec compatibility still depends on native browser/FFmpeg decoding.
+- Bound stuck photo-provider reads or stalled media metadata to 30 seconds, show a localized recovery message, revoke stale Blob URLs, and reject any late async result from the old source.
+- Generate a safe default MP4 filename from the selected source; include v0.2.0 source phase/error code (not media name/data) in the opt-in diagnostic JSON.
+- Extend real Chrome ST/MT tests for corrupt container headers, invalid codec-like media, stalled and stale provider reads, source switching and automatic save names. Add targeted Node unit tests.
+- Add an explicit "Cancel loading" action while a source is being inspected; it invalidates the file generation immediately instead of forcing users to wait for the 30-second timeout. Pending browser/provider reads may finish internally but can no longer change the app.
+- Reject multi-video drag/drop instead of silently taking the first file. Remove the inert focus stop on the drop area; the actual choose/record buttons remain keyboard accessible.
+- Exercise ST/MT UI at 320/360/390/1024px in the real-browser smoke suite to catch horizontal overflow.
+- Physical Android device intake/error and repeated MT performance acceptance remain **PENDING**. Browser Kitty PR #41 remains closed unmerged.
+
+
+## [0.2.0] - 2026-10-13 (App Foundation / development milestone)
+- Advance beyond the v0.1.x technical-spike series to the v0.2.0 app-foundation milestone. This is a working development build, **not** a completed G1/G2/G3 or stable public release.
+- Introduce an explicit generation-aware source state machine: `empty / inspecting / ready / error`; preserve validation and decoder errors across JA/EN switching, including empty videos.
+- Keep source replacement and rejected input fail-closed: clear previous results, disable stale edit/save controls, and reject late async input reads. Continue using object URLs for source preview without uploading media.
+- Preserve the proven ST/MT separate FFmpeg assets, local-first single HTML, `file://` ST build and 10s video-only reverse experiments; newer features remain experimental.
+- Expand Chrome ST/MT regression to cover invalid type, zero-byte MP4, unplayable MP4, language switching after an error, and recovery when a valid video is selected again.
+- **Pending v0.2.0 completion evidence:** Android physical-device intake/replacement/error-path tests. Do not claim this milestone fully accepted until those checks are recorded.
+- Browser Kitty PR #41 remains closed unmerged. No further portal PR until Reverse Clip is finished.
+
+
+## [0.1.7] - 2026-10-13 (experimental HD 720p-class output)
+- Keep the existing long-edge 360px / 720px presets and add a **separate** long-edge 1280px pilot for true 1280×720 landscape or 720×1280 portrait source without upscaling.
+- Hard-cap the HD 720p-class pilot at 5 seconds, preserve up-to-2-second FFmpeg chunks and the existing 96 MiB estimated frame-buffer limit. No automatic shortening or quality downgrade.
+- Disclose device-memory/performance uncertainty in both JA/EN. Real-device Android ST/MT 720p output is **not** claimed until tested.
+- Expand Chrome ST/MT smoke with native 1280×720 H.264 source, 1-second real HD MP4 download and ffprobe dimension/codec/frame checks.
+- Browser Kitty remains deferred; do not merge or release.
+
+
+## [0.1.6] - 2026-10-13 (cancel/retry & source-switch hardening)
+- Prevent a WASM runner that finishes initializing *after* a cancellation or file change from being published or executed. Dispose each conversion's own runner even when stale, without touching a newer conversion.
+- Make output-video metadata loading abortable; cancellation immediately cleans up preview listeners/timers rather than waiting for a timeout.
+- Restore availability of the Convert button through the existing range/input/isolation guards, not just an old range-valid flag.
+- Expand actual ST/MT Chrome smoke to cancel during delayed WASM initialization, change input mid-load and then successfully export H.264 MP4 again.
+- Bring the existing frame-indexed 10-second/fractional-boundary regression into the hosted ST/MT Chrome CI, with repeat-run output validation, MP4 frame-order checks and simulated mobile file transport.
+- Keep the experimental input/output/10s limits and temporary pinned GPL Builder artifacts unchanged; this is not a claim of Android device MT or release readiness.
+- Stage a future immutable Builder Release asset importer that validates the exact ZIP digest, ST/MT core hashes and included GPL/BUILDINFO notices; current runtime lock still selects the temporary Actions artifact.
+- Per owner direction, **Browser Kitty integration is postponed until Reverse Clip is complete**; mistakenly opened Browser Kitty Draft PR #41 was closed unmerged. Do not open a replacement now.
+
+
+## [0.1.5] - 2026-10-12 (two real ST/MT WASM distributions)
+- Request dual ST/MT pthread builds in the dedicated Reverse Clip Builder profile.
+- Generate ST + MT readable and self-extract single HTML, with separately pinned JS/WASM hashes.
+- Publish GitHub Pages root (ST) and /mt/ (MT). A fixed, MIT-licensed, SHA-256-verified same-origin COI Service Worker is deployed **only** under Pages /mt/.
+- MT conversion requires crossOriginIsolated plus SharedArrayBuffer; missing isolation disables the MT conversion UI with a clear Japanese/English explanation.
+- Prepare Browser Kitty to use MT with route-scoped COOP/COEP/CORP; no global cross-origin isolation and no silent ST fallback.
+- No claims of MT speedup or stable release until actual runtime/phone/hosting checks and permanent source-complete GPL runtime distribution.
+
+
+## [0.1.4] - 2026-10-12 (experimental ten-second reverse)
+- Extend the experimental range to 0.5–10 seconds at 15fps, with at most five 2-second segments for a full ten-second selection.
+- Require an exact expected encoded-frame count for every WASM segment and for the joined MP4. Reject incomplete/extra-frame output, rather than silently accepting a loose duration.
+- Show a distinct warning for selections over five seconds; preserve the Android photo-provider MEMFS workaround, separate quality presets and cancellation.
+- Pin dedicated Builder commit b67b1e2 and its SHA-256-verified expiring Actions binary; no runtime fetch.
+- Keep iPhone deferred and the original G1 not passed. Android 10s reliability and 720p/1080p-class export remain future tests.
+
+## [0.1.3] - 2026-10-11 (experimental chunk reversal)
+- Added 0.5–5-second video-only MP4 reversal via 1–3 sequential chunks on 2-second frame boundaries, each up to 2 seconds.
+- Added public-libav MP4 joining in reverse chronological order, with timestamp and codec-parameter checks; no partial outputs are downloadable.
+- Disclose 15fps frame snapping. Quality presets specify long edge 360/720px (not full native 360p/720p).
+- Added conversion stage labels, cancel and output timing checks.
+- Upgraded pinned Builder WASM to commit 47448852; source-complete permanent release and mobile performance tests remain pending.
+- Gate G1 remains INVESTIGATE.
+
+## [0.1.2] - 2026-10-11 (Android file read recovery)
+
+- Avoid Android photo-provider `FileReaderSync.readAsArrayBuffer` failures during WORKERFS reads: immediately copy selected mobile videos **up to 64 MiB** into a new local in-memory Blob, then stage via FFmpeg MEMFS (no FileReaderSync).
+- Retain memory-efficient WORKERFS on desktop and larger input; retry once using bounded MEMFS if its original file reader reports a known permission/readability error and the source is under 64 MiB.
+- Show a useful explanation when an external photo/cloud provider cannot be read or when a large file cannot safely use the memory fallback.
+- Keep video data entirely in-browser, preserve cancellation/stale-source guards, and record the input transport in the optional diagnostic JSON (not media bytes or source filename).
+- Real Android/iOS MP4 output and the long-video memory limits remain unverified; Gate G1 stays INVESTIGATE.
+
+## [0.1.1] - 2026-10-11 (experimental reverse-WASM preview)
+
+- Added pinned Builder FFmpeg WASM import with SHA-256 verification and offline-capable single HTML.
+- Added short silent MP4 reversal, result preview, filename editing, cancellation and diagnostic result summary.
+- Reverse output is limited to 0.5–2 seconds and 360p/720p at 15 fps; mobile support remains unverified.
+- Uses a temporary Actions artifact; must transition to permanent source-complete release before stable publication.
+- Gate G1 remains INVESTIGATE.
+
+## [0.1.0] - 2026-10-11 (feasibility)
+
+- Started Browser Kitty Reverse Clip from the current standalone template.
+- Added native frame-order tests, diagnostic browser probes, responsive bilingual UI, and explicit G1 gate.

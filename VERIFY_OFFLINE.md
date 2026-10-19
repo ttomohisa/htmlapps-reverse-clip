@@ -1,34 +1,45 @@
-# Offline Verification
+# Reverse Clip — Offline & Standalone Verification
 
-1. Run `build-standalone.bat`.
-2. Open `dist/index.html` and `dist/index.self-extract.html` directly.
-3. Open browser developer tools and clear the Network panel.
-4. Enable offline mode or disconnect the device.
-5. Reload the local HTML.
-6. Exercise every core input, editing, preview, worker, and export flow.
-7. Confirm there is no failed external resource request and no console error.
-8. Change the suggested output filename, export, and confirm both the filename and file contents are correct.
-9. If the app can replace its primary input while processing, change the input mid-process and confirm no stale result from the old input appears.
-10. Confirm output files still open correctly.
+**Current status (2026-10-16):** v0.9.0 RC PREPARATION, **Gate G2 / Gate G3 still NOT PASSED**. Prior real Chrome `file://` ST readable+self-extract MP4 smoke PASS ([CI #38864099711](https://github.com/ttomohisa/htmlapps-reverse-clip/actions/runs/38864099711)); this does not establish Windows Edge, Android physical acceptance or iPhone Safari. MT requires COOP/COEP from a web server and must not be advertised as direct file://. Refer to [current RC checklist](docs/release/RC_CHECKLIST.md) for release signoff. Older version references below are historical regression instructions, not current status.
 
-For GitHub Pages, one initial request downloads the HTML. Clear the Network panel after the page has loaded, then test the complete app flow.
+## Build & compare output
 
+1. Run `build-standalone.bat` with a source checkout. The app downloads the fixed ST/MT assets and matching source from the [public Builder video-reverse Release](https://github.com/ttomohisa/htmlapps-ffmpeg-wasm-builder/releases/tag/video-reverse-v1.10.6) on the first build. A GitHub token is no longer needed for the FFmpeg WASM runtime; browser users never needed one.
+2. Confirm the template builds `dist/index.html`, `dist/index.self-extract.html` and `reverse-clip.html`. These are separate variants of the same local application, not external-runtime shells.
+3. Confirm `connect-src 'none'`, `worker-src ... blob:`, and `script-src ... 'wasm-unsafe-eval'` in the effective CSP of both standalone files. Verify no external JS/WASM URLs remain.
+4. On Windows Chrome/Edge, open **each** HTML directly through `file://`. Observe the self-extract loader complete without CSP errors, then turn off network and reload. This local URL check is required; tests that use `page.set_content` do **not** replace it.
+5. Use `tests/feasibility/browser-video-smoke.py` for an optional reproducible Chromium test. It creates an artificial 50-frame source and checks 75 reverse frames across all segment boundaries, both HTML variants, MP4 save and no external network requests. See `tests/feasibility/README.md`.
 
-## Self-extracting variant
+## Device tests (record results in docs/feasibility/G1.md)
 
-Open `dist/index.html` first and confirm that the browser favicon and upper-left application brand icon use the same artwork from `assets/favicon.svg`. Then open `dist/index.self-extract.html` directly, confirm that the loading screen text is readable, the same favicon as `dist/index.html` is visible, and the loading screen disappears. Repeat the same offline checks and verify that the browser console contains no decompression or CSP errors. `scripts/verify-self-extract.ps1` also enforces an ASCII-only loader and byte-for-byte restoration of the readable HTML.
-## Optional WebRTC QR pairing component
+1. iPhone Safari and Android Chrome: select a real H.264 MP4; preview, adjust start/end to **0–1s**, output **long edge 360px**, create and save MP4. Confirm the downloaded file plays correctly.
+2. Repeat **0–5s** with long edge 360px; then separately try long edge 720px and record seconds, file size, successful playback, source codec and failure messages. Test 2 consecutive runs and cancellation/retry.
+3. Use a video from the device's photo gallery and one from Downloads. On Android, a picker source may allow browser preview but block Worker-side `FileReaderSync`. Confirm the pre-copy/MEMFS fallback for source files ≤64 MiB, and actionable error text for denied or larger files.
+4. Include an iPhone HEVC MOV with orientation metadata. If unsupported, record that explicitly rather than claiming MOV works.
+5. Check landscape and portrait outputs, start/end frame order, correct 15fps timing, UI at 320–390px, and long filenames in both Japanese and English.
+6. Replace the source while processing; confirm the previous worker stops and stale results never appear. Cancel during chunk reversal and during joining; ensure partial MP4 cannot be saved.
+7. Inspect Network for CDN, analytics, upload or other external dependencies; source video bytes should stay on-device.
 
-The starter does not enable WebRTC by default. If the application copies `components/webrtc-qr-pairing.html`, verify the connection behavior separately in addition to the normal no-CDN/API checks:
+## Release blockers
 
-1. Confirm `RTCPeerConnection` is created with `iceServers: []`.
-2. Confirm no signaling server, STUN, TURN, WebSocket, fetch/XHR API, or runtime CDN was added.
-3. Complete a host → joining device → host QR exchange on the same reachable LAN.
-4. Confirm Offer/Answer QR data is not shown until ICE gathering reaches `complete`.
-5. Deny camera permission and confirm the manual copy/paste signaling fallback remains usable.
-6. Test connect → disconnect → reconnect repeatedly so stale PeerConnection/DataChannel events do not corrupt the next attempt.
-7. Test a pre-connect joining-side ICE failure and confirm the Answer QR is regenerated with a fresh PeerConnection/session.
-8. Force a network failure (for example, a guest network or client-isolation environment) and confirm diagnostics explain candidate/route state without exposing IP addresses.
+The Builder WASM currently comes from an **expiring GitHub Actions artifact**, pinned in `reverse-runtime.lock.json`. Before a stable release, replace it with a permanent versioned artifact carrying the required FFmpeg/x264/Emscripten corresponding source and GPL notices. Full G1/G2 acceptance and actual mobile testing remain necessary.
 
-`connect-src 'none'` remains expected. The direct WebRTC DataChannel is intentional peer-to-peer application traffic, not a hidden runtime dependency.
+## v0.1.4 ten-second checks (Android / Windows focus)
 
+1. Test 0–5s again to ensure the previously working Android path remains intact.
+2. Test 0–10s first with long edge360px, then optionally long edge720px. The app displays an experimental warning beyond five seconds; there is no automatic downgrade. Record conversion time and failures, but **do not infer mobile performance from desktop simulation**.
+3. Test start=0.1s, end=9.87s; the expected video is 146 frames at 15fps / ~9.733s after frame-grid snapping. Test 0–9.9s (149 frames) and 0–0.5s (8 frames). Unexpected frame counts must fail closed rather than leave a savable output.
+4. Repeat the same 10-second conversion twice, compare output hashes where possible, cancel during the second/third segment and during join, and ensure no previous/stale/partial result is downloadable.
+5. Test replacement of input during a slow 10-second conversion, Android photo-provider source and browser Downloads source, direct `file://` on Windows, long filenames, offline access and English/Japanese UI.
+6. **iPhone Safari / HEVC MOV testing is deferred by user instruction (2026-10-12)**; do not claim it passed or request it as part of the current Android-first milestone.
+
+A separate `tests/feasibility/browser-video-smoke.py` optional suite runs real WASM on both generated HTML variants using desktop Chromium. It does not validate physical Android devices or direct file://.
+
+## ST / MT distribution acceptance (v0.1.5)
+
+- The normal Windows standalone build must produce four HTML files: `dist/index.html`, `dist/index.mt.html`, and both respective self-extract outputs. Root ST and MT copies must match each output byte-for-byte.
+- ST standalone must operate directly from `file://` (when allowed by the local browser); MT may only run on a server that supplies COOP/COEP and exposes SharedArrayBuffer. Missing MT isolation must disable conversion with a clear message; **do not silently execute ST while labeling MT**.
+- `pages-dist/index.html` is ST; `pages-dist/mt/index.html` is MT with a **pinned, same-origin COI SW**. Neither standalone HTML variant embeds a Pages worker reference.
+- GitHub Pages ST and MT must both pass real MP4 conversion, cancellation, saved output, per-threading SHA-256 and no runtime external media/network requests. Pages MT may reload once to install its SW.
+- Browser Kitty must import the actual MT Pages HTML and apply COOP/COEP/CORP only on `/apps/reverse-clip.html`. The required headers must be observed on the live HTTP response; runtime must show `crossOriginIsolated` and `SharedArrayBuffer` available. The portal homepage and other apps must be unchanged.
+- A successful build does not prove MT is faster on Android, nor make iPhone supported. Stable release is blocked on corresponding GPL source and immutable Builder assets.

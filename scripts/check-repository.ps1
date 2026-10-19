@@ -281,6 +281,33 @@ if ($rootHtmlHash -ne $readableOutputHash) {
   throw "Repository-root HTML must be an exact copy of the readable standalone HTML."
 }
 
+
+# Keep both standalone variants verifiably distinct even outside GitHub Pages.
+$mtHtml = Join-Path $Root 'dist/index.mt.html'
+$mtExtract = Join-Path $Root 'dist/index.mt.self-extract.html'
+$mtRootCopy = Join-Path $Root ($rootHtmlBaseName + '.mt.html')
+foreach ($requiredFile in @($mtHtml,$mtExtract,$mtRootCopy)) {
+  if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
+    throw "Multi-thread standalone file missing: $requiredFile"
+  }
+}
+$mtRead = Get-Content -Raw -Encoding UTF8 $mtHtml
+$stRead = Get-Content -Raw -Encoding UTF8 $readableOutputPath
+if (-not $stRead.Contains('const RUNTIME_VARIANT = "single-thread";') -or
+    -not $mtRead.Contains('const RUNTIME_VARIANT = "multi-thread";')) {
+  throw 'ST and MT outputs must have distinct runtime variants.'
+}
+if ($mtRead -notmatch "connect-src 'none'" -or
+    -not $mtRead.Contains('threading:RUNTIME_VARIANT') -or
+    $mtRead.Contains('coi-serviceworker.js')) {
+  throw 'Standalone MT must embed its runtime without Pages-specific Service Worker dependency.'
+}
+if ((Get-FileHash -LiteralPath $mtHtml -Algorithm SHA256).Hash -ne
+    (Get-FileHash -LiteralPath $mtRootCopy -Algorithm SHA256).Hash) {
+  throw 'MT root copy must match dist/index.mt.html.'
+}
+Write-Host '[OK] Dist ST and MT outputs, including both standalone self-extract variants, checked.'
+
 Write-Host "[OK] Repository-root HTML matches the readable standalone build: $rootHtmlPath" -ForegroundColor Green
 Write-Host "[OK] Repository check passed." -ForegroundColor Green
 

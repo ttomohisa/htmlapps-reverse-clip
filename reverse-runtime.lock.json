@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "kind": "github-release-st-mt",
+  "status": "release-approved",
+  "builderRepository": "ttomohisa/htmlapps-ffmpeg-wasm-builder",
+  "builderCommit": "8e60da7cf9de644ce3f6cce9c007b17e6a385c53",
+  "profile": "video-reverse",
+  "builderVersion": "1.10.6",
+  "wasmLicense": "GPL-2.0-or-later",
+  "browserRuntimeSha256": "32edec91e98e93ef10496a4daaed7e42cabf33ab705df4ca287376ab96cf1ce4",
+  "variants": {
+    "single-thread": {
+      "assets": {
+        "ffmpeg.js": "4a85934acca9afb09ec90be83958002040d100674fee7c7903e5a59ed1d8a74c",
+        "ffmpeg.wasm": "b12598c46d9e98f4f46f5c510476261b9d226ae0de01dc8bd8859d9eeacb108b"
+      },
+      "releaseAsset": "ffmpeg-wasm-video-reverse-single-thread-v1.10.6.zip",
+      "releaseArchiveSha256": "9087bf4d03b29d141e78c93e9de62a237f2d408f24b43caeef26072e6d3b21b0"
+    },
+    "multi-thread": {
+      "assets": {
+        "ffmpeg.js": "0f41f937b6535d92159bfafbe063735286e8c693475c4ede856f0df7e8168fa4",
+        "ffmpeg.wasm": "8a9e45ce28d06d9dfde734d41d9af022d1158798b4967bb1e05ee41c20cd193c"
+      },
+      "releaseAsset": "ffmpeg-wasm-video-reverse-multi-thread-v1.10.6.zip",
+      "releaseArchiveSha256": "b577be491754ecfa96d0b86021184b82b2fc280f8881bd73cb5d52d83914d3bd"
+    }
+  },
+  "notes": "Verified immutable-profile public Builder Release published 2026-10-19 with identical original ST/MT binaries; corresponding source and GPL/x264 notice separately SHA-256-pinned. This lock approves only the FFmpeg WASM dependency. Reverse Clip app remains v0.9.0 Draft RC, G3 not yet accepted.",
+  "features": [
+    "pingpong",
+    "audio-mux"
+  ],
+  "builderTag": "video-reverse-v1.10.6",
+  "correspondingSourceAsset": "ffmpeg-wasm-sources-v1.10.6.tar.gz",
+  "correspondingSourceSha256": "9ceb47a5f46fb3484f8b1f6a8fa37e6d0dc4144aa09d78939ac9d23e8ab5ce92",
+  "supplementalNoticeAsset": "VIDEO_REVERSE_LICENSE_ADDENDUM.md",
+  "supplementalNoticeSha256": "e011d66e3451dbf5ffa5f67f26636749664a69d285a3cfc665a71e36635e15f3"
+}

@@ -2,11 +2,23 @@ name: Validate standalone HTML
 
 on:
   workflow_dispatch:
+    inputs:
+      run_hd_mt:
+        description: 'Opt-in full-resolution MT proof (costly; default off)'
+        required: false
+        type: boolean
+        default: false
   pull_request:
     branches:
       - main
+      - feat/reverse-clip-feasibility-v0.1
     paths:
       - "src/**"
+      - "tests/feasibility/**"
+      - "reverse-runtime.lock.json"
+      - "coi-serviceworker.lock.json"
+      - "vendor/coi-serviceworker/**"
+      - "licenses/coi-serviceworker-MIT.txt"
       - "scripts/**"
       - "app.config.json"
       - "dependencies.json"
@@ -22,6 +34,9 @@ on:
 permissions:
   contents: read
 
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+
 jobs:
   build:
     runs-on: windows-latest
@@ -29,6 +44,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Reverse timeline tests
+        shell: pwsh
+        run: node --test ./tests/feasibility/preview-mt-worker.test.mjs ./tests/feasibility/reverse-chunk-plan.test.mjs ./tests/feasibility/source-preflight.test.mjs ./tests/feasibility/mobile-worker-probe.test.mjs ./tests/feasibility/v030-ui.test.mjs ./tests/feasibility/pingpong-plan.test.mjs ./tests/feasibility/audio-mode.test.mjs ./tests/feasibility/rc-readiness.test.mjs
 
       - name: Validate PowerShell syntax and encoding
         shell: powershell
@@ -38,6 +62,16 @@ jobs:
         shell: pwsh
         run: ./scripts/check-repository.ps1
 
+      - name: Verify pinned ST and MT runtime bytes
+        shell: pwsh
+        run: node --test ./tests/feasibility/threading-distribution.test.mjs ./tests/feasibility/release-lock-guard.test.mjs ./tests/feasibility/release-import-mock.test.mjs
+
+      - name: Verify ST and MT Pages staging
+        shell: pwsh
+        run: |
+          ./scripts/prepare-pages.ps1
+          node --test ./tests/feasibility/pages-dual-thread.test.mjs
+
       - name: Upload standalone artifact
         uses: actions/upload-artifact@v7
         with:
@@ -45,9 +79,160 @@ jobs:
           path: |
             *.html
             dist/index.html
+            dist/index.mt.html
             dist/index.self-extract.html
+            dist/index.mt.self-extract.html
             dist/dependency-manifest.json
+            dist/dependency-manifest.mt.json
+            pages-dist/**
             dist/self-extract-manifest.json
             dist/.nojekyll
           if-no-files-found: error
           retention-days: 14
+
+  dual-runtime-browser-smoke:
+    name: Real Chrome reverse MP4 (ST and isolated MT)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+      - name: Download verified standalone HTML
+        uses: actions/download-artifact@v4
+        with:
+          name: standalone-html-${{ github.event.pull_request.head.sha || github.sha }}
+          path: .
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2.2.0
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Setup local smoke dependencies
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          command -v ffmpeg && command -v ffprobe || {
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          }
+      - name: Ensure Japanese glyphs render in actual CI screenshots
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! fc-list ':lang=ja' family | grep -q 'Noto Sans CJK'; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq fonts-noto-cjk
+            fc-cache -f >/dev/null
+          fi
+          fc-match -f '%{family}\n' ':lang=ja'
+          fc-list ':lang=ja' family | grep -q 'Noto Sans CJK'
+
+      - name: Syntax-check opt-in v0.6 HD endurance harness (do not run load test)
+        shell: bash
+        run: python -m py_compile tests/feasibility/v060-stress-browser-smoke.py
+
+      - name: Reverse H.264 MP4 using ST and real pthread MT
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/dual-thread-browser-smoke.py
+
+      - name: Verify Pages ST and service-worker-isolated MT in real Chrome
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/pages-browser-smoke.py
+
+      - name: Validate 10-second frame order, repeat export and cancellation (ST/MT)
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+          RC_CAPTURE_SCREENSHOTS: "1"
+        run: python tests/feasibility/browser-video-smoke.py
+
+      - name: Investigate owner-reported MT 30/24-frame mismatch using 37.89s camera-like sources
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/mt-real-source-regression.py
+
+
+      - name: Verify real 0.5–10s ping-pong MP4 and no duplicate turn/loop frames (ST and MT)
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/pingpong-browser-smoke.py
+
+      - name: Check real AAC audio reversal, ping-pong and silent-source safety (ST and MT)
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/audio-browser-smoke.py
+
+      - name: Verify true offline file-protocol ST and self-extract MP4
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/file-standalone-browser-smoke.py
+
+      - name: Upload real app UI screenshots for release review
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reverse-clip-v090-real-ui-${{ github.event.pull_request.head.sha || github.sha }}
+          path: rc-evidence/screenshots/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  # v0.6 experimental full-resolution workload runs only on explicit manual
+  # dispatch (run_hd_mt=true). Never burn minutes on ordinary PR updates.
+  experimental-mt-hd:
+    name: One-time isolated MT 720p/1080p video proof
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.run_hd_mt == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+      - name: Download verified standalone HTML
+        uses: actions/download-artifact@v4
+        with:
+          name: standalone-html-${{ github.event.pull_request.head.sha || github.sha }}
+          path: .
+      - name: Install Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v2.2.0
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Local smoke dependencies and memory sampler
+        shell: bash
+        run: |
+          python -m pip install --disable-pip-version-check playwright psutil
+          command -v ffmpeg && command -v ffprobe || {
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          }
+      - name: Real MT 720p 10-second ping-pong with AAC and full-frame comparison
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/v060-stress-browser-smoke.py --profile standard --runtime MT --mode pingpong --runs 1 --audio --timeout-ms 360000 --report v060-mt-720p-aac.json
+      - name: Real MT 1080p 5-second reverse and full-frame comparison
+        shell: bash
+        env:
+          CHROMIUM_EXE: ${{ steps.chrome.outputs.chrome-path }}
+        run: python tests/feasibility/v060-stress-browser-smoke.py --profile high --runtime MT --mode reverse --runs 1 --timeout-ms 360000 --report v060-mt-1080p-reverse.json
+      - name: Save small desktop MT measurements
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: v060-mt-performance-${{ github.sha }}
+          path: v060-mt-*.json
+          if-no-files-found: ignore
+          retention-days: 7

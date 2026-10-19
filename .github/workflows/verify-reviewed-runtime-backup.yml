@@ -1,0 +1,45 @@
+name: Verify audited Reverse Clip temporary runtime backup
+
+# Build-time expiry resilience only, never an app/GPL Release approval.
+on:
+  push:
+    branches: [feat/reverse-wasm-preview]
+    paths:
+      - "scripts/prepare-video-reverse-runtime.ps1"
+      - "scripts/restore-reviewed-video-reverse-runtime.ps1"
+      - ".github/workflows/verify-reviewed-runtime-backup.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  reviewed-backup:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Validate PowerShell syntax before fetching review artifact
+        shell: powershell
+        run: .\scripts\check-powershell-syntax.ps1
+      - name: Import exact ST and MT from pinned review-only source bundle
+        shell: pwsh
+        run: |
+          ./scripts/prepare-video-reverse-runtime.ps1 -Variant single-thread -ForceDownload -UseAuditedReviewFallback
+          ./scripts/prepare-video-reverse-runtime.ps1 -Variant multi-thread -ForceDownload -UseAuditedReviewFallback
+          ./scripts/prepare-video-reverse-runtime.ps1 -Variant single-thread
+          ./scripts/prepare-video-reverse-runtime.ps1 -Variant multi-thread
+          $lock = Get-Content -Raw reverse-runtime.lock.json | ConvertFrom-Json
+          if ($lock.status -cne 'temporary-not-release') { throw 'Backup unexpectedly approved for release' }
+          foreach ($variant in @('single-thread','multi-thread')) {
+            $root = ".cache/reverse-runtime/$variant"
+            foreach ($name in @('ffmpeg.js','ffmpeg.wasm','browser-ffmpeg.js','manifest.json')) {
+              if (-not (Test-Path (Join-Path $root $name) -PathType Leaf)) {
+                throw "Missing pinned backup $variant/$name"
+              }
+            }
+          }
+          Write-Host '[PASS] Both ST/MT audited backups byte-verified; app lock remains temporary.'
