@@ -3,7 +3,7 @@
   "name": "Reverse Clip",
   "nameJa": "動画逆再生",
   "slug": "reverse-clip",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "Reverse a short video or create a forward-and-back MP4 in your browser. Reverse supported audio when needed. Your video stays on your device.",
   "descriptionJa": "短い動画を逆再生や往復再生のMP4に。対応する動画では音声も逆向きにできます。動画はブラウザ内で処理します。",
   "defaultLanguage": "auto",

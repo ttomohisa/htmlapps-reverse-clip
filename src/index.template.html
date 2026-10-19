@@ -583,7 +583,7 @@
 <section class="shell workspace" id="rcWorkflow" data-flow-step="video" aria-labelledby="workspaceTitle">
   <div class="workspace-head">
     <div><h2 id="workspaceTitle" tabindex="-1" data-i18n="workspaceTitle">動画を読み込む</h2>
-      <p id="workspaceBody" data-i18n="workspaceBody">端末内だけで動画の情報とブラウザーの動作を調べます。</p></div>
+      <p id="workspaceBody" data-i18n="workspaceBody">ブラウザー内で動画を確認し、作成する区間を選びます。</p></div>
   </div>
   <nav id="rcFlowNav" class="rc-flow-nav" aria-label="作業の進行" data-i18n-aria-label="flowNavigation">
     <button id="flowVideoButton" data-flow-target="video" type="button" aria-current="step" data-i18n="flowVideo">動画</button>
@@ -647,7 +647,7 @@
     </div>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
     <p id="memoryEstimate" class="rc-hint"></p>
-    <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声付き出力は開発中です。現在のMP4は音声なしで保存されます。</p>
+    <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声トラックを確認しています。音声なしでもMP4を作成できます。</p>
   </div>
 
   <section class="rc-export" id="reversePanel" hidden aria-labelledby="reverseTitle">
@@ -924,7 +924,7 @@
     "audioModeLabel": "音声",
     "audioNone": "音声なし（既定）",
     "audioReverseOption": "音声も逆再生",
-    "audioPreparingNotice": "音声付き出力は開発中です。現在のMP4は音声なしで保存されます。",
+    "audioPreparingNotice": "音声トラックを確認しています。音声なしでもMP4を作成できます。",
     "audioCheckingLater": "選択動画の音声トラックを確認しています。",
     "audioPresent": "元動画に音声トラックがあります。音声付き出力の検証中です。",
     "audioAbsent": "この動画に音声はありません。音声なしのMP4を作成します。",
@@ -1084,7 +1084,7 @@
     "audioModeLabel": "Audio",
     "audioNone": "No audio (default)",
     "audioReverseOption": "Reverse audio too",
-    "audioPreparingNotice": "Audio export is under development. Current MP4 exports contain no audio.",
+    "audioPreparingNotice": "Checking the source audio track. You can also create a silent MP4.",
     "audioCheckingLater": "Checking this video's audio track.",
     "audioPresent": "This video has an audio track. Audio export is under validation.",
     "audioAbsent": "This video has no audio; export will be silent.",
@@ -1111,7 +1111,7 @@
     "rangeInvalid": "Check start and end (0.5–10 seconds).",
     "rangeTooLong": "The maximum segment is 10 seconds. The app will not shorten your selection automatically.",
     "memoryNotice": "Approximate buffered frames per segment: up to ~{mib}MiB (actual RAM use is higher).",
-    "helpBasicsTitle": "How to test",
+    "helpBasicsTitle": "How to use",
     "helpStep1": "Choose a video, or record one where supported.",
     "helpStep2": "Drag the start/end handles below the source video, or enter times; play the selected portion to check it.",
     "helpStep3": "Choose Reverse or Ping-pong, output quality and optional reverse audio when supported. Create the MP4, preview the result and save it.",

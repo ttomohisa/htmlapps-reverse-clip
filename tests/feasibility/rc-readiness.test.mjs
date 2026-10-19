@@ -6,8 +6,8 @@ const read=p=>readFileSync(new URL('../../'+p,import.meta.url),'utf8');
 const config=JSON.parse(read('app.config.json'));
 const lock=JSON.parse(read('reverse-runtime.lock.json'));
 const rc=read('docs/release/RC_CHECKLIST.md');
-test('v0.9 RC preparation is not an approved release or passed gate',()=>{
-  assert.equal(config.version,'0.9.0');
+test('v1.0 candidate is labeled in HTML but has no signed-off app Release',()=>{
+  assert.equal(config.version,'1.0.0');
   assert.match(config.description,/forward-and-back MP4.*browser/);
   assert.match(config.descriptionJa,/動画はブラウザ内で処理します/);
   assert.doesNotMatch(config.description,/G2|G3|RC PREPARATION|not released/);

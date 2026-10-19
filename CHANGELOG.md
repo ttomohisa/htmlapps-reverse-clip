@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.0] — Release candidate (unreleased; 2026-10-19)
+
+- Update the product-facing HTML version to 1.0.0, remove the developer diagnostics and status panels, and simplify reverse/ping-pong headings and device-test wording. The MP4 error-details panel, format/quality warnings and all conversion safeguards remain.
+- No v1.0.0 app tag, GitHub Release, G3 approval or Browser Kitty integration is implied by this candidate.
+
 ## [0.9.0] — RC PREPARATION (2026-10-16 onward; not released)
 
 - 2026-10-19: replace expiring experimental Builder Actions lock with publicly released, SHA-256-pinned `video-reverse-v1.10.6` ST/MT binaries, corresponding source and separate GPL notice. The app is still a Draft RC; Builder dependency release does not imply app G3 sign-off.
