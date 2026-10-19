@@ -50,7 +50,7 @@ test('published Builder runtime is pinned but Reverse Clip app remains RC',()=>{
   assert.equal(lock.correspondingSourceSha256,'9ceb47a5f46fb3484f8b1f6a8fa37e6d0dc4144aa09d78939ac9d23e8ab5ce92');
   assert.equal(lock.supplementalNoticeSha256,'e011d66e3451dbf5ffa5f67f26636749664a69d285a3cfc665a71e36635e15f3');
   assert.match(read('README.md'),/\*\*v1\.0\.0:/);
-  assert.match(read('README.ja.md'),/\*\*v1\.0\.0正式版:/);
+  assert.match(read('README.ja.md'),/\*\*v1\.0\.0正式版：/);
   assert.match(read('README-FIRST.txt'),/v1\.0\.0 — ST\/MT SINGLE-HTML RELEASE/);
   assert.match(read('VERIFY_OFFLINE.md'),/v0\.9\.0 RC PREPARATION/);
   assert.match(read('APP_SPEC.md'),/v0\.9\.0 RC準備中/);
