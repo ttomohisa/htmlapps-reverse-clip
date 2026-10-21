@@ -217,6 +217,8 @@ jobs:
         } else {
           Write-Host "::warning::Cloudflare Preview MT failed isolation check; DO NOT use MT URL for phone acceptance."
         }
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
     outputs:
       mt_supported: ${{ steps.verify-headers.outputs.mt_supported }}
   verify-live-mt:

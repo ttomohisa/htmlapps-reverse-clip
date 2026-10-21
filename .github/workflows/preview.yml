@@ -14,6 +14,8 @@ permissions:
 concurrency:
   group: pr-preview-build-${{ github.event.pull_request.number }}
   cancel-in-progress: true
+env:
+  GITHUB_TOKEN: ${{ github.token }}
 jobs:
   preview:
     if: github.event.pull_request.head.repo.full_name == github.repository
