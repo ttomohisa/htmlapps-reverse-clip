@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Hide only the informational footer at the existing 600px phone workflow boundary. Keep functional navigation and the canonical local-processing badge. Move the existing build disclosure, including its fixed ST/MT build variant label, intact to final Help content; preserve metadata access and modal scroll locking.
+- Versions, runtime binaries, security policy and fixed release assets are unchanged. This source change does not update the Browser Kitty v1.0.0 release pin.
+
 ## [1.0.0] — 2026-10-19
 
 - Update the product-facing HTML version to 1.0.0, remove the developer diagnostics and status panels, and simplify reverse/ping-pong headings and device-test wording. The MP4 error-details panel, format/quality warnings and all conversion safeguards remain.

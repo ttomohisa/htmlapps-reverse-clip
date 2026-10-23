@@ -1,5 +1,10 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
+## Phone footer and final Help metadata
+
+- Hide only the informational footer at the existing 600px phone workflow boundary. Keep functional navigation and the canonical local-processing badge. Move the existing build disclosure, including its fixed ST/MT build variant label, intact to final Help content; preserve metadata access and modal scroll locking.
+- Versions, runtime binaries, security policy and fixed release assets are unchanged. This source change does not update the Browser Kitty v1.0.0 release pin.
+
 > **Status:** v0.9.0 RC準備中（main統合済み、従来Gate G2/G3未合格、アプリのタグ・正式リリース未実施。Builder専用WASMは公開済み）  
 > **作成日:** 2026-10-11  
 > **目標版:** v1.0.0  
