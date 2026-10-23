@@ -1,12 +1,13 @@
 # Reverse Clip — ST / MT distribution
 
-**Development target:** Android Chrome and Windows Chrome/Edge. **Browser Kitty integration is postponed until Reverse Clip is finished; Browser Kitty Draft PR #41 has been closed without merge. Do not open another portal PR during app development.** iPhone testing is deferred. Both runtime builds are experimental until the pinned FFmpeg/x264/Emscripten GPL-corresponding-source release and RC tests are complete.
+**Latest-build distribution:** Pages publishes raw MT at `/index.mt.html` for import by header-isolated hosts such as Browser Kitty. This updates the distribution route only, not app/runtime versions, release assets, security policy, or device-support claims. The current `reverse-runtime.lock.json` remains the source of truth for pinned runtime assets; the historical publication and migration notes below do not describe the current integration state.
 
 | Distribution | Actual runtime | Delivery / isolation |
 | --- | --- | --- |
 | GitHub Pages root `/` | **Single-thread** (`dist/index.html`) | No special headers; ordinary browser use and direct `file://` standalone |
 | GitHub Pages `/mt/` | **Multi-thread** (`dist/index.mt.html`) | Same-origin pinned `coi-serviceworker` loads conditionally to provide COOP/COEP; first visit can reload |
-| Browser Kitty `/apps/reverse-clip.html` (once added) | **Multi-thread** (from Pages `/mt/`) | Cloudflare static asset response headers only for this route: COOP `same-origin`, COEP `require-corp`, CORP `same-origin`; no SW bootstrap request when `crossOriginIsolated` is already true |
+| GitHub Pages `/index.mt.html` | **Multi-thread** (byte-identical to `dist/index.mt.html`) | Raw import/download artifact only; no SW bootstrap and no isolation headers on Pages. Not a directly usable Pages MT entry point. |
+| Browser Kitty `/apps/reverse-clip.html` | **Multi-thread** (latest-build import source: Pages `/index.mt.html`) | Cloudflare static asset response headers only for this route: COOP `same-origin`, COEP `require-corp`, CORP `same-origin`; raw HTML has no SW bootstrap. Importer configuration is maintained separately in Browser Kitty. |
 | Standalone ST `reverse-clip.html` | **Single-thread** | Single offline HTML; `file://` is intended |
 | Standalone MT `reverse-clip.mt.html` | **Multi-thread** | Single HTML but requires HTTPS/localhost with cross-origin isolation, cannot work from a raw `file://` navigation |
 
@@ -14,15 +15,15 @@
 
 ## Build and immutability
 
-The Reverse Clip app pins a **specific `htmlapps-ffmpeg-wasm-builder` commit**, a dedicated **ST+MT dual-profile Actions artifact**, independent SHA-256 for both WASM+JS cores, and one common hashed `browser-ffmpeg.js` loader. The Windows template build imports only during build and embeds all assets into:
+The Reverse Clip app pins a **specific `htmlapps-ffmpeg-wasm-builder` commit and release** in `reverse-runtime.lock.json`, independent SHA-256 for both WASM+JS cores, and one common hashed `browser-ffmpeg.js` loader. The Windows template build imports only during build and embeds all assets into:
 
 - `dist/index.html` (ST) and `dist/index.self-extract.html` (ST compressed self-extract)
 - `dist/index.mt.html` (MT) and `dist/index.mt.self-extract.html` (MT compressed self-extract)
 - root copies `reverse-clip.html` and `reverse-clip.mt.html` (the respective standalone HTML bytes)
 
-`scripts/prepare-pages.ps1` stages `pages-dist/index.html` for ST and `pages-dist/mt/index.html` for MT. A vendor-pinned, SHA-checked `coi-serviceworker.js` is deployed only into `pages-dist/mt/`; **standalone MT HTML does not contain or require this file** when hosted on a server that provides the correct COOP/COEP headers. MIT license: `licenses/coi-serviceworker-MIT.txt`; source pin: `coi-serviceworker.lock.json`.
+`scripts/prepare-pages.ps1` stages `pages-dist/index.html` for ST, `pages-dist/mt/index.html` for Service Worker-isolated MT, and a byte-identical raw copy at `pages-dist/index.mt.html`. The raw URL tracks the latest successful main-branch Pages deployment, not an immutable app release. A vendor-pinned, SHA-checked `coi-serviceworker.js` is deployed only into `pages-dist/mt/`; **standalone/raw MT HTML does not contain or require this file** when hosted on a server that provides the correct COOP/COEP headers. On GitHub Pages itself, use `/mt/` for MT or `/` for ST; raw `/index.mt.html` cannot convert without cross-origin isolation. MIT license: `licenses/coi-serviceworker-MIT.txt`; source pin: `coi-serviceworker.lock.json`.
 
-`tests/feasibility/threading-distribution.test.mjs` checks the actual generated ST+MT HTML manifests, SHA-256 of embedded decompressed WASM/JS, correct pthread/isolation metadata and lack of runtime CDN. `tests/feasibility/pages-dual-thread.test.mjs` checks ST Pages root, MT Pages wrapper and pinned worker.
+`tests/feasibility/threading-distribution.test.mjs` checks the actual generated ST+MT HTML manifests, SHA-256 of embedded decompressed WASM/JS, correct pthread/isolation metadata and lack of runtime CDN. `tests/feasibility/pages-dual-thread.test.mjs` checks ST Pages root, MT Pages wrapper, pinned worker, and raw MT byte parity with no SW bootstrap.
 
 ## Runtime behavior
 
@@ -30,7 +31,7 @@ The multi-thread app checks both `globalThis.crossOriginIsolated` and `SharedArr
 
 The original Android ST-mode user reports (10-second clip, 84.73s) are not proof of MT performance. Do not promise a conversion speedup or suggest the new binary has been tested on a physical Android phone before that result exists.
 
-## Publication ordering
+## Historical publication ordering
 
 1. Review and merge the **Builder dual-profile Draft PR**, build both outputs with actual Docker + browser smoke, and publish a fixed, GPL source-complete runtime release (not an expiring Actions zip).
 2. Merge the **Reverse Clip dual-output PR** after CI and MT Pages isolation tests. GitHub Pages root and `/mt/` become available from the deployed main branch; direct MT HTML remains a separate artifact.
@@ -39,7 +40,9 @@ The original Android ST-mode user reports (10-second clip, 84.73s) are not proof
 
 **Limitation:** The Pages MT worker is a functional fallback on browsers allowing same-origin service workers and isolation; private browsing or restrictive service-worker settings may prevent activation. Browser Kitty MT uses direct HTTP response headers instead.
 
-## Future immutable release migration — not active yet
+## Historical immutable release migration plan
+
+The following pre-release plan is retained as history. The active lock now uses `kind: github-release-st-mt`; this raw Pages copy does not modify it or any immutable release asset.
 
 The current `reverse-runtime.lock.json` still uses `kind: experimental-dual-github-actions-artifact` with an expiring Actions artifact ID. An additional code path now supports `kind: github-release-st-mt` **after** a reviewed, permanent Builder Release is published. Do not switch the active lock to a nonexistent or unreviewed version.
 

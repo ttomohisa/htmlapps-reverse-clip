@@ -38,7 +38,7 @@ test('generated ST/MT have separate runtime bundles',()=>{
   assert.ok(fs.existsSync('dist/index.self-extract.html'));
   assert.ok(fs.existsSync('dist/index.mt.self-extract.html'));
 });
-test('Pages serves ST root and MT only under /mt/',()=>{
+test('Pages preserves ST root and service-worker MT under /mt/',()=>{
   if (!fs.existsSync('pages-dist/index.html')) return;
   const st=fs.readFileSync('pages-dist/index.html','utf8');
   const mt=fs.readFileSync('pages-dist/mt/index.html','utf8');
@@ -50,4 +50,15 @@ test('Pages serves ST root and MT only under /mt/',()=>{
   assert.ok(mt.includes('sw.src = "./coi-serviceworker.js";'));
   assert.equal(sw,vendor);
   assert.ok(fs.existsSync('pages-dist/.nojekyll'));
+});
+test('Pages publishes byte-identical raw MT for header-isolated embedding',()=>{
+  if (!fs.existsSync('pages-dist/index.html')) return;
+  const raw=fs.readFileSync('pages-dist/index.mt.html');
+  assert.deepEqual(raw,fs.readFileSync('dist/index.mt.html'));
+  assert.deepEqual(fs.readFileSync('pages-dist/index.html'),fs.readFileSync('dist/index.html'));
+  const html=raw.toString('utf8');
+  assert.ok(html.includes('const RUNTIME_VARIANT = "multi-thread";'));
+  assert.ok(html.includes("connect-src 'none'"));
+  assert.ok(!html.includes('coi-serviceworker.js'));
+  assert.ok(!html.includes('window.coi'));
 });
