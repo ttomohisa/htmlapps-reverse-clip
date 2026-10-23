@@ -543,7 +543,10 @@
       .rc-save button{width:100%;min-height:44px}
       .rc-actions .button{width:100%}
     }
-  </style>
+    @media (max-width: 600px) { body > footer { display: none; } }
+    #helpDialog .help-build { margin-top:20px; padding-top:12px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
+    #helpDialog .help-build .build-grid { grid-template-columns:minmax(0,1fr); }
+</style>
 </head>
 <body>
   <header class="app-header">
@@ -679,17 +682,7 @@
 </section>
 <!-- APP:END -->
 
-    <section class="shell section">
-      <details>
-        <summary data-i18n="buildInfo">Build information</summary>
-        <div class="build-grid">
-          <div class="build-item"><span data-i18n="appVersion">App version</span><strong id="buildVersion">—</strong></div>
-          <div class="build-item"><span data-i18n="builtAt">Built at</span><strong id="builtAt">—</strong></div>
-          <div class="build-item"><span data-i18n="dependencies">Embedded dependencies</span><strong id="dependencyCount">0</strong></div>
-          <div class="build-item"><span data-i18n="runtimeThreading">処理方式</span><strong id="runtimeModeLabel">ST</strong></div>
-        </div>
-      </details>
-    </section>
+    
   </main>
 
   <footer><span id="footerName">Reverse Clip</span> · <span data-i18n="footerLicense">アプリ MIT / FFmpeg・x264 GPL</span></footer>
@@ -741,6 +734,15 @@
   </ul>
   <p id="helpOffline" class="dialog-note" data-i18n="helpOffline">単一HTMLはローカルで開けます。動画のアップロードは不要です。</p>
 <!-- APP:HELP:END -->
+      <section class="help-build"><details>
+        <summary data-i18n="buildInfo">Build information</summary>
+        <div class="build-grid">
+          <div class="build-item"><span data-i18n="appVersion">App version</span><strong id="buildVersion">—</strong></div>
+          <div class="build-item"><span data-i18n="builtAt">Built at</span><strong id="builtAt">—</strong></div>
+          <div class="build-item"><span data-i18n="dependencies">Embedded dependencies</span><strong id="dependencyCount">0</strong></div>
+          <div class="build-item"><span data-i18n="runtimeThreading">処理方式</span><strong id="runtimeModeLabel">ST</strong></div>
+        </div>
+      </details></section>
     </div>
   </dialog>
 
@@ -2606,6 +2608,7 @@
       helpDialog.addEventListener('cancel',unlockHelpBackground);
       helpDialog.addEventListener('close',unlockHelpBackground);
       helpDialog.addEventListener('click',event=>{
+        if (event.target !== event.currentTarget) return;
         const rect=helpDialog.getBoundingClientRect();
         if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)closeHelpDialog();
       });
