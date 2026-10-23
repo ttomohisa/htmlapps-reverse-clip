@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Publish the latest raw MT build at Pages `/index.mt.html` for header-isolated hosts such as Browser Kitty, byte-identical to `dist/index.mt.html` and without the Pages Service Worker bootstrap. Preserve the ST root, `/mt/` fallback, runtime pins, and release assets.
+
 - Hide only the informational footer at the existing 600px phone workflow boundary. Keep functional navigation and the canonical local-processing badge. Move the existing build disclosure, including its fixed ST/MT build variant label, intact to final Help content; preserve metadata access and modal scroll locking.
 - Versions, runtime binaries, security policy and fixed release assets are unchanged. This source change does not update the Browser Kitty v1.0.0 release pin.
 

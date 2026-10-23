@@ -52,8 +52,9 @@ $bootstrap = @'
 if (Test-Path $pages) { Remove-Item $pages -Recurse -Force }
 New-Item -ItemType Directory -Force $mtDir | Out-Null
 Copy-Item -LiteralPath $stPath -Destination (Join-Path $pages 'index.html')
+Copy-Item -LiteralPath $mtPath -Destination (Join-Path $pages 'index.mt.html')
 Copy-Item -LiteralPath $swPath -Destination (Join-Path $mtDir 'coi-serviceworker.js')
 $mtPages = $mt.Replace('</head>', $bootstrap + [Environment]::NewLine + '</head>')
 [IO.File]::WriteAllText((Join-Path $mtDir 'index.html'), $mtPages, (New-Object Text.UTF8Encoding($false)))
 [IO.File]::WriteAllText((Join-Path $pages '.nojekyll'), '', (New-Object Text.UTF8Encoding($false)))
-Write-Host '[OK] Pages root = ST; /mt/ = MT with pinned same-origin COI fallback.'
+Write-Host '[OK] Pages root = ST; /mt/ = MT with COI fallback; /index.mt.html = raw MT for header-isolated hosts.'

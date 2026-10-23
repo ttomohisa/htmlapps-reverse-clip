@@ -1,5 +1,11 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
+## Latest raw MT distribution for header-isolated hosts
+
+- Publish `pages-dist/index.mt.html` as a byte-identical copy of `dist/index.mt.html` so Browser Kitty can import the latest deployed main build without the Pages Service Worker bootstrap.
+- Preserve the ST Pages root and the Service Worker-isolated `/mt/` route. The raw MT file is for hosts supplying cross-origin isolation headers, not direct use on GitHub Pages or `file://`; the existing MT readiness guard remains unchanged.
+- Do not change app/runtime versions, pinned binaries, release assets, CSP, or runtime behavior. Browser Kitty's importer configuration is maintained separately.
+
 ## Phone footer and final Help metadata
 
 - Hide only the informational footer at the existing 600px phone workflow boundary. Keep functional navigation and the canonical local-processing badge. Move the existing build disclosure, including its fixed ST/MT build variant label, intact to final Help content; preserve metadata access and modal scroll locking.
