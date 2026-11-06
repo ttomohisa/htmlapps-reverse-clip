@@ -70,6 +70,6 @@ test('approved status with invalid GPL sidecar hash rejects before network',()=>
   const candidate=releaseCandidate('github-release-st-mt','release-approved');
   candidate.supplementalNoticeSha256='invalid';
   assertRejectedBeforeNetwork(candidate,
-    /Invalid pinned Builder Release version, profile tag, hashes, GPL notice or source metadata/
+    /Invalid pinned Builder Release version, profile tag, hashes, GPL notice\s+(?:\|\s*)?or source metadata/
   );
 });

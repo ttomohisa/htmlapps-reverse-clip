@@ -63,7 +63,7 @@ def main():
                 page.locator("#rangeEnd").fill("1")
                 page.locator("#rangeEnd").dispatch_event("change")
                 page.locator("#qualityInput").select_option("360")
-                page.locator("#modeInput").select_option("reverse")
+                page.locator("#modeReverseButton").click()
                 assert page.locator("#reverseButton").is_enabled(), page.locator("#rangeNotice").inner_text()
                 page.locator("#reverseButton").click()
                 page.wait_for_function("""() =>

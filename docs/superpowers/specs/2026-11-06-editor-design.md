@@ -1,0 +1,5 @@
+# Reverse Clip 1.1 editor improvements
+
+Implement all improvements approved in the conversation: thumbnail timeline and boundary seeking, current-position start/end buttons, focused timeline zoom, explicit playback mode cards, actual output dimensions and maximum duration, looping and native file sharing, low-resolution draft rendering, optional 30fps and honest pre-import limitations.
+
+Keep the single source HTML, pinned ST/MT runtimes, restrictive CSP, source-generation cancellation, mobile workflow and JA/EN. No Browser Kitty main-site changes or release publication. 15fps remains default. 30fps is experimental, limited to long-edge 720px and five source seconds; reject incompatible settings without silently changing them. Draft uses the full selected interval at <=360px/15fps without audio and is clearly identified; saving/sharing requires a full render. Sharing only invokes the OS sheet upon a user click, with a supported File. Thumbnail decoding is sequential, bounded to eight small images, cancellable, and cannot invalidate media readiness on failure.

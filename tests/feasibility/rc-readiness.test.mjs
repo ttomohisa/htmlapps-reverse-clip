@@ -7,7 +7,7 @@ const config=JSON.parse(read('app.config.json'));
 const lock=JSON.parse(read('reverse-runtime.lock.json'));
 const rc=read('docs/release/RC_CHECKLIST.md');
 test('v1.0 candidate is labeled in HTML but has no signed-off app Release',()=>{
-  assert.equal(config.version,'1.0.0');
+  assert.equal(config.version,'1.1.0');
   assert.match(config.description,/forward-and-back MP4.*browser/);
   assert.match(config.descriptionJa,/動画はブラウザ内で処理します/);
   assert.doesNotMatch(config.description,/G2|G3|RC PREPARATION|not released/);
@@ -73,7 +73,8 @@ test('reducing stress does not weaken input memory, privacy or stale-result safe
 
 test('actual JA/EN desktop and mobile screenshots match the reviewed CI manifest',()=>{
   const evidence=JSON.parse(read('docs/release/RC_SCREENSHOT_ASSET_MANIFEST.json'));
-  assert.equal(evidence.artifact_run_id,38944766865);
+  assert.match(evidence.evidence.app,/v1\.1\.0 editor/);
+  assert.match(evidence.capture_command,/editor-screenshots\.py/);
   assert.equal(evidence.evidence.runtime,'single-thread Chrome (not Android/iPhone QA)');
   const cases=[
     ['reverse-clip-desktop-ja.png','assets/screenshot.png',1360,900,'README.ja.md'],
