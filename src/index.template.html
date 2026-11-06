@@ -481,6 +481,21 @@
     .rc-trim-sliders input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;touch-action:none;width:24px;height:36px;margin-top:4px;border:3px solid #fff;border-radius:10px;background:var(--accent);box-shadow:0 0 0 1px var(--line-strong),var(--shadow-sm);cursor:ew-resize}
     .rc-trim-sliders input[type=range]::-moz-range-thumb{pointer-events:auto;touch-action:none;width:24px;height:36px;border:3px solid #fff;border-radius:10px;background:var(--accent);box-shadow:0 0 0 1px var(--line-strong),var(--shadow-sm);cursor:ew-resize}
     .rc-trim .button{min-height:44px}
+    .rc-filmstrip{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));height:56px;overflow:hidden;border-radius:8px;background:var(--line);margin-top:10px}
+    .rc-filmstrip:empty{display:flex;align-items:center;justify-content:center}
+    .rc-filmstrip:empty::before{content:attr(data-placeholder);font-size:12px;color:var(--muted)}
+    .rc-filmstrip img{width:100%;height:56px;object-fit:cover}
+    .rc-timeline-window{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+    .rc-grid label[hidden]{display:none!important}
+    .rc-mode-choices{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+    .rc-mode-choices button{text-align:left;white-space:normal;min-height:72px;display:grid;gap:3px}
+    .rc-mode-choices button span{font-size:12px;font-weight:400}
+    .rc-mode-choices button[aria-pressed=true]{border:2px solid var(--accent);background:var(--accent-soft);color:var(--accent)}
+    .rc-output-summary{padding:10px 12px;background:var(--accent-soft);border-radius:8px;font-size:13px}
+    .rc-loop{display:flex;gap:8px;align-items:center;min-height:44px;font-weight:600}
+    .rc-loop input{width:20px;height:20px;accent-color:var(--accent)}
+    .rc-range-fields{grid-template-columns:1fr 1fr!important}
+    @media(max-width:600px){.rc-facts{display:flex;flex-wrap:wrap;gap:6px}.rc-facts div{padding:7px 9px;flex:1 1 28%}.rc-facts div:first-child{flex-basis:100%}.rc-trim{padding:10px}.rc-trim-actions{gap:6px}.rc-trim-actions .button{flex:1 1 auto;padding:8px;font-size:13px}.rc-mode-choices{margin:10px 0}}
     .rc-trim-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:7px}
     .rc-source-status{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
     .rc-source-status .rc-status{flex:1 1 180px}
@@ -619,12 +634,23 @@
         <strong id="trimTitle" data-i18n="trimTitle">逆再生する区間</strong>
         <output id="trimSummary" aria-live="off">0.0–1.0 秒</output>
       </div>
+      <div class="rc-trim-actions">
+        <button class="button" id="markStartButton" type="button" data-i18n="markStart" disabled>今の位置を開始に</button>
+        <button class="button" id="markEndButton" type="button" data-i18n="markEnd" disabled>今の位置を終了に</button>
+        <button class="button" id="timelineZoomButton" type="button" aria-pressed="false" data-i18n="zoomTimeline" disabled>選択付近を拡大</button>
+      </div>
+      <div id="timelineFilmstrip" class="rc-filmstrip" aria-hidden="true"></div>
       <div class="rc-trim-sliders">
         <div class="rc-trim-track" aria-hidden="true"><div class="rc-trim-selection" id="trimSelectedTrack"></div></div>
         <input id="trimStartSlider" type="range" min="0" max="1" step="0.1" value="0" disabled aria-label="開始ハンドル" data-i18n-aria-label="trimStartLabel" aria-describedby="rangeNotice">
         <input id="trimEndSlider" type="range" min="0" max="1" step="0.1" value="1" disabled aria-label="終了ハンドル" data-i18n-aria-label="trimEndLabel" aria-describedby="rangeNotice">
       </div>
+      <div class="rc-timeline-window"><span id="timelineWindowStart">0.0 s</span><span id="timelineWindowEnd">0.0 s</span></div>
       <div class="rc-trim-labels"><label for="trimStartSlider" data-i18n="trimStartLabel">開始ハンドル</label><label for="trimEndSlider" data-i18n="trimEndLabel">終了ハンドル</label></div>
+      <div class="rc-grid rc-range-fields">
+      <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
+      <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
+      </div>
       <div class="rc-trim-actions">
         <button class="button" id="previewSelectionButton" type="button" disabled data-i18n="previewSelectionButton">選択範囲を再生</button>
         <span class="rc-hint" id="trimPreviewNotice" role="status" aria-live="polite"></span>
@@ -638,16 +664,20 @@
     </div>
     <details id="sourceCompatibilityDetails" class="rc-advanced">
       <summary data-i18n="sourceCompatibilitySummary">素材・色についての注意</summary>
-      <p class="rc-hint" data-i18n="sourceCompatibilityBody">HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsで、元のフレームレートは維持しません。</p>
+      <p class="rc-hint" data-i18n="sourceCompatibilityBody">HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsが既定で、30fpsも条件付きで選べます。元のフレームレートの自動維持はしません。</p>
       <p class="rc-hint" data-i18n="sourceAudioSelectionNote">複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。</p>
     </details>
+    <div class="rc-mode-choices" role="group" data-i18n-aria-label="modeLabel" aria-label="作成モード">
+      <button id="modeReverseButton" class="button" type="button" aria-pressed="true" disabled><strong data-i18n="modeReverse">逆再生</strong><span data-i18n="modeReverseHint">終わりから始めへ</span></button>
+      <button id="modePingpongButton" class="button" type="button" aria-pressed="false" disabled><strong data-i18n="modePingpong">往復再生</strong><span data-i18n="modePingpongHint">通常再生 → 逆再生</span></button>
+    </div>
     <div class="rc-grid">
-      <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
-      <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
-      <label><span data-i18n="modeLabel">作成モード</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option id="pingpongOption" value="pingpong" data-i18n="modePingpong" disabled>往復再生</option></select></label>
+      <label hidden><span data-i18n="modeLabel">作成モード</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option id="pingpongOption" value="pingpong" data-i18n="modePingpong" disabled>往復再生</option></select></label>
       <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option><option value="1280" data-i18n="qualityHdPilot">標準720p級（試験）</option><option value="1920" data-i18n="qualityFullHdPilot">高画質1080p級（試験）</option></select></label>
+      <label><span data-i18n="fpsLabel">なめらかさ</span><select id="fpsInput" disabled><option value="15" data-i18n="fps15">15fps（標準）</option><option value="30" data-i18n="fps30">30fps（試験・最大5秒）</option></select></label>
       <label><span data-i18n="audioModeLabel">音声</span><select id="audioInput" disabled><option value="none" data-i18n="audioNone">音声なし（既定）</option><option id="audioReverseOption" value="reverse" data-i18n="audioReverseOption" disabled>音声も逆再生（準備中）</option></select></label>
     </div>
+    <p id="outputSummary" class="rc-output-summary" role="status"></p>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
     <p id="memoryEstimate" class="rc-hint"></p>
     <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声トラックを確認しています。音声なしでもMP4を作成できます。</p>
@@ -658,23 +688,28 @@
     <p id="reverseDescription" data-i18n="reverseDescription" class="rc-hint">15fps・音声なしが既定。対応動画では音声も逆再生できます。最大10秒（1080p級は5秒）。</p>
     <p id="reverseStatus" class="rc-status" role="status" aria-live="polite"></p>
     <div class="rc-actions">
+      <button id="draftButton" class="button" type="button" disabled data-i18n="draftButton">仕上がりを試す</button>
       <button id="reverseButton" class="button primary" type="button" disabled data-i18n="reverseButton">逆再生MP4を作成</button>
       <button id="cancelReverseButton" class="button" type="button" hidden data-i18n="cancelReverse">処理を中止</button>
     </div>
     <progress id="reverseProgress" max="100" value="0" hidden data-i18n-aria-label="conversionProgressLabel" aria-label="MP4変換の進行状況"></progress>
     <details id="reverseErrorDetails" hidden><summary data-i18n="errorDetailTitle">エラー詳細</summary><pre id="reverseErrorDetail" class="rc-report"></pre></details>
         <div id="resultArea" hidden>
+      <p id="draftNotice" class="rc-output-summary" hidden data-i18n="draftNotice">試作：長辺360px以下・15fps・音声なし。保存するには通常のMP4を作成してください。</p>
       <h4 id="resultTitle" data-i18n="resultTitle">逆再生の結果</h4>
       <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="逆再生MP4のプレビュー"></video>
+      <label class="rc-loop"><input id="loopResultInput" type="checkbox"><span data-i18n="loopResult">繰り返し再生</span></label>
       <p id="resultInfo" class="rc-hint"></p>
       <p id="resultDimensions" class="rc-hint"></p>
-      <div class="rc-save">
+      <div class="rc-save" id="resultSaveControls">
         <label class="export-field" for="reverseFilename">
           <span class="export-label" data-i18n="reverseFilenameLabel">保存するMP4の名前</span>
           <span class="filename-control"><input class="filename-input" id="reverseFilename" type="text" maxlength="120" autocomplete="off" spellcheck="false"><span class="filename-extension" aria-hidden="true">.mp4</span></span>
         </label>
         <button class="button primary" id="saveReverseButton" type="button" data-i18n="saveReverse">MP4を保存</button>
       </div>
+      <button id="shareResultButton" class="button" type="button" hidden disabled data-i18n="shareResult">動画を共有</button>
+      <button id="createFinalButton" class="button primary" type="button" hidden data-i18n="createFinal">この設定でMP4を作成</button>
       <p id="flowSaveHint" class="rc-hint" role="status" hidden data-i18n="flowSaveHint">MP4のダウンロードを開始しました。見つからない場合は、ブラウザーのダウンロードを確認するか、もう一度「MP4を保存」を押してください。</p>
       <button id="flowBackToEditButton" class="button rc-mobile-only" type="button" data-i18n="flowBackEdit">区間・設定を変更する</button>
     </div>
@@ -723,6 +758,7 @@
   <li data-i18n="helpStep2">元動画をプレビューして、開始・終了秒を設定します。</li>
   <li data-i18n="helpStep3">再生モード・画質・対応する場合は音声を選んでMP4を作成し、結果を確認して保存します。</li>
   </ol>
+  <p data-i18n="editorHelp"></p>
   <h3 data-i18n="helpPrivacyTitle">プライバシー</h3>
   <p data-i18n="helpPrivacyBody">動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。</p>
   <h3 data-i18n="helpNotesTitle">制限と注意</h3>
@@ -868,6 +904,30 @@
     "sourceVideoLabel": "元動画のプレビュー",
     "resultReverseVideoLabel": "逆再生MP4のプレビュー",
     "resultPingpongVideoLabel": "往復再生MP4のプレビュー",
+    "editorHelp": "映像を一時停止して「今の位置を開始／終了に」で区間を指定できます。選択付近の拡大、ハンドルでの調整、元動画の範囲再生も使えます。「仕上がりを試す」は低解像度・15fps・音声なしの試作です。30fpsは長辺720px以下・選択区間5秒までの試験設定です。完成結果は繰り返し確認でき、対応端末では共有先を選べます。共有は利用者の操作時のみ行います。",
+    "thumbnailLoading": "サムネイルを準備中…",
+    "thumbnailUnavailableShort": "サムネイルなし",
+    "markStart": "今の位置を開始に",
+    "markEnd": "今の位置を終了に",
+    "zoomTimeline": "選択付近を拡大",
+    "zoomTimelineOff": "動画全体を表示",
+    "modeReverseHint": "終わりから始めへ",
+    "modePingpongHint": "通常再生 → 逆再生",
+    "fpsLabel": "なめらかさ",
+    "fps15": "15fps（標準）",
+    "fps30": "30fps（試験・最大5秒）",
+    "fpsLimit": "30fpsは長辺720px以下・選択区間5秒までです。画質・区間・なめらかさを変更してください。",
+    "outputSummary": "出力予定：{width} × {height}px・{fps}fps ／ 選択区間は最大{max}秒",
+    "boundaryInvalid": "開始と終了の間は0.5秒以上必要です。反対側の位置を調整してから指定してください。",
+    "draftButton": "仕上がりを試す",
+    "draftNotice": "試作：長辺360px以下・15fps・音声なし。保存するには通常のMP4を作成してください。",
+    "draftSuccess": "試作ができました。動きを確認し、保存用のMP4を作成してください。",
+    "createFinal": "この設定でMP4を作成",
+    "loopResult": "繰り返し再生",
+    "shareResult": "動画を共有",
+    "shareFailed": "共有できませんでした。「MP4を保存」をお試しください。",
+    "shareSuccess": "共有先への受け渡しを依頼しました。",
+    "thumbnailUnavailable": "サムネイルを表示できません。映像と範囲ハンドルで区間を指定できます。",
     "conversionProgressLabel": "MP4変換の進行状況",
     "flowNavigation": "作業の進行",
     "flowVideo": "動画",
@@ -890,7 +950,7 @@
     "workspaceTitle": "動画を読み込む",
     "workspaceBody": "ブラウザー内でプレビューして短い範囲を選びます。",
     "dropTitle": "動画を選ぶか撮影する",
-    "dropHint": "MP4 / MOV・上限1GiB・動画は送信しません",
+    "dropHint": "MP4 / MOV・上限1GiB・H.264 MP4推奨。短い区間向け（通常15fps）。動画は送信しません",
     "pick": "動画を選ぶ",
     "capture": "撮影して取り込む",
     "nothingSelected": "動画がまだ選択されていません。",
@@ -907,7 +967,7 @@
     "cantRead": "動画をプレビューできません。対応していない形式か破損している可能性があります。",
     "sourceTooShort": "動画が0.5秒未満のため変換できません。0.5秒以上のMP4またはMOVを選んでください。",
     "sourceCompatibilitySummary": "素材・色についての注意",
-    "sourceCompatibilityBody": "HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsで、元のフレームレートは維持しません。",
+    "sourceCompatibilityBody": "HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsが既定で、30fpsも条件付きで選べます。元のフレームレートの自動維持はしません。",
     "sourceAudioSelectionNote": "複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。",
     "fileName": "ファイル名",
     "sourceDuration": "長さ",
@@ -918,7 +978,7 @@
     "trimEndLabel": "終了ハンドル",
     "trimSummary": "{start}～{end} 秒（{duration} 秒）",
     "trimInvalidSummary": "開始・終了の時刻を確認してください",
-    "previewSelectionButton": "選択範囲を再生",
+    "previewSelectionButton": "元動画の選択範囲を再生",
     "trimPreviewPlaying": "元動画の選択区間を再生中",
     "previewSelectionFailed": "元動画の選択区間を再生できませんでした。",
     "rangeStartLabel": "開始（秒）",
@@ -928,7 +988,7 @@
     "audioReverseOption": "音声も逆再生",
     "audioPreparingNotice": "音声トラックを確認しています。音声なしでもMP4を作成できます。",
     "audioCheckingLater": "選択動画の音声トラックを確認しています。",
-    "audioPresent": "元動画に音声トラックがあります。音声付き出力の検証中です。",
+    "audioPresent": "対応する音声トラックが見つかりました。音声も逆再生できます。",
     "audioAbsent": "この動画に音声はありません。音声なしのMP4を作成します。",
     "audioUnavailable": "音声付き出力は、この動画と実行環境でまだ利用できません。",
     "audioUnknown": "音声トラックを確認できません。動画を端末に保存し直すか、音声なしで保存してください。",
@@ -943,8 +1003,8 @@
     "qualityLabel": "出力画質",
     "qualityStandard": "長辺360px",
     "qualityHigh": "長辺720px",
-    "qualityHdPilot": "標準720p級（最大10秒・試験）",
-    "qualityFullHdPilot": "高画質1080p級（最大5秒・試験）",
+    "qualityHdPilot": "最大1280 × 720px（試験）",
+    "qualityFullHdPilot": "最大1920 × 1080px（試験）",
     "rangeHdPilotWarning": "720p級（短辺最大720px・長辺最大1280px、最大10秒）の試験設定です。実機の安定性は未確認です。",
     "rangeFullHdPilotWarning": "1080p級（短辺最大1080px・長辺最大1920px、最大5秒）の試験設定です。実機メモリ負荷は未検証です。",
     "rangeHdPilotTooLong": "720p級は最大10秒です。",
@@ -983,7 +1043,7 @@
     "saveReverse": "MP4を保存",
     "errorDetailTitle": "エラー詳細",
     "resultTitle": "逆再生の結果",
-    "reverseReady": "0.5〜10秒の範囲を指定してください。",
+    "reverseReady": "この設定でMP4を作成できます。",
     "reverseRunning": "逆再生中… {progress}%",
     "reverseLoading": "変換の準備中…",
     "reverseInvalid": "範囲・画質を確認してください。",
@@ -1001,12 +1061,12 @@
     "reverseMemoryLimit": "この動画は大きいため、読み込み方法を切り替えられません。64MiB以下の動画を端末に保存して選び直してください。",
     "rangePlan": "{count}区間に分けて逆再生します。出力予定 {duration}秒。",
     "pingpongRangePlan": "通常再生→逆再生の{count}区間。出力予定 {duration}秒。折り返し・ループ境界の重複フレームを除きます。",
-    "rangeSnapNote": "15fpsのフレーム境界に合わせるため、選択時刻から最大約0.03秒ずれます。",
+    "rangeSnapNote": "出力フレームの境界に合わせるため、選択時刻から最大約0.03秒ずれます。",
     "reverseChunk": "区間 {current}/{total} を逆再生中… {progress}%",
     "pingpongForwardChunk": "往路の区間 {current}/{total} を処理中… {progress}%",
     "pingpongReturnChunk": "復路の区間 {current}/{total} を処理中… {progress}%",
     "pingpongTitle": "往復再生のMP4を作る",
-    "pingpongDescription": "選択区間を通常再生→逆再生で1本のMP4にします。折り返しの重複フレームを除きます。15fps・音声選択可（対応動画のみ）。",
+    "pingpongDescription": "選択区間を通常再生→逆再生で1本のMP4にします。折り返しの重複フレームを除きます。15fps／30fps・音声選択可（対応動画のみ）。",
     "pingpongResultTitle": "往復再生の結果",
     "createPingpong": "往復再生MP4を作成",
     "pingpongSuccess": "往復再生MP4を作成しました。結果を確認して保存できます。",
@@ -1028,6 +1088,30 @@
     "sourceVideoLabel": "Source video preview",
     "resultReverseVideoLabel": "Reversed MP4 preview",
     "resultPingpongVideoLabel": "Ping-pong MP4 preview",
+    "editorHelp": "Pause the video and use Set start/end here, zoom around the selection, or drag a range handle. Play source selection previews the original video. Try a draft renders the selected interval at low resolution, 15fps and without audio. Experimental 30fps requires a long edge up to 720px and a selection up to 5 seconds. Loop the result to check the join. On supported devices, Share video opens the system share sheet only when you request it.",
+    "thumbnailLoading": "Preparing thumbnails…",
+    "thumbnailUnavailableShort": "No thumbnails",
+    "markStart": "Set start here",
+    "markEnd": "Set end here",
+    "zoomTimeline": "Zoom to selection",
+    "zoomTimelineOff": "Show entire video",
+    "modeReverseHint": "End to beginning",
+    "modePingpongHint": "Forward → backward",
+    "fpsLabel": "Frame rate",
+    "fps15": "15fps (standard)",
+    "fps30": "30fps (experimental; up to 5s)",
+    "fpsLimit": "30fps requires long edge ≤720px and a selection up to 5 seconds. Change quality, range or frame rate.",
+    "outputSummary": "Planned output: {width} × {height}px · {fps}fps / selection up to {max}s",
+    "boundaryInvalid": "Start and end must be at least 0.5 seconds apart. Adjust the other boundary first.",
+    "draftButton": "Try a draft",
+    "draftNotice": "Draft: up to 360px long edge, 15fps, no audio. Create a full MP4 to save or share.",
+    "draftSuccess": "Draft ready. Check the motion, then create your full MP4.",
+    "createFinal": "Create MP4 with these settings",
+    "loopResult": "Loop playback",
+    "shareResult": "Share video",
+    "shareFailed": "Could not share the video. Try “Save MP4” instead.",
+    "shareSuccess": "Requested handoff to the selected app.",
+    "thumbnailUnavailable": "Thumbnails unavailable. Use the video and range handles to select a segment.",
     "conversionProgressLabel": "MP4 conversion progress",
     "flowNavigation": "Video editing steps",
     "flowVideo": "Video",
@@ -1050,7 +1134,7 @@
     "workspaceTitle": "Load a video",
     "workspaceBody": "Preview locally and select a short section.",
     "dropTitle": "Choose or record a video",
-    "dropHint": "MP4 / MOV · 1 GiB maximum · no upload",
+    "dropHint": "MP4 / MOV · up to 1 GiB · H.264 MP4 recommended. Short selections; 15fps by default. No upload.",
     "pick": "Choose video",
     "capture": "Record video",
     "nothingSelected": "No video selected.",
@@ -1067,7 +1151,7 @@
     "cantRead": "This video cannot be previewed. The format may be unsupported or the file damaged.",
     "sourceTooShort": "This video is shorter than 0.5 seconds. Choose an MP4 or MOV that is at least 0.5 seconds long.",
     "sourceCompatibilitySummary": "Source format and color limitations",
-    "sourceCompatibilityBody": "HDR/10-bit input is not automatically identified or color-preserved. Colors may change even if the source can be previewed. Output is 15fps and does not retain the source frame rate.",
+    "sourceCompatibilityBody": "HDR/10-bit input is not automatically identified or color-preserved. Colors may change even if the source can be previewed. Output defaults to 15fps, with a limited 30fps option. The source frame rate is not automatically retained.",
     "sourceAudioSelectionNote": "Multiple audio tracks cannot be selected. When audio is available, only a supported track can be processed.",
     "fileName": "File name",
     "sourceDuration": "Duration",
@@ -1078,7 +1162,7 @@
     "trimEndLabel": "End handle",
     "trimSummary": "{start}–{end}s ({duration}s)",
     "trimInvalidSummary": "Check the start and end times",
-    "previewSelectionButton": "Play selected section",
+    "previewSelectionButton": "Play source selection",
     "trimPreviewPlaying": "Playing the selected source interval",
     "previewSelectionFailed": "Could not play the selected part of the source video.",
     "rangeStartLabel": "Start (seconds)",
@@ -1088,7 +1172,7 @@
     "audioReverseOption": "Reverse audio too",
     "audioPreparingNotice": "Checking the source audio track. You can also create a silent MP4.",
     "audioCheckingLater": "Checking this video's audio track.",
-    "audioPresent": "This video has an audio track. Audio export is under validation.",
+    "audioPresent": "A supported audio track was found. Its audio can also be reversed.",
     "audioAbsent": "This video has no audio; export will be silent.",
     "audioUnavailable": "Audio export is not yet available for this source and runtime.",
     "audioUnknown": "Could not inspect this video's audio track. Try a locally saved copy, or export without sound.",
@@ -1103,8 +1187,8 @@
     "qualityLabel": "Output quality",
     "qualityStandard": "Long edge 360px",
     "qualityHigh": "Long edge 720px",
-    "qualityHdPilot": "Standard 720p-class (up to 10s; pilot)",
-    "qualityFullHdPilot": "High 1080p-class (up to 5s; pilot)",
+    "qualityHdPilot": "Up to 1280 × 720px (experimental)",
+    "qualityFullHdPilot": "Up to 1920 × 1080px (experimental)",
     "rangeHdPilotWarning": "Experimental 720p-class (short edge max 720px, long edge max 1280px), up to 10 seconds; phone reliability unverified.",
     "rangeFullHdPilotWarning": "Experimental 1080p-class (short edge max 1080px, long edge max 1920px), up to 5 seconds; phone RAM use unverified.",
     "rangeHdPilotTooLong": "720p-class is limited to 10 seconds.",
@@ -1143,7 +1227,7 @@
     "saveReverse": "Save MP4",
     "errorDetailTitle": "Error details",
     "resultTitle": "Reversed result",
-    "reverseReady": "Select between 0.5 and 10 seconds.",
+    "reverseReady": "Ready to create an MP4 with these settings.",
     "reverseRunning": "Reversing video… {progress}%",
     "reverseLoading": "Preparing conversion…",
     "reverseInvalid": "Check the selected time range and quality.",
@@ -1161,12 +1245,12 @@
     "reverseMemoryLimit": "This file is too large for safe in-memory fallback. Save a local video under 64 MiB and select it again.",
     "rangePlan": "Reversing {count} segments; expected output {duration}s.",
     "pingpongRangePlan": "{count} forward/return segments; expected output {duration}s. Duplicate turn and loop-end frames are excluded.",
-    "rangeSnapNote": "15fps output may shift selection boundaries by up to about 0.03s to align frames.",
+    "rangeSnapNote": "Selection boundaries may shift by up to about 0.03s to align output frames.",
     "reverseChunk": "Reversing segment {current}/{total}… {progress}%",
     "pingpongForwardChunk": "Processing forward segment {current}/{total}… {progress}%",
     "pingpongReturnChunk": "Processing return segment {current}/{total}… {progress}%",
     "pingpongTitle": "Create a ping-pong MP4",
-    "pingpongDescription": "Forward then backward in one MP4, without duplicate turning/loop frames. H.264 at 15fps; optional audio for supported sources.",
+    "pingpongDescription": "Forward then backward in one MP4, without duplicate turning/loop frames. H.264 at 15fps or 30fps; optional audio for supported sources.",
     "pingpongResultTitle": "Ping-pong result",
     "createPingpong": "Create ping-pong MP4",
     "pingpongSuccess": "Ping-pong MP4 created. Preview and save the result.",
@@ -1414,6 +1498,7 @@
         return true;
       }
       function releaseSource() {
+        resetTimeline();
         // Source-specific disclosures must not accidentally carry their
         // expanded state over to the next (potentially different) video.
         $('#sourceCompatibilityDetails').open=false;
@@ -1501,7 +1586,99 @@
           (globalThis.crossOriginIsolated === true &&
            typeof SharedArrayBuffer === 'function');
       }
-      const OUTPUT_FPS = 15;
+      const OUTPUT_FPS = 15; // Default; every job captures the selected rate.
+      function editorOutputPolicy(quality,fps,duration) {
+        const maxSeconds=fps===30 || quality===1920 ? 5 : 10;
+        return {maxSeconds,valid:[15,30].includes(fps) &&
+          (fps!==30 || quality<=720) && Number.isFinite(duration) && duration>=.5-1e-8 && duration<=maxSeconds+1e-8};
+      }
+      function timelineViewport(duration,start,end,zoom) {
+        if(!zoom || !Number.isFinite(start) || !Number.isFinite(end) || end<=start)
+          return {start:0,end:duration};
+        const span=Math.min(duration,Math.max(3,(end-start)*1.5));
+        const from=Math.max(0,Math.min(duration-span,(start+end-span)/2));
+        return {start:from,end:from+span};
+      }
+      function boundaryAtTime(which,time,start,end,duration) {
+        const value=Math.round(time*10)/10;
+        if(!Number.isFinite(value) || value<0 || value>duration) return null;
+        const next={start:which==='start'?value:start,end:which==='end'?value:end};
+        return next.end-next.start>=.5-1e-8 ? next : null;
+      }
+      // EDITOR POLICY END
+      function selectedFps(){return Number($('#fpsInput').value)||OUTPUT_FPS;}
+      let timelineZoom=false, timelineView=null, thumbnailKey='', thumbnailTimer=0, thumbnailEpoch=0, thumbnailDecoder=null, thumbnailAbort=null;
+      let resultBlob=null;
+      function stopThumbnails(){
+        thumbnailEpoch++; clearTimeout(thumbnailTimer);
+        thumbnailAbort?.abort();thumbnailAbort=null;
+        if(thumbnailDecoder){thumbnailDecoder.pause();thumbnailDecoder.removeAttribute('src');thumbnailDecoder.load();thumbnailDecoder=null;}
+      }
+      function resetTimeline(){
+        stopThumbnails(); timelineZoom=false; timelineView=null; thumbnailKey='';
+        $('#timelineFilmstrip').replaceChildren();
+        $('#timelineZoomButton').setAttribute('aria-pressed','false');
+      }
+      function activeTimelineViewport(){
+        const duration=sliderMaxTime(),start=Number($('#rangeStart').value),end=Number($('#rangeEnd').value);
+        if(!timelineZoom)return {start:0,end:duration};
+        // Keep the scale stationary while dragging. Recenter only when a
+        // numeric edit takes a boundary outside the current viewport.
+        if(!timelineView || start<timelineView.start || end>timelineView.end)
+          timelineView=timelineViewport(duration,start,end,true);
+        return timelineView;
+      }
+      function scheduleThumbnails(view){
+        const key=[state.generation,view.start.toFixed(2),view.end.toFixed(2)].join(':');
+        if(key===thumbnailKey)return;
+        stopThumbnails();thumbnailKey=key;
+        $('#timelineFilmstrip').replaceChildren();
+        $('#timelineFilmstrip').dataset.placeholder=translate('thumbnailLoading');
+        const epoch=thumbnailEpoch, generation=state.generation, url=state.url;
+        thumbnailTimer=setTimeout(()=>void renderThumbnails(view,epoch,generation,url),250);
+      }
+      async function renderThumbnails(view,epoch,generation,url){
+        const decoder=document.createElement('video');
+        const abort=new AbortController();thumbnailAbort=abort;
+        decoder.muted=true;decoder.playsInline=true;decoder.preload='auto';
+        thumbnailDecoder=decoder;
+        const current=()=>epoch===thumbnailEpoch && generation===state.generation && url===state.url;
+        function wait(event,action){
+          return new Promise((resolve,reject)=>{
+            const clean=()=>{clearTimeout(timer);decoder.removeEventListener(event,ok);decoder.removeEventListener('error',bad);abort.signal.removeEventListener('abort',bad);};
+            const ok=()=>{clean();resolve();},bad=()=>{clean();reject(new Error('Thumbnail unavailable'));};
+            const timer=setTimeout(bad,5000);
+            decoder.addEventListener(event,ok,{once:true});decoder.addEventListener('error',bad,{once:true});abort.signal.addEventListener('abort',bad,{once:true});
+            action();
+          });
+        }
+        try{
+          await wait('loadeddata',()=>{decoder.src=url;decoder.load();});
+          if(!current())return;
+          const canvas=document.createElement('canvas');canvas.width=128;canvas.height=72;
+          const context=canvas.getContext('2d');const images=[];
+          for(let i=0;i<8;i++){
+            if(!current())return;
+            const t=Math.min(decoder.duration-.01,view.start+(view.end-view.start)*(i+.5)/8);
+            await wait('seeked',()=>{decoder.currentTime=Math.max(0,t);});
+            if(!current())return;
+            context.fillStyle='#20211f';context.fillRect(0,0,128,72);
+            const scale=Math.min(128/decoder.videoWidth,72/decoder.videoHeight);
+            const w=decoder.videoWidth*scale,h=decoder.videoHeight*scale;
+            context.drawImage(decoder,(128-w)/2,(72-h)/2,w,h);
+            const img=document.createElement('img');img.alt='';img.src=canvas.toDataURL('image/jpeg',.65);images.push(img);
+          }
+          if(current())$('#timelineFilmstrip').replaceChildren(...images);
+        }catch(_){if(current()){$('#trimPreviewNotice').textContent=translate('thumbnailUnavailable');$('#timelineFilmstrip').dataset.placeholder=translate('thumbnailUnavailableShort');}}
+        finally{decoder.pause();decoder.removeAttribute('src');decoder.load();if(thumbnailDecoder===decoder)thumbnailDecoder=null;if(thumbnailAbort===abort)thumbnailAbort=null;}
+      }
+      function markBoundary(which){
+        if(!state.ready || conversionController)return;
+        const range=boundaryAtTime(which,video.currentTime,Number($('#rangeStart').value),Number($('#rangeEnd').value),video.duration);
+        if(!range){showToast(translate('boundaryInvalid'));return;}
+        $('#rangeStart').value=range.start.toFixed(1);$('#rangeEnd').value=range.end.toFixed(1);
+        onOutputSettingsEdited();
+      }
       // Estimate a <=48MiB YUV420 frame cache per chunk. This does not bound
       // decoder/FFmpeg graphs, WASM heap, or JS memory: G2 requires measurements.
       function chunkFrameLimit(width,height,fps=15) {
@@ -1622,9 +1799,10 @@
       function sliderMaxTime() { return Math.max(.5, Math.floor(video.duration * 10 + 1e-7) / 10); }
       function syncTrimControls() {
         if (!state.ready) return;
-        const maxTime = sliderMaxTime();
+        const view=activeTimelineViewport(), maxTime=view.end;
+        const minTime=view.start;
         const a=$('#trimStartSlider'), b=$('#trimEndSlider');
-        for (const control of [a,b]) { control.min='0'; control.max=String(maxTime); control.disabled=false; }
+        for (const control of [a,b]) { control.min=String(Math.floor(minTime*10)/10); control.max=String(maxTime); control.disabled=false; }
         const rawStart=$('#rangeStart').value.trim(), rawEnd=$('#rangeEnd').value.trim();
         const start=Number(rawStart), end=Number(rawEnd);
         const valid=Boolean(rawStart && rawEnd && Number.isFinite(start) && Number.isFinite(end) &&
@@ -1632,7 +1810,7 @@
         if (valid) {
           a.value=String(Math.max(0,Math.min(maxTime,roundTrim(start))));
           b.value=String(Math.max(0,Math.min(maxTime,roundTrim(end))));
-          const begin=Number(a.value) / maxTime * 100, finish=Number(b.value) / maxTime * 100;
+          const begin=(Number(a.value)-Number(a.min))/(maxTime-Number(a.min))*100, finish=(Number(b.value)-Number(b.min))/(maxTime-Number(b.min))*100;
           $('#trimSelectedTrack').style.left=begin+'%';
           $('#trimSelectedTrack').style.width=Math.max(0,finish-begin)+'%';
           a.setAttribute('aria-valuetext',start.toFixed(1)+' s');
@@ -1646,7 +1824,7 @@
       }
       function moveTrimHandle(which) {
         if (!state.ready) return;
-        const maxTime=sliderMaxTime(), maxSpan=$('#qualityInput').value==='1920'?5:MAX_CLIP_SECONDS;
+        const maxTime=sliderMaxTime(), maxSpan=selectedFps()===30?5:$('#qualityInput').value==='1920'?5:MAX_CLIP_SECONDS;
         const oldStart=Number($('#rangeStart').value), oldEnd=Number($('#rangeEnd').value);
         let start=Number.isFinite(oldStart)?roundTrim(oldStart):Number($('#trimStartSlider').value);
         let end=Number.isFinite(oldEnd)?roundTrim(oldEnd):Number($('#trimEndSlider').value);
@@ -1666,6 +1844,7 @@
         $('#trimPreviewNotice').textContent='';
         $('#rangeStart').value=start.toFixed(1);
         $('#rangeEnd').value=end.toFixed(1);
+        video.currentTime=Math.min(video.duration-.001,which==='start'?start:end);
         resetConversion();
         rangeInfo();
       }
@@ -1700,6 +1879,8 @@
         const rawStart = $('#rangeStart').value.trim(), rawEnd = $('#rangeEnd').value.trim();
         const start = Number(rawStart), end = Number(rawEnd), duration = end-start;
         const dims = outputDimensions();
+        const OUTPUT_FPS=selectedFps();
+        const policy=editorOutputPolicy(Number($('#qualityInput').value),OUTPUT_FPS,duration);
         const mode=$('#modeInput').value;
         const modeAvailable=mode==='reverse' || (mode==='pingpong' && PINGPONG_ENABLED);
         let plan = null;
@@ -1720,9 +1901,20 @@
           (AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent);
         const safe = Boolean(plan && mib <= 48 && dims.width <= 2048 &&
                              dims.height <= 2048 && !highTooLong &&
-                             modeAvailable && audioAvailable);
+                             modeAvailable && audioAvailable && policy.valid);
         state.validRange = safe;
         syncTrimControls();
+        const busy=Boolean(conversionController);
+        for(const id of ['markStartButton','markEndButton','timelineZoomButton','fpsInput','modeReverseButton'])$('#'+id).disabled=busy;
+        $('#modePingpongButton').disabled=busy || !PINGPONG_ENABLED;
+        $('#timelineZoomButton').setAttribute('aria-pressed',String(timelineZoom));
+        $('#timelineZoomButton').textContent=translate(timelineZoom?'zoomTimelineOff':'zoomTimeline');
+        const view=activeTimelineViewport();
+        $('#timelineWindowStart').textContent=view.start.toFixed(1)+' s';
+        $('#timelineWindowEnd').textContent=view.end.toFixed(1)+' s';
+        if(!busy)scheduleThumbnails(view);
+        $('#outputSummary').textContent=format('outputSummary',{...dims,fps:OUTPUT_FPS,max:policy.maxSeconds});
+        $('#draftButton').disabled=!safe || busy || !threadingReady() || state.inputTransport==='preparing' || state.inputTransport==='unreadable';
         $('#previewSelectionButton').disabled=!safe || Boolean(conversionController);
         if (safe) {
           $('#rangeNotice').textContent = format(mode==='pingpong'?'pingpongRangePlan':'rangePlan',{
@@ -1733,7 +1925,7 @@
                (standardHd ? ' '+translate('rangeHdPilotWarning') : '') +
                (fullHd ? ' '+translate('rangeFullHdPilotWarning') : '');
         } else {
-          const notice = highTooLong ? 'rangeFullHdPilotTooLong' :
+          const notice = OUTPUT_FPS===30 && !policy.valid ? 'fpsLimit' : highTooLong ? 'rangeFullHdPilotTooLong' :
                          !plan ? duration > MAX_CLIP_SECONDS ? 'rangeTooLong' : 'rangeInvalid'
                                : 'rangeMemoryHigh';
           $('#rangeNotice').textContent = translate(notice);
@@ -2022,6 +2214,10 @@
         const mode=$('#modeInput').value;
         const isPingpong=mode==='pingpong' && PINGPONG_ENABLED;
         $('#pingpongOption').disabled=!PINGPONG_ENABLED;
+        $('#modeReverseButton').setAttribute('aria-pressed',String(!isPingpong));
+        $('#modePingpongButton').setAttribute('aria-pressed',String(isPingpong));
+        $('#modeReverseButton').disabled=!state.ready || Boolean(conversionController);
+        $('#modePingpongButton').disabled=!state.ready || !PINGPONG_ENABLED || Boolean(conversionController);
         $('#reverseButton').textContent=translate(isPingpong?'createPingpong':'reverseButton');
         $('#reverseTitle').textContent=translate(isPingpong?'pingpongTitle':'reverseTitle');
         $('#reverseDescription').textContent=translate(isPingpong?'pingpongDescription':'reverseDescription');
@@ -2050,6 +2246,11 @@
       function renderResultDetails() {
         const result=state.conversion;
         if(!result?.ok)return;
+        $('#draftNotice').hidden=!result.draft;
+        $('#resultSaveControls').hidden=Boolean(result.draft);
+        $('#createFinalButton').hidden=!result.draft;
+        $('#shareResultButton').hidden=Boolean(result.draft) || !canShareResult();
+        $('#shareResultButton').disabled=Boolean(result.draft) || !resultBlob;
         const isPingpong=result.mode==='pingpong', withAudio=result.audio==='reverse';
         $('#resultTitle').textContent=translate(isPingpong?'pingpongResultTitle':'resultTitle');
         $('#resultVideo').setAttribute('aria-label',
@@ -2156,12 +2357,15 @@
         $('#flowSaveHint').hidden=true;
         $('#resultDimensions').textContent='';
         state.conversion=null;
+        resultBlob=null;
+        $('#shareResultButton').disabled=true;
+        $('#shareResultButton').hidden=true;
         conversionMessageKey=null;
         resultDownloadStarted=false;
         updateFlowNavigation();
         $('#reverseButton').disabled=!state.validRange||!state.ready;
       }
-      async function reverseShortClip() {
+      async function reverseShortClip({draft=false}={}) {
         if(conversionController)return; // never overlap two encoder jobs
         previewSelectionActive=false;
         video.pause();
@@ -2176,6 +2380,8 @@
         }
         const start=Number($('#rangeStart').value), end=Number($('#rangeEnd').value);
         const dims=outputDimensions();
+        const OUTPUT_FPS=draft?15:selectedFps();
+        if(draft){const scale=Math.min(1,360/Math.max(dims.width,dims.height));dims.width=Math.max(16,Math.floor(dims.width*scale/2)*2);dims.height=Math.max(16,Math.floor(dims.height*scale/2)*2);}
         if (!threadingReady()) {
           showToast(translate('mtUnavailable'));
           $('#reverseStatus').textContent=translate('mtUnavailable');
@@ -2189,7 +2395,7 @@
           !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
           showToast(translate('audioUnavailable'));return;
         }
-        const wantsAudio=$('#audioInput').value==='reverse';
+        const wantsAudio=!draft && $('#audioInput').value==='reverse';
         let plan;
         try { plan=planModeFrames(start,end,mode,OUTPUT_FPS,
                                   chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)); }
@@ -2201,7 +2407,9 @@
         const generation=state.generation, job=++conversionEpoch, file=state.file;
         const controller=new AbortController();
         conversionController=controller;
+        stopThumbnails();thumbnailKey='';
         updateFlowNavigation();
+        rangeInfo();
         $('#reverseButton').disabled=true;
         $('#cancelReverseButton').hidden=false;
         $('#reverseProgress').hidden=false;
@@ -2371,7 +2579,8 @@
           // Drop the returned WASM output buffer before media metadata awaits;
           // retaining both increases transient memory on constrained phones.
           const outputSize=bytes.byteLength;
-          resultUrl=URL.createObjectURL(new Blob([bytes],{type:'video/mp4'}));
+          resultBlob=new Blob([bytes],{type:'video/mp4'});
+          resultUrl=URL.createObjectURL(resultBlob);
           bytes=null;
           const resultVideo=$('#resultVideo');
           await new Promise((resolve,reject)=>{
@@ -2400,7 +2609,7 @@
             throw new Error('Joined MP4 duration differs from selection: '+duration+' / '+plan.expectedDuration);
           const elapsed=(performance.now()-started)/1000;
           state.conversion={
-            ok:true,elapsedSeconds:Number(elapsed.toFixed(2)),
+            ok:true,draft,elapsedSeconds:Number(elapsed.toFixed(2)),
             outputBytes:outputSize,outputDuration:duration,
             outputWidth:resultVideo.videoWidth,outputHeight:resultVideo.videoHeight,
             selectedStart:plan.selectedStart,selectedEnd:plan.selectedEnd,
@@ -2417,13 +2626,14 @@
           // actual browser preview have all been checked.
           if(flowStep==='edit')setFlowStep('result',{focus:true});
           else updateFlowNavigation();
-          conversionMessageKey=mode==='pingpong'?'pingpongSuccess':'reverseSuccess';
+          conversionMessageKey=draft?'draftSuccess':mode==='pingpong'?'pingpongSuccess':'reverseSuccess';
           const successText=translate(conversionMessageKey);
           $('#reverseStatus').textContent=successText;
           showToast(successText,{tone:'success'});
         }catch(error){
           if(job!==conversionEpoch)return;
           if(resultUrl){URL.revokeObjectURL(resultUrl);resultUrl=null;}
+          resultBlob=null;
           $('#resultVideo').pause();
           $('#resultVideo').removeAttribute('src');
           $('#resultVideo').load();
@@ -2498,7 +2708,7 @@
         }
       }
       function saveReverseResult() {
-        if(!resultUrl||!state.conversion?.ok)return;
+        if(!resultUrl||!state.conversion?.ok||state.conversion.draft)return;
         const a=document.createElement('a');
         a.href=resultUrl;
         a.download=normalizeMP4Filename();
@@ -2508,6 +2718,29 @@
         showToast(translate(state.conversion.mode==='pingpong'?'pingpongSaved':'reverseSaved'),{tone:'success'});
       }
 
+      function canShareResult(){
+        if(!resultBlob || typeof navigator.share!=='function' || typeof navigator.canShare!=='function')return false;
+        try{return navigator.canShare({files:[new File([resultBlob],'reverse-clip.mp4',{type:'video/mp4'})]});}catch(_){return false;}
+      }
+      async function shareReverseResult(){
+        if(!state.conversion?.ok || state.conversion.draft || !canShareResult())return;
+        const button=$('#shareResultButton'), generation=state.generation, epoch=conversionEpoch;
+        const file=new File([resultBlob],normalizeMP4Filename(),{type:'video/mp4'});
+        button.disabled=true;
+        try{await navigator.share({files:[file]});if(epoch===conversionEpoch && generation===state.generation)showToast(translate('shareSuccess'));}
+        catch(error){if(error.name!=='AbortError' && epoch===conversionEpoch)showToast(translate('shareFailed'));}
+        finally{if(epoch===conversionEpoch && generation===state.generation)button.disabled=false;}
+      }
+      $('#shareResultButton').addEventListener('click',shareReverseResult);
+      $('#loopResultInput').addEventListener('change',()=>{$('#resultVideo').loop=$('#loopResultInput').checked;});
+      $('#markStartButton').addEventListener('click',()=>markBoundary('start'));
+      $('#markEndButton').addEventListener('click',()=>markBoundary('end'));
+      $('#timelineZoomButton').addEventListener('click',()=>{timelineZoom=!timelineZoom;timelineView=null;rangeInfo();});
+      for(const [id,mode] of [['modeReverseButton','reverse'],['modePingpongButton','pingpong']])
+        $('#'+id).addEventListener('click',()=>{if(!state.ready || conversionController)return;$('#modeInput').value=mode;onConversionModeChanged();});
+      $('#fpsInput').addEventListener('change',onOutputSettingsEdited);
+      $('#draftButton').addEventListener('click',()=>void reverseShortClip({draft:true}));
+      $('#createFinalButton').addEventListener('click',()=>void reverseShortClip());
       // Navigation only reveals already-created state. Result remains
       // inaccessible until an actual MP4 Blob and metadata are available.
       for(const step of flowSteps){
@@ -2561,7 +2794,7 @@
       for(const [id,which] of [['trimStartSlider','start'],['trimEndSlider','end']])
         $('#'+id).addEventListener('input',()=>moveTrimHandle(which));
       $('#previewSelectionButton').addEventListener('click',previewSelectedSource);
-      $('#reverseButton').addEventListener('click',reverseShortClip);
+      $('#reverseButton').addEventListener('click',()=>void reverseShortClip());
       $('#cancelReverseButton').addEventListener('click',()=>{
         resetConversion();rangeInfo();
         conversionMessageKey='reverseCancelled';

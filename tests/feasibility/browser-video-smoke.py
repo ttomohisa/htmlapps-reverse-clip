@@ -118,7 +118,8 @@ def create_compat_sources(workdir):
                 "-f","lavfi","-i","testsrc2=size=160x90:rate=15:duration=1.2",
                 "-frames:v","18","-threads","1",
                 "-c:v","libx265","-preset","ultrafast",
-                "-x265-params","pools=none:frame-threads=1:log-level=error",
+                "-x265-params",("pools=none:frame-threads=1:log-level=error"+
+                 (":colorprim=bt2020:transfer=smpte2084:colormatrix=bt2020nc" if depth==10 else "")),
                 "-pix_fmt",pix,"-tag:v","hvc1"]
             if depth==10:
                 cmd+=["-color_primaries","bt2020","-color_trc","smpte2084",

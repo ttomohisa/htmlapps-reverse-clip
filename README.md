@@ -9,15 +9,25 @@
 
 Reverse a short video, or make it play forward and then backward (ping-pong), and save the result as an MP4. Everything runs in your browser without uploading the selected video. No account or installation is needed.
 
+
+## v1.1.0 editor improvements (in development)
+
+- Use an eight-thumbnail timeline, inspect boundary frames while dragging, or pause and choose **Set start/end here**.
+- Zoom around the selection for precise trimming in long sources; return to the entire video at any time.
+- Choose **Reverse** or **Ping-pong** with visible mode buttons, and inspect the actual output dimensions and maximum selection length.
+- 15fps remains the default. Experimental 30fps requires a long-edge preset up to 720px and a selection up to 5 seconds. The source frame rate is not automatically preserved.
+- **Try a draft** renders the whole selected interval at up to 360px long edge, 15fps, without audio. Drafts are for motion review; create a full MP4 to save or share.
+- Loop the result to inspect the join. On supported devices, **Share video** opens the OS share sheet only on request. You choose whether and where to hand off the video.
+
 ## Live demo
 
 ### [Open Reverse Clip on GitHub Pages](https://ttomohisa.github.io/htmlapps-reverse-clip/)
 
 The root page runs the **single-thread (ST)** version. An [isolated multi-thread (MT) page](https://ttomohisa.github.io/htmlapps-reverse-clip/mt/) is also available for supported browsers. The web page is downloaded normally, but the video you select is processed on your device.
 
-[![Reverse Clip showing a generated MP4 in desktop Chrome](assets/screenshot-en.png)](https://ttomohisa.github.io/htmlapps-reverse-clip/)
+[![Reverse Clip timeline editor in desktop Chromium](assets/screenshot-en.png)](https://ttomohisa.github.io/htmlapps-reverse-clip/)
 
-Desktop Chrome screenshot of an actual locally generated and verified MP4. This screenshot is **not physical Android device certification**. This screenshot was captured during v0.9.0 development; some controls have changed in v1.0.0.
+Actual v1.1.0 editor showing a locally generated sample video in Chromium. This screenshot is **not physical Android device certification**.
 
 ## Features
 
@@ -103,7 +113,7 @@ The build pins its FFmpeg WebAssembly files by SHA-256 and embeds them in the ou
 
 ## Privacy and offline behavior
 
-- Your selected video is not uploaded by the app. Decoding, reversal, preview and export run in the browser.
+- Normal conversion does not upload your selected video. Native sharing hands it to a destination only when you choose one. Decoding, reversal, preview and export run in the browser.
 - The generated HTML uses a restrictive Content Security Policy including `connect-src 'none'`; the runtime has no remote FFmpeg/CDN requirement.
 - The GitHub Pages version makes normal requests to load the page. Its MT path also loads a same-origin isolation helper; this does not upload the video.
 - Some Android file providers cannot be read directly by the Worker. For source files **up to 64 MiB**, the app may conditionally make a temporary copy **in device memory** to retry. This is not a server upload.
@@ -111,7 +121,7 @@ The build pins its FFmpeg WebAssembly files by SHA-256 and embeds them in the ou
 ## Limitations and compatibility
 
 - **H.264 MP4** is the main verified input. Windows Chrome and Android Chrome are the intended initial platforms. Desktop Chrome tests also cover selected H.264 MOV, frame-rate and rotation cases, but that does not guarantee every camera file works.
-- Output is **H.264 MP4 at 15 fps**. Source frame rate is not preserved, and selection boundaries can be adjusted slightly to frame boundaries.
+- Output is **H.264 MP4 at 15fps by default**, with experimental 30fps under the limits above. Source frame rate is not preserved, and selection boundaries can be adjusted slightly to frame boundaries.
 - The ordinary recommended range is about **0.5–5 seconds**. Up to 10 seconds is experimental; the 1080p-class option is limited to 5 seconds. Processing time and memory use vary by device.
 - **Silent output is the default.** Optional reversed audio is available only when the source audio can be read and processed; multiple audio-track selection is not supported.
 - HEVC/H.265, HDR/10-bit color fidelity and iPhone Safari are **not guaranteed or claimed supported**.

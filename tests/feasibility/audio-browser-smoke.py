@@ -177,7 +177,7 @@ def export(page,directory:Path,mode:str,with_audio:bool,
     page.locator("#rangeStart").dispatch_event("change")
     page.locator("#rangeEnd").fill(str(end))
     page.locator("#rangeEnd").dispatch_event("change")
-    page.locator("#modeInput").select_option(mode)
+    page.locator("#modePingpongButton" if mode=="pingpong" else "#modeReverseButton").click()
     if with_audio:
         page.locator("#audioInput").select_option("reverse")
     else:
@@ -348,7 +348,7 @@ def main():
 
                         # Invalidated output cannot be saved after a new job.
                         page.locator("#flowEditButton").click()
-                        page.locator("#modeInput").select_option("pingpong")
+                        page.locator("#modePingpongButton").click()
                         assert page.locator("#resultArea").is_hidden()
                         page.evaluate("""() => {
                           document.querySelector('#reverseButton').click();

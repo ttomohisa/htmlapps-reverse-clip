@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0] - Unreleased
+
+- Add bounded, cancellable local timeline thumbnails, boundary seeking, current-position marking and selection-focused zoom.
+- Show reverse/ping-pong mode buttons, actual output dimensions and applicable duration limits.
+- Add experimental 30fps output for <=720px long-edge presets and <=5-second selections, retaining 15fps default.
+- Render real low-resolution silent drafts without changing final output settings.
+- Add preview looping and supported-device native MP4 file sharing with sanitized names.
+- Clarify short-selection limits before file import and update Japanese/English help.
+
 ## Unreleased
 
 - Publish the latest raw MT build at Pages `/index.mt.html` for header-isolated hosts such as Browser Kitty, byte-identical to `dist/index.mt.html` and without the Pages Service Worker bootstrap. Preserve the ST root, `/mt/` fallback, runtime pins, and release assets.
