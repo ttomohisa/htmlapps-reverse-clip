@@ -95,7 +95,7 @@
       border-radius: 999px;
       color: var(--muted);
       background: var(--surface-muted);
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 650;
       vertical-align: 2px;
     }
@@ -184,13 +184,13 @@
       gap: 7px;
       flex: 0 0 auto;
       margin-top: 3px;
-      padding: 7px 10px;
-      border: 1px solid color-mix(in srgb, var(--accent) 24%, var(--line));
-      border-radius: 999px;
+      padding: 7px 0;
+      border: 0;
+      border-radius: 0;
       color: var(--accent);
-      background: var(--accent-soft);
+      background: transparent;
       font-size: 12px;
-      font-weight: 700;
+      font-weight: 500;
       white-space: nowrap;
     }
     .local-badge svg { width: 15px; height: 15px; display: block; }
@@ -348,6 +348,19 @@
       color: var(--text);
       cursor: pointer;
     }
+    .dialog-close {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      padding: 0;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      cursor: pointer;
+    }
+    .file-fallback-button { display: none; width: 100%; margin-top: 10px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    @media (max-width: 767px), (pointer: coarse) and (max-height: 600px) { .file-fallback-button { display: block; } }
     .app-confirm-close:hover { background: var(--surface-hover); }
     .app-confirm-close svg { width: 19px; height: 19px; }
     .app-confirm-body { padding: 18px; }
@@ -615,7 +628,7 @@
     <div class="button-row rc-center">
       <button class="button primary" type="button" id="pickButton" data-i18n="pick">動画を選ぶ</button>
       <button class="button" type="button" id="captureButton" data-i18n="capture">撮影して取り込む</button>
-    </div>
+    </div><button class="file-fallback-button" id="fileFallbackButton" type="button" data-i18n="fileFallback">ファイルから選択</button><input class="sr-only" id="fileFallbackInput" type="file">
     <input class="sr-only" id="sourceInput" type="file" accept="video/mp4,video/quicktime,.mp4,.m4v,.mov">
     <input class="sr-only" id="captureInput" type="file" accept="video/*" capture="environment">
   </div>
@@ -720,7 +733,7 @@
     
   </main>
 
-  <footer><span id="footerName">Reverse Clip</span> · <span data-i18n="footerLicense">アプリ MIT / FFmpeg・x264 GPL</span></footer>
+  <footer><span id="footerName">Reverse Clip</span> · <span data-i18n="footerLicense">アプリ MIT / FFmpeg・x264 GPL</span> · <span data-i18n="footerNote">動画の処理はブラウザー内で完結</span></footer>
   <div class="app-toast" id="appToast" role="status" aria-live="polite" aria-atomic="true" data-tone="default">
     <span class="app-toast-message" id="appToastMessage"></span>
     <button class="app-toast-action" id="appToastAction" type="button" hidden></button>
@@ -730,8 +743,8 @@
   <dialog class="app-confirm-dialog" id="appConfirmDialog" aria-labelledby="appConfirmTitle" aria-describedby="appConfirmMessage">
     <div class="app-confirm-header">
       <h2 class="app-confirm-title" id="appConfirmTitle">確認</h2>
-      <button class="app-confirm-close" id="appConfirmClose" type="button" data-i18n-aria-label="close" aria-label="閉じる">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      <button class="dialog-close" id="appConfirmClose" type="button" data-i18n-aria-label="close" aria-label="閉じる">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12"/><path d="M18 6 6 18"/></svg>
       </button>
     </div>
     <div class="app-confirm-body">
@@ -746,8 +759,8 @@
   <dialog id="helpDialog" aria-labelledby="helpTitle">
     <div class="dialog-header">
       <h2 id="helpTitle" data-i18n="helpTitle">使い方と注意事項</h2>
-      <button class="icon-button" id="closeHelpButton" type="button" data-i18n-title="close" data-i18n-aria-label="close" title="閉じる" aria-label="閉じる">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+      <button class="dialog-close" id="closeHelpButton" type="button" data-i18n-title="close" data-i18n-aria-label="close" title="閉じる" aria-label="閉じる">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12"/><path d="M18 6 6 18"/></svg>
       </button>
     </div>
     <div class="dialog-body">
@@ -1029,6 +1042,8 @@
     "builtAt": "生成日時",
     "dependencies": "内包依存数",
     "footerLicense": "アプリ MIT / FFmpeg・x264 GPL",
+    "footerNote": "動画の処理はブラウザー内で完結",
+    "fileFallback": "ファイルから選択",
     "runtimeThreading": "処理方式",
     "confirmTitle": "確認",
     "confirmAction": "実行する",
@@ -1213,6 +1228,8 @@
     "builtAt": "Built at",
     "dependencies": "Embedded dependencies",
     "footerLicense": "App MIT / FFmpeg and x264 GPL",
+    "footerNote": "Video processing stays in the browser",
+    "fileFallback": "Choose from files",
     "runtimeThreading": "Processing mode",
     "confirmTitle": "Confirm",
     "confirmAction": "Continue",
@@ -2756,7 +2773,7 @@
         setStatus('sourceLoadCancelled');
       });
       $('#captureButton').addEventListener('click',()=>$('#captureInput').click());
-      $('#sourceInput').addEventListener('change',e=>{void chooseFile(e.target.files?.[0]);e.target.value='';});
+      $('#sourceInput').addEventListener('change',e=>{void chooseFile(e.target.files?.[0]);e.target.value='';});$('#fileFallbackButton').addEventListener('click',()=>$('#fileFallbackInput').click());$('#fileFallbackInput').addEventListener('change',e=>{void chooseFile(e.target.files?.[0]);e.target.value='';});
       $('#captureInput').addEventListener('change',e=>{void chooseFile(e.target.files?.[0]);e.target.value='';});
       const drop=$('#dropZone');
       drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('is-dragover');});
