@@ -10,7 +10,7 @@
 動画の好きな区間を逆再生したり、通常再生から逆再生へ折り返す「往復再生」のMP4を作るアプリです。動画をサーバーへアップロードせず、ブラウザ内で処理します。登録・インストールは不要です。
 
 
-## v1.1.0の操作改善（開発中）
+## v1.1.0の操作改善
 
 - サムネイル付きタイムラインで区間を指定できます。ハンドルを動かすと境界の映像を確認でき、「今の位置を開始／終了に」で一時停止した位置を指定できます。
 - 「選択付近を拡大」で長い素材の短い区間を調整できます。「動画全体を表示」で戻れます。
@@ -46,7 +46,7 @@
 
 ### 単一HTMLをオフラインで使う
 
-生成済みの**ST版**は、ブラウザで `file://` から直接開けます。[v1.0.0 GitHub Release](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/tag/v1.0.0) から配布用HTMLを入手できます。
+生成済みの**ST版**は、ブラウザで `file://` から直接開けます。[最新の GitHub Release](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/latest) から配布用HTMLを入手できます。
 
 1. Windowsでこのリポジトリをダウンロード、またはクローンします。
 2. `build-standalone.bat` を実行して単一HTMLを生成します。
@@ -141,6 +141,6 @@ FFmpeg・x264・Emscripten等の[対応ソース](https://github.com/ttomohisa/h
 
 ## 開発状況・コントリビューション
 
-**v1.0.0正式版：** [GitHub Release](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/tag/v1.0.0) で通常版・MT版の単一HTMLを配布します。初期対象はWindows／Android Chromeでの短いH.264 MP4です。過去の広範なG2基準は未達成のまま記録します。[リリースノート](docs/release/V100_RELEASE_NOTES.md) · [検証記録](docs/release/RC_CHECKLIST.md)
+**v1.1.0：** [GitHub Releases](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/latest) で通常版・MT版の単一HTMLを配布します。初期対象はWindows／Android Chromeでの短いH.264 MP4です。過去の広範なG2基準は未達成のまま記録します。[リリースノート](docs/release/V110_RELEASE_NOTES.md) · [検証記録](docs/release/V110_VERIFICATION.md)
 
-不具合や改善案はGitHub Issuesからお知らせください。[開発への参加方法](CONTRIBUTING.md)も参照できます。Browser Kitty本体への追加は**v1.0.0正式リリース後**に行います。
+不具合や改善案はGitHub Issuesからお知らせください。[開発への参加方法](CONTRIBUTING.md)も参照できます。

@@ -10,7 +10,7 @@
 Reverse a short video, or make it play forward and then backward (ping-pong), and save the result as an MP4. Everything runs in your browser without uploading the selected video. No account or installation is needed.
 
 
-## v1.1.0 editor improvements (in development)
+## v1.1.0 editor improvements
 
 - Use an eight-thumbnail timeline, inspect boundary frames while dragging, or pause and choose **Set start/end here**.
 - Zoom around the selection for precise trimming in long sources; return to the entire video at any time.
@@ -46,7 +46,7 @@ Open the [GitHub Pages demo](https://ttomohisa.github.io/htmlapps-reverse-clip/)
 
 ### Use a standalone HTML file offline
 
-The readable **ST** build works directly via `file://` after it has been generated. Standalone downloads are provided by the [v1.0.0 GitHub Release](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/tag/v1.0.0).
+The readable **ST** build works directly via `file://` after it has been generated. Standalone downloads are provided by the [latest GitHub Release](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/latest).
 
 1. Download or clone this repository on Windows.
 2. Run `build-standalone.bat` to generate the self-contained HTML files.
@@ -140,6 +140,6 @@ The matching [FFmpeg/x264/Emscripten corresponding source](https://github.com/tt
 
 ## Project status and contributing
 
-**v1.0.0:** This app is distributed through its [versioned GitHub Release](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/tag/v1.0.0). The initial scope is short H.264 MP4 workflows in Windows and Android Chrome. The historical broader G2 matrix was not passed; iPhone/HEVC/HDR are not claimed supported. [Release notes](docs/release/V100_RELEASE_NOTES.md) · [Test evidence](docs/release/RC_CHECKLIST.md).
+**v1.1.0:** Download the standalone files from [GitHub Releases](https://github.com/ttomohisa/htmlapps-reverse-clip/releases/latest). The initial scope is short H.264 MP4 workflows in Windows and Android Chrome. The historical broader G2 matrix was not passed; iPhone/HEVC/HDR are not claimed supported. [Release notes](docs/release/V110_RELEASE_NOTES.md) · [Test evidence](docs/release/V110_VERIFICATION.md).
 
-Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance. Reverse Clip will be added to Browser Kitty **after** its v1.0.0 release.
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for development guidance.

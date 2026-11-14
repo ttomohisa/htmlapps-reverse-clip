@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0] - Unreleased
+## [1.1.0]
 
 - Add bounded, cancellable local timeline thumbnails, boundary seeking, current-position marking and selection-focused zoom.
 - Show reverse/ping-pong mode buttons, actual output dimensions and applicable duration limits.
@@ -8,6 +8,7 @@
 - Render real low-resolution silent drafts without changing final output settings.
 - Add preview looping and supported-device native MP4 file sharing with sanitized names.
 - Clarify short-selection limits before file import and update Japanese/English help.
+- Accept exactly half-second selections at fractional timestamps and base the long-clip warning on the source selection.
 
 ## Unreleased
 

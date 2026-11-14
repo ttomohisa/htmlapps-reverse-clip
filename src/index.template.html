@@ -1886,7 +1886,7 @@
         let plan = null;
         if (rawStart && rawEnd && Number.isFinite(start) && Number.isFinite(end) &&
             start >= 0 && end <= video.duration+.001 &&
-            duration >= .5 && duration <= MAX_CLIP_SECONDS && modeAvailable) {
+            policy.valid && modeAvailable) {
           try { plan = planModeFrames(start,end,mode,OUTPUT_FPS,
                                       chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)); } catch (_) {}
         }
@@ -1921,7 +1921,7 @@
             count:plan.segments.length,duration:plan.expectedDuration.toFixed(2)
           }) + ((Math.abs(plan.selectedStart-start)>.001 || Math.abs(plan.selectedEnd-end)>.001)
                ? ' '+translate('rangeSnapNote') : '') +
-               (plan.expectedDuration>5 ? ' '+translate('rangeTenSecondWarning') : '') +
+               (duration>5+1e-8 ? ' '+translate('rangeTenSecondWarning') : '') +
                (standardHd ? ' '+translate('rangeHdPilotWarning') : '') +
                (fullHd ? ' '+translate('rangeFullHdPilotWarning') : '');
         } else {

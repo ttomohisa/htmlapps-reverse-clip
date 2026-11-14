@@ -54,3 +54,34 @@ test('30fps reverse and ping-pong preserve every selected frame and omit duplica
   assert.equal(p.expectedDuration,expected.length/30);
  }
 });
+
+test('the editor accepts a half-second selection with fractional endpoints',()=>{
+ const start=html.indexOf('function rangeInfo()');
+ const end=html.indexOf('function sourceIsCurrent(',start);
+ assert.ok(start>=0 && end>start);
+ const settings=new Map([
+  ['rangeStart',{value:'0.2'}],['rangeEnd',{value:'0.7'}],
+  ['qualityInput',{value:'720'}],['modeInput',{value:'reverse'}],['audioInput',{value:'none'}],
+ ]);
+ const state={ready:true};
+ const context={
+  $:selector=>{
+   const id=selector.slice(1);
+   if(!settings.has(id)) settings.set(id,{setAttribute(){}});
+   return settings.get(id);
+  },
+  state, video:{duration:8}, MAX_CLIP_SECONDS:10,
+  PINGPONG_ENABLED:true, AUDIO_MUX_ENABLED:true, conversionController:null,
+  timelineZoom:false, selectedFps:()=>30, outputDimensions:()=>({width:640,height:360}),
+  editorOutputPolicy:policy().editorOutputPolicy,
+  chunkFrameLimit:()=>60, planModeFrames:()=>({
+   segments:[{frames:15}],expectedDuration:.5,selectedStart:.2,selectedEnd:.7,
+  }),
+  syncTrimControls(){}, scheduleThumbnails(){},
+  activeTimelineViewport:()=>({start:0,end:8}),
+  translate:key=>key, format:key=>key, threadingReady:()=>true,
+ };
+ runInNewContext(html.slice(start,end)+'\nrangeInfo();',context);
+ assert.equal(settings.get('reverseButton').disabled,false);
+ assert.equal(settings.get('draftButton').disabled,false);
+});

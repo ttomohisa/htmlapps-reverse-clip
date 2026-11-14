@@ -55,6 +55,24 @@ def main():
      page.locator('#qualityInput').select_option('720')
      page.locator('#modePingpongButton').click()
      assert page.locator('#modePingpongButton').get_attribute('aria-pressed')=='true'
+     # A short ping-pong output can exceed 5s even when its selected source does not.
+     page.locator('#rangeEnd').fill('5')
+     assert '5秒を超える変換' not in page.locator('#rangeNotice').inner_text()
+     # 0.7 - 0.2 is slightly below 0.5 in binary floating point.
+     page.locator('#rangeStart').fill('0.2')
+     page.locator('#rangeEnd').fill('0.7')
+     assert page.locator('#reverseButton').is_enabled()
+     page.locator('#reverseButton').click()
+     page.wait_for_function("() => !document.querySelector('#resultArea').hidden",timeout=120000)
+     with page.expect_download() as short_download:
+         page.locator('#saveReverseButton').click()
+     short_out=tmp/f'short-{variant}.mp4'
+     short_download.value.save_as(short_out)
+     short_video=next(s for s in probe(short_out) if s['codec_type']=='video')
+     assert short_video['r_frame_rate']=='30/1' and int(short_video['nb_frames'])==28,short_video
+     page.locator('#flowBackToEditButton').click()
+     page.locator('#rangeStart').fill('2')
+     page.locator('#rangeEnd').fill('4')
      page.wait_for_function("() => !document.querySelector('#audioInput').disabled",timeout=60000)
      page.locator('#audioInput').select_option('reverse')
      page.locator('#reverseButton').click()
