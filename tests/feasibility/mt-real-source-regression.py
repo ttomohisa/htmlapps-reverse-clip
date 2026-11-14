@@ -110,7 +110,7 @@ def transcode(page, source: Path, mode: str, label: str, temporary: Path,
     page.locator("#qualityInput").select_option(
         "1280" if "sparse-slide-1080" in label or "pvm-webcodecs-1080" in label
         else "360")
-    page.locator("#modeInput").select_option(mode)
+    page.locator("#modePingpongButton" if mode=="pingpong" else "#modeReverseButton").click()
     # Audio is already "none" by default; silent files intentionally disable
     # its selector, so Playwright must not wait for it to become enabled.
     assert page.locator("#audioInput").input_value() == "none"

@@ -211,7 +211,7 @@ def main():
 
                         assert page.locator("#modeInput").is_enabled(),mode
                         assert page.locator("#reverseFilename").input_value()=="marker-15fps-reverse"
-                        page.locator("#modeInput").select_option("pingpong")
+                        page.locator("#modePingpongButton").click()
                         assert page.locator("#reverseFilename").input_value()=="marker-15fps-pingpong"
                         assert "ping" in page.locator("#reverseButton").inner_text().lower() or \
                                "往復" in page.locator("#reverseButton").inner_text()
@@ -229,10 +229,10 @@ def main():
                         # while preserving names intentionally edited by users.
                         page.locator("#reverseFilename").fill("personal-name")
                         page.locator("#flowEditButton").click()
-                        page.locator("#modeInput").select_option("reverse")
+                        page.locator("#modeReverseButton").click()
                         assert page.locator("#resultArea").is_hidden()
                         assert page.locator("#reverseFilename").input_value()=="personal-name"
-                        page.locator("#modeInput").select_option("pingpong")
+                        page.locator("#modePingpongButton").click()
                         assert page.locator("#reverseFilename").input_value()=="personal-name"
                         # After changing mode, the previous result is
                         # correctly hidden, so its filename input is not
@@ -251,7 +251,7 @@ def main():
                         # chunks, 298 frames and 19.8667-second output.
                         page.locator("#sourceInput").set_input_files(str(long))
                         page.locator("#reversePanel").wait_for(state="visible",timeout=20000)
-                        page.locator("#modeInput").select_option("pingpong")
+                        page.locator("#modePingpongButton").click()
                         export(page,directory,mode,0,10,298)
 
                         # Real VFR: source timestamps are irregular, so

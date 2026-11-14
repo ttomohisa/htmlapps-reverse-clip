@@ -1,0 +1,42 @@
+{
+  "artifact_run_id": 38944766865,
+  "artifact_name": "reverse-clip-v090-real-ui-dd627de191133496c1ff10b2ed4d76247af0e4f9",
+  "note": "Real Chrome desktop/mobile viewport screenshots; NOT Android physical-device QA",
+  "evidence": {
+    "source": "local deterministic 384x216 30fps 2s motion sample; genuine Chrome H.264 reverse",
+    "app": "Reverse Clip v0.9.0 RC preparation, NOT released",
+    "runtime": "single-thread Chrome (not Android/iPhone QA)",
+    "source_sha256": "76d3d8c72810764faef29ee576e3dccfc479235dd844ea56ad4159b6a96f3651",
+    "output_sha256": "0b00e7896652331379e6ee62cc98263e4b874987653c05b64bd1828796a057da",
+    "screenshots": [
+      {
+        "viewport": "desktop",
+        "language": "ja",
+        "file": "reverse-clip-desktop-ja.png",
+        "bytes": 95684,
+        "sha256": "489d574f1ebcc5015640b2d5ce689b30b42dfd9f529d3c08f05838bad2f04088"
+      },
+      {
+        "viewport": "desktop",
+        "language": "en",
+        "file": "reverse-clip-desktop-en.png",
+        "bytes": 85872,
+        "sha256": "0905b451ef8fa4ab6c6a3f93eec733b735d26b914730746eed878871d77628de"
+      },
+      {
+        "viewport": "mobile",
+        "language": "ja",
+        "file": "reverse-clip-mobile-ja.png",
+        "bytes": 67182,
+        "sha256": "279d28b0ec3a33c259df42eb81312aad0e9149a23d28d71668dddb49ca49830f"
+      },
+      {
+        "viewport": "mobile",
+        "language": "en",
+        "file": "reverse-clip-mobile-en.png",
+        "bytes": 59335,
+        "sha256": "78cddab46404e30db2d76aaa2ef64350ea1dd4edc262ce46ebd8531332df257c"
+      }
+    ]
+  }
+}

@@ -246,7 +246,7 @@ def run_profile(browser, base: str, directory: Path, runtime: str,
             assert page.locator("#audioInput").input_value() == "none"
         for mode in modes:
             page.locator("#flowEditButton").click()
-            page.locator("#modeInput").select_option(mode)
+            page.locator("#modePingpongButton" if mode=="pingpong" else "#modeReverseButton").click()
             for iteration in range(1, runs + 1):
                 page.locator("#flowEditButton").click()
                 assert page.locator("#reverseButton").is_enabled(), (

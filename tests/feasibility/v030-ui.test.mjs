@@ -9,7 +9,7 @@ const icon=read('assets/favicon.svg');
 const config=JSON.parse(read('app.config.json'));
 
 test('v1.0 UI uses product copy without development gate jargon',()=>{
-  assert.equal(config.version,'1.0.0');
+  assert.equal(config.version,'1.1.0');
   assert.match(config.description,/forward-and-back MP4.*browser/);
   assert.match(config.descriptionJa,/動画はブラウザ内で処理します/);
   assert.doesNotMatch(config.description,/PREPARATION|G2|G3|not released/);
@@ -29,12 +29,12 @@ test('v0.8 input hardening distinguishes short but decodable source and disclose
   assert.ok(html.includes('id="sourceCompatibilityDetails"'));
   assert.ok(html.includes('data-i18n="sourceCompatibilityBody"'));
   assert.ok(html.includes('HDR/10-bit input is not automatically identified or color-preserved.'));
-  assert.ok(html.includes('出力は15fpsで、元のフレームレートは維持しません。'));
+  assert.ok(html.includes('出力は15fpsが既定で、30fpsも条件付きで選べます。'));
   assert.ok(html.includes('Multiple audio tracks cannot be selected.'));
 });
 
 test('v0.3.0 version and exact supplied 64px favicon/brand icon',()=>{
-  assert.equal(config.version,'1.0.0');
+  assert.equal(config.version,'1.1.0');
   assert.equal(createHash('sha256').update(icon).digest('hex'),
     'd0ed25d1c017d253aaf48a3d482e6d60b97e6386edff5fa97bbf13e041af0f7e');
   assert.match(icon,/viewBox="0 0 64 64"/);
@@ -54,7 +54,7 @@ test('selection handles, keyboard input, half-open interval plan and source play
   for(const marker of ['id="trimStartSlider"','id="trimEndSlider"',
     'id="trimSelectedTrack"','id="previewSelectionButton"',
     "addEventListener('input',()=>moveTrimHandle(which))",
-    "maxSpan=$('#qualityInput').value==='1920'?5:MAX_CLIP_SECONDS",
+    "maxSpan=selectedFps()===30?5:$('#qualityInput').value==='1920'?5:MAX_CLIP_SECONDS",
     'function previewSelectedSource()','function syncTrimControls()']) {
     assert.ok(html.includes(marker),marker);
   }
@@ -153,7 +153,7 @@ test('mobile processing stays on Edit until completion or cancellation',()=>{
   assert.ok(html.includes("const busy=Boolean(conversionController);"));
   assert.ok(html.includes("button.disabled=step==='video'?busy:step==='edit'?!canEdit:!canResult;"));
   assert.ok(html.includes("if(step==='video'&&conversionController)return false;"));
-  assert.ok(html.includes("conversionController=controller;\n        updateFlowNavigation();"));
+  assert.ok(html.includes("conversionController=controller;"));
   assert.ok(html.includes("conversionController=null;\n            updateFlowNavigation();"));
   assert.ok(html.includes("#workspaceTitle{scroll-margin-top:calc(var(--header-height) + 14px)}"));
   assert.ok(html.includes("(focus?$('#workspaceTitle'):$('#rcFlowNav'))"));

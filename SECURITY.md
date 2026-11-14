@@ -72,3 +72,7 @@ Untrusted MP4/MOV selection now runs a **bounded 32-byte prefix inspection** bef
 A 30-second, generation-scoped timeout prevents indefinitely pending source reads/metadata. Error/source-change paths invalidate previous results, revoke Blob URLs, clear references, and do not permit an old source's delayed promise to alter the newly selected video. Diagnostic JSON records only source phase and error identifiers, never filenames or video bytes. Real-device Android acceptance remains pending.
 
 When a pending input is manually cancelled, the app invalidates its generation and drops selected File/Blob references and any previous export. Browser-provider `File.arrayBuffer()` operations may not themselves support abort and could complete internally; the resolved bytes are ignored for obsolete sources. A drop carrying more than one File is rejected atomically to avoid accidental selection of the wrong input.
+
+## Explicit file sharing
+
+Normal processing keeps selected media on the device. On browsers with native file-sharing support, a user may explicitly open the OS share sheet to hand the completed MP4 to a destination they choose. The app does not select a recipient, upload to a fixed destination, or share drafts. Cancellation and errors retain the local output. Thumbnail generation uses the same local Blob URL and a cancellable decoder; it adds no external source.

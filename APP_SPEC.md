@@ -1,5 +1,16 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
+## 2026-11-06 — v1.1.0 editor and output improvements
+
+This section supersedes historical 15fps-only, UI-freeze and pre-v1.0 status descriptions below. v1.1.0 adds an eight-image local thumbnail timeline, boundary preview while dragging, current-position start/end marking and a stationary selection-focused zoom viewport. Source replacement cancels pending thumbnail work and releases the decoder. Thumbnail failure must not block editing or exporting.
+
+Playback modes use two accessible pressed-state buttons. Output settings show actual dimensions, selected FPS and the maximum source interval. Existing limits remain: 0.5–10s at 15fps, 1080p-class up to 5s. Experimental 30fps is limited to quality presets with long edge <=720px and source intervals <=5s, with the same <=48MiB chunk estimate. Invalid combinations are rejected without modifying user settings. All jobs snapshot their FPS.
+
+Try a draft processes the entire selected interval at <=360px long edge, 15fps, without audio, using the pinned real encoder. Draft results are visibly identified, cannot be saved/shared through the app, and offer an explicit full-MP4 action. Final rendering keeps the chosen settings and output filename. The loop checkbox affects preview playback only; it does not embed a repeat count into the MP4. Native file sharing is exposed only when navigator.canShare confirms file support. It opens the OS share sheet on an explicit click, sanitizes the filename and retains the result on cancellation or failure. User data leaves the device only through a user-selected sharing destination. Normal conversion remains local and CSP stays connect-src none.
+
+Acceptance: synthetic ST/MT real MP4 tests for 30fps reverse/ping-pong/AAC and draft, offline readable/self-extract tests, JA/EN 320/390/1360px layout, source replacement/cancel during thumbnails, exact filenames, bounded thumbnails and no application runtime network. Physical Android/iPhone, OS share-sheet delivery and high-resolution endurance remain separate manual checks.
+
+
 ## Latest raw MT distribution for header-isolated hosts
 
 - Publish `pages-dist/index.mt.html` as a byte-identical copy of `dist/index.mt.html` so Browser Kitty can import the latest deployed main build without the Pages Service Worker bootstrap.

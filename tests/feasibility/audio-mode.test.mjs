@@ -8,7 +8,7 @@ const lock=JSON.parse(read('reverse-runtime.lock.json'));
 const cfg=JSON.parse(read('app.config.json'));
 
 test('v1 retains pinned AAC support with safe disabled initial selection',()=>{
-  assert.equal(cfg.version,'1.0.0');
+  assert.equal(cfg.version,'1.1.0');
   assert.ok(html.includes('id="audioInput" disabled'));
   assert.ok(html.includes('id="audioReverseOption" value="reverse"'));
   assert.ok(html.includes("const AUDIO_MUX_ENABLED = __AUDIO_MUX_ENABLED__"));
