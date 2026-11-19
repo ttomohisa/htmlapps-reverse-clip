@@ -359,7 +359,9 @@
       background: transparent;
       cursor: pointer;
     }
-    .file-fallback-button { display: none; width: 100%; margin-top: 10px; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .file-fallback-button { display:none; min-height:40px; margin:7px auto 0; padding:6px 12px; border:0; border-radius:8px; background:transparent; color:var(--muted); font:inherit; font-size:12px; font-weight:500; cursor:pointer; text-decoration:underline; text-decoration-color:var(--line-strong); text-underline-offset:3px; }
+    .file-fallback-button:hover{color:var(--text);text-decoration-color:currentColor}
+    .file-fallback-button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
     @media (max-width: 767px), (pointer: coarse) and (max-height: 600px) { .file-fallback-button { display: block; } }
     .app-confirm-close:hover { background: var(--surface-hover); }
     .app-confirm-close svg { width: 19px; height: 19px; }
@@ -458,6 +460,9 @@
     .rc-drop { text-align:center; border:2px dashed var(--line-strong); border-radius:14px; padding:20px 12px; background:var(--surface-muted); }
     .rc-drop h3{font-size:16px;margin:0 0 4px}.rc-drop p{margin:0 0 14px;color:var(--muted);font-size:13px}
     .rc-drop.is-dragover{border-color:var(--accent);background:var(--accent-soft)}
+    /* Keep choose and capture actions equal-size, even when labels wrap. */
+    .rc-drop .button-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-width:460px;margin:0 auto}
+    .rc-drop .button-row .button{display:flex;align-items:center;justify-content:center;min-width:0;width:100%;min-height:46px;padding:10px 8px;text-align:center;line-height:1.35}
     .rc-center{justify-content:center}.rc-video{display:block;width:100%;max-height:340px;background:#171b19;border-radius:12px;margin:12px 0;object-fit:contain}
     [hidden]{display:none!important}.rc-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px 0}
     .rc-facts div{display:flex;min-width:0;flex-direction:column;gap:3px;background:var(--surface-muted);padding:10px;border-radius:9px}
@@ -628,7 +633,9 @@
     <div class="button-row rc-center">
       <button class="button primary" type="button" id="pickButton" data-i18n="pick">動画を選ぶ</button>
       <button class="button" type="button" id="captureButton" data-i18n="capture">撮影して取り込む</button>
-    </div><button class="file-fallback-button" id="fileFallbackButton" type="button" data-i18n="fileFallback">ファイルから選択</button><input class="sr-only" id="fileFallbackInput" type="file">
+    </div>
+    <button class="file-fallback-button" id="fileFallbackButton" type="button" data-i18n="fileFallback">ファイルから選択</button>
+    <input class="sr-only" id="fileFallbackInput" type="file">
     <input class="sr-only" id="sourceInput" type="file" accept="video/mp4,video/quicktime,.mp4,.m4v,.mov">
     <input class="sr-only" id="captureInput" type="file" accept="video/*" capture="environment">
   </div>
@@ -777,6 +784,7 @@
   <h3 data-i18n="helpNotesTitle">制限と注意</h3>
   <ul>
     <li data-i18n="helpNoteReplace">保存前のMP4がある状態で別の動画を選ぶと、結果を破棄するか確認します。</li>
+    <li data-i18n="helpNoteDuringConversion">MP4の作成中は区間や画質などの設定を変更できません。止める場合は「処理を中止」を使ってください。</li>
     <li data-i18n="helpNoteStorage">ブラウザーの制限によってMOVやHEVCをプレビューできない場合があります。</li>
     <li data-i18n="helpNoteBrowser">Androidの一部の写真・クラウドの動画は直接読み込めないため、64MiB以下で必要な場合だけ端末メモリ内へ一時コピーして再試行します。</li>
     <li data-i18n="helpNoteTemplate">10秒への拡張は検証中です。予期しないフレーム数の出力は保存できません。</li>
@@ -959,6 +967,7 @@
     "flowReplaceMessage": "まだダウンロードしていない結果があります。別の動画を読み込むと、このMP4は使えなくなります。",
     "flowReplaceConfirm": "動画を入れ替える",
     "helpNoteReplace": "保存前のMP4がある状態で別の動画を選ぶと、結果を破棄するか確認します。",
+    "helpNoteDuringConversion": "MP4の作成中は区間や画質などの設定を変更できません。止める場合は「処理を中止」を使ってください。",
     "flowOutputDimensions": "出力：{width} × {height}px・{fps}fps",
     "workspaceTitle": "動画を読み込む",
     "workspaceBody": "ブラウザー内でプレビューして短い範囲を選びます。",
@@ -1145,6 +1154,7 @@
     "flowReplaceMessage": "This MP4 has not been downloaded yet. Loading another video will discard the result.",
     "flowReplaceConfirm": "Replace video",
     "helpNoteReplace": "When an MP4 has not been downloaded, choosing another video asks before discarding it.",
+    "helpNoteDuringConversion": "While creating an MP4, editing controls are disabled. Use Cancel conversion to stop before changing the settings.",
     "flowOutputDimensions": "Output: {width} × {height}px · {fps}fps",
     "workspaceTitle": "Load a video",
     "workspaceBody": "Preview locally and select a short section.",
@@ -1453,7 +1463,7 @@
         if(flowStep==='edit'&&step!=='edit'){
           previewSelectionActive=false;
           video.pause();
-          $('#trimPreviewNotice').textContent='';
+          setTrimPreviewNotice();
         }
         // Hide the result only after stopping its playback; AAC audio must
         // not continue invisibly on Video/Edit. Retain the verified MP4 Blob.
@@ -1489,6 +1499,17 @@
         sourceTimeout = 0;
       }
       let previewSelectionActive = false;
+      // Keep temporary notices translatable without restarting playback.
+      function setTrimPreviewNotice(key = '') {
+        const notice = $('#trimPreviewNotice');
+        notice.dataset.messageKey = key;
+        notice.textContent = key ? translate(key) : '';
+      }
+      function setFilmstripPlaceholder(key) {
+        const strip = $('#timelineFilmstrip');
+        strip.dataset.placeholderKey = key;
+        strip.dataset.placeholder = translate(key);
+      }
       const memoryRate = 1.5; // YUV420p approximation; it is not a memory budget.
       const format = (key, vars = {}) => translate(key).replace(/\{(\w+)\}/g, (_, name) => String(vars[name] ?? ''));
       function setStatus(key) {
@@ -1556,7 +1577,7 @@
         $('#trimStartSlider').disabled = true;
         $('#trimEndSlider').disabled = true;
         $('#previewSelectionButton').disabled = true;
-        $('#trimPreviewNotice').textContent = '';
+        setTrimPreviewNotice();
         $('#modeInput').disabled = true;
         $('#audioInput').disabled = true;
         $('#audioReverseOption').disabled = true;
@@ -1650,7 +1671,7 @@
         if(key===thumbnailKey)return;
         stopThumbnails();thumbnailKey=key;
         $('#timelineFilmstrip').replaceChildren();
-        $('#timelineFilmstrip').dataset.placeholder=translate('thumbnailLoading');
+        setFilmstripPlaceholder('thumbnailLoading');
         const epoch=thumbnailEpoch, generation=state.generation, url=state.url;
         thumbnailTimer=setTimeout(()=>void renderThumbnails(view,epoch,generation,url),250);
       }
@@ -1686,7 +1707,7 @@
             const img=document.createElement('img');img.alt='';img.src=canvas.toDataURL('image/jpeg',.65);images.push(img);
           }
           if(current())$('#timelineFilmstrip').replaceChildren(...images);
-        }catch(_){if(current()){$('#trimPreviewNotice').textContent=translate('thumbnailUnavailable');$('#timelineFilmstrip').dataset.placeholder=translate('thumbnailUnavailableShort');}}
+        }catch(_){if(current()){setTrimPreviewNotice('thumbnailUnavailable');setFilmstripPlaceholder('thumbnailUnavailableShort');}}
         finally{decoder.pause();decoder.removeAttribute('src');decoder.load();if(thumbnailDecoder===decoder)thumbnailDecoder=null;if(thumbnailAbort===abort)thumbnailAbort=null;}
       }
       function markBoundary(which){
@@ -1836,11 +1857,16 @@
             start:start.toFixed(1),end:end.toFixed(1),duration:(end-start).toFixed(1)
           });
         } else {
+          // Do not retain a valid-looking selection from an earlier edit.
+          $('#trimSelectedTrack').style.left='0%';
+          $('#trimSelectedTrack').style.width='0%';
+          a.removeAttribute('aria-valuetext');
+          b.removeAttribute('aria-valuetext');
           $('#trimSummary').textContent=translate('trimInvalidSummary');
         }
       }
       function moveTrimHandle(which) {
-        if (!state.ready) return;
+        if (!state.ready || conversionController) return;
         const maxTime=sliderMaxTime(), maxSpan=selectedFps()===30?5:$('#qualityInput').value==='1920'?5:MAX_CLIP_SECONDS;
         const oldStart=Number($('#rangeStart').value), oldEnd=Number($('#rangeEnd').value);
         let start=Number.isFinite(oldStart)?roundTrim(oldStart):Number($('#trimStartSlider').value);
@@ -1858,7 +1884,7 @@
         if (!(start>=0 && end-start>=.5-1e-8 && end<=video.duration+.001)) return;
         previewSelectionActive=false;
         video.pause();
-        $('#trimPreviewNotice').textContent='';
+        setTrimPreviewNotice();
         $('#rangeStart').value=start.toFixed(1);
         $('#rangeEnd').value=end.toFixed(1);
         video.currentTime=Math.min(video.duration-.001,which==='start'?start:end);
@@ -1871,11 +1897,11 @@
         previewSelectionActive=true;
         video.pause();
         video.currentTime=start;
-        $('#trimPreviewNotice').textContent=translate('trimPreviewPlaying');
+        setTrimPreviewNotice('trimPreviewPlaying');
         const played=video.play();
         if (played?.catch) played.catch(()=>{
           previewSelectionActive=false;
-          $('#trimPreviewNotice').textContent=translate('previewSelectionFailed');
+          setTrimPreviewNotice('previewSelectionFailed');
         });
       }
       video.addEventListener('timeupdate',()=>{
@@ -1884,12 +1910,12 @@
         if (Number.isFinite(end) && video.currentTime>=end-.025) {
           video.pause();
           previewSelectionActive=false;
-          $('#trimPreviewNotice').textContent='';
+          setTrimPreviewNotice();
         }
       });
       video.addEventListener('ended',()=>{
         previewSelectionActive=false;
-        $('#trimPreviewNotice').textContent='';
+        setTrimPreviewNotice();
       });
       function rangeInfo() {
         if (!state.ready) return;
@@ -1922,7 +1948,14 @@
         state.validRange = safe;
         syncTrimControls();
         const busy=Boolean(conversionController);
-        for(const id of ['markStartButton','markEndButton','timelineZoomButton','fpsInput','modeReverseButton'])$('#'+id).disabled=busy;
+        // syncTrimControls may reenable sliders: lock every editor setting after it.
+        for(const id of ['rangeStart','rangeEnd','trimStartSlider','trimEndSlider',
+                         'qualityInput','fpsInput','markStartButton','markEndButton',
+                         'timelineZoomButton','modeReverseButton'])$('#'+id).disabled=busy;
+        $('#modeInput').disabled=busy || !PINGPONG_ENABLED;
+        const canEditAudio=AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent;
+        $('#audioInput').disabled=busy || !canEditAudio;
+        $('#audioReverseOption').disabled=busy || !canEditAudio;
         $('#modePingpongButton').disabled=busy || !PINGPONG_ENABLED;
         $('#timelineZoomButton').setAttribute('aria-pressed',String(timelineZoom));
         $('#timelineZoomButton').textContent=translate(timelineZoom?'zoomTimelineOff':'zoomTimeline');
@@ -2235,6 +2268,7 @@
         $('#modePingpongButton').setAttribute('aria-pressed',String(isPingpong));
         $('#modeReverseButton').disabled=!state.ready || Boolean(conversionController);
         $('#modePingpongButton').disabled=!state.ready || !PINGPONG_ENABLED || Boolean(conversionController);
+        $('#modeInput').disabled=!state.ready || !PINGPONG_ENABLED || Boolean(conversionController);
         $('#reverseButton').textContent=translate(isPingpong?'createPingpong':'reverseButton');
         $('#reverseTitle').textContent=translate(isPingpong?'pingpongTitle':'reverseTitle');
         $('#reverseDescription').textContent=translate(isPingpong?'pingpongDescription':'reverseDescription');
@@ -2243,14 +2277,15 @@
           translate(isPingpong?'resultPingpongVideoLabel':'resultReverseVideoLabel'));
         $('#modeInput').setAttribute('aria-label',translate('modeLabel'));
         const canUseAudio=Boolean(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent);
-        $('#audioInput').disabled=!state.ready || !canUseAudio;
-        $('#audioReverseOption').disabled=!canUseAudio;
+        $('#audioInput').disabled=!state.ready || Boolean(conversionController) || !canUseAudio;
+        $('#audioReverseOption').disabled=Boolean(conversionController) || !canUseAudio;
         $('#audioNotice').textContent=translate(!AUDIO_MUX_ENABLED?'audioPreparingNotice':
           !state.audioChecked?'audioCheckingLater':
           state.audioPresent?'audioPresent':
           state.audioInspectionError?'audioUnknown':'audioAbsent');
       }
       function onAudioModeChanged() {
+        if(conversionController)return;
         if($('#audioInput').value!=='none' &&
           !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
           $('#audioInput').value='none';
@@ -2304,6 +2339,10 @@
                   state.sourcePhase === 'inspecting' ? 'loading' : 'nothingSelected');
         updateModeUi();
         rangeInfo();
+        const noticeKey=$('#trimPreviewNotice').dataset.messageKey;
+        if(noticeKey)setTrimPreviewNotice(noticeKey);
+        const placeholderKey=$('#timelineFilmstrip').dataset.placeholderKey;
+        if(placeholderKey)setFilmstripPlaceholder(placeholderKey);
         updateFlowNavigation();
         renderResultDetails();
         if(conversionMessageKey && !conversionController)
@@ -2331,7 +2370,7 @@
         state.lastSelectedMode=selected;
         previewSelectionActive=false;
         video.pause();
-        $('#trimPreviewNotice').textContent='';
+        setTrimPreviewNotice();
         resetConversion();
         updateModeUi();
         rangeInfo();
@@ -2798,7 +2837,8 @@
       $('#modeInput').addEventListener('change',onConversionModeChanged);
       $('#audioInput').addEventListener('change',onAudioModeChanged);
       function onOutputSettingsEdited(){
-        previewSelectionActive=false;video.pause();$('#trimPreviewNotice').textContent='';
+        if(conversionController)return;
+        previewSelectionActive=false;video.pause();setTrimPreviewNotice();
         resetConversion();rangeInfo();
       }
       // Number fields can change long before blur. Immediately revoke any
