@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1]
+
+- Disable all trim, quality, mode, fps and audio controls during conversion; the explicit Cancel control is the only supported way to stop an encode before changing settings.
+- Clear stale highlighted time ranges and slider announcements on invalid numeric input.
+- Refresh thumbnail and source-preview status text when switching Japanese/English.
+- Keep Choose video and Record video buttons equal-size and render the touch/small-screen file-picker fallback as a quiet text link.
+- Publish all four ST/MT standalone variants from the same app source as the current Pages deployment, without altering v1.1.0 assets.
+
+- Publish the latest raw MT build at Pages `/index.mt.html` for header-isolated hosts such as Browser Kitty, byte-identical to `dist/index.mt.html` and without the Pages Service Worker bootstrap. Preserve the ST root, `/mt/` fallback, runtime pins, and release assets.
+
+- Hide only the informational footer at the existing 600px phone workflow boundary. Keep functional navigation and the canonical local-processing badge. Move the existing build disclosure, including its fixed ST/MT build variant label, intact to final Help content; preserve metadata access and modal scroll locking.
+- FFmpeg runtime binaries and privacy policy remain unchanged. Browser Kitty integration is released separately.
+
 ## [1.1.0]
 
 - Add bounded, cancellable local timeline thumbnails, boundary seeking, current-position marking and selection-focused zoom.
@@ -9,13 +22,6 @@
 - Add preview looping and supported-device native MP4 file sharing with sanitized names.
 - Clarify short-selection limits before file import and update Japanese/English help.
 - Accept exactly half-second selections at fractional timestamps and base the long-clip warning on the source selection.
-
-## Unreleased
-
-- Publish the latest raw MT build at Pages `/index.mt.html` for header-isolated hosts such as Browser Kitty, byte-identical to `dist/index.mt.html` and without the Pages Service Worker bootstrap. Preserve the ST root, `/mt/` fallback, runtime pins, and release assets.
-
-- Hide only the informational footer at the existing 600px phone workflow boundary. Keep functional navigation and the canonical local-processing badge. Move the existing build disclosure, including its fixed ST/MT build variant label, intact to final Help content; preserve metadata access and modal scroll locking.
-- Versions, runtime binaries, security policy and fixed release assets are unchanged. This source change does not update the Browser Kitty v1.0.0 release pin.
 
 ## [1.0.0] — 2026-10-19
 

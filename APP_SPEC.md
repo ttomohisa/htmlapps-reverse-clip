@@ -1,5 +1,14 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
+## 2026-11-20 — v1.1.1 editor and distribution regression fixes
+
+- While an encoder job is active, numeric start/end inputs, both range handles, quality/fps/audio options, and mode controls are disabled. A user can intentionally stop the job via Cancel conversion. Settings regain their previous availability after completion, cancellation or failure.
+- Invalid numeric trim input must clear the previous green timeline highlight rather than displaying a selection that does not match the fields; never silently clamp typed values.
+- Transient thumbnail and source-preview notices and the empty thumbnail strip refresh on a Japanese/English switch without restarting the source.
+- The primary file-picker and camera buttons have matching widths and heights. The file-provider fallback is a quiet secondary, touch/small-screen-only text action with an adequate tap target.
+- Publish v1.1.1 ST/MT standalone variants and corresponding checksums from the same source as GitHub Pages after the owner merges the PR. Do not overwrite the immutable v1.1.0 Release. Runtime binaries, GPL notices and CSP remain unchanged.
+- Validate via Node contracts, rendered desktop/mobile JA/EN tests, real ST and isolated MT MP4 generation, file:// offline ST builds, runtime network checks and GitHub Release artifact integrity. Physical-device, native sharing and prolonged high-resolution load certification remain separate acceptance items.
+
 ## 2026-11-06 — v1.1.0 editor and output improvements
 
 This section supersedes historical 15fps-only, UI-freeze and pre-v1.0 status descriptions below. v1.1.0 adds an eight-image local thumbnail timeline, boundary preview while dragging, current-position start/end marking and a stationary selection-focused zoom viewport. Source replacement cancels pending thumbnail work and releases the decoder. Thumbnail failure must not block editing or exporting.

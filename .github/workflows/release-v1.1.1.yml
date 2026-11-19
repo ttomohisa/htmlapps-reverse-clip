@@ -1,0 +1,173 @@
+name: Publish Reverse Clip v1.1.1 standalone Release
+
+# Validate new release assets in PRs; publish the reviewed merge commit once.
+on:
+  push:
+    branches: [main]
+    paths: [".github/workflows/release-v1.1.1.yml"]
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/release-v1.1.1.yml"
+      - "docs/release/V111_RELEASE_NOTES.md"
+      - "src/**"
+      - "app.config.json"
+      - "scripts/**"
+      - "build-standalone.ps1"
+      - "reverse-runtime.lock.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reverse-clip-v1.1.1-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.repository == 'ttomohisa/htmlapps-reverse-clip'
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Validate PowerShell syntax and encoding
+        shell: powershell
+        run: .\scripts\check-powershell-syntax.ps1
+      - name: Build and verify pinned ST/MT single-HTML artifacts
+        shell: pwsh
+        run: ./scripts/check-repository.ps1
+      - name: Stage versioned HTML, source notices and checksums
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $config = Get-Content app.config.json -Raw | ConvertFrom-Json
+          if ($config.version -ne '1.1.0') { throw 'Wrong app.config.json version' }
+          $dest = Join-Path $PWD 'release-dist'
+          New-Item -ItemType Directory -Path $dest -Force | Out-Null
+          $sources = [ordered]@{
+            'dist/index.html' = 'reverse-clip-v1.1.1.html'
+            'dist/index.self-extract.html' = 'reverse-clip-v1.1.1.self-extract.html'
+            'dist/index.mt.html' = 'reverse-clip-v1.1.1.mt.html'
+            'dist/index.mt.self-extract.html' = 'reverse-clip-v1.1.1.mt.self-extract.html'
+            'LICENSE' = 'LICENSE'
+            'THIRD_PARTY_NOTICES.md' = 'THIRD_PARTY_NOTICES.md'
+            'docs/release/V111_RELEASE_NOTES.md' = 'V111_RELEASE_NOTES.md'
+          }
+          $sum = @()
+          foreach ($pair in $sources.GetEnumerator()) {
+            if (-not (Test-Path -LiteralPath $pair.Key -PathType Leaf)) {
+              throw "Missing Release input: $($pair.Key)"
+            }
+            $target = Join-Path $dest $pair.Value
+            Copy-Item -LiteralPath $pair.Key -Destination $target
+            $hash = (Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash.ToLowerInvariant()
+            $sum += "$hash  $($pair.Value)"
+            if ($pair.Value.EndsWith('.html') -and (Get-Item $target).Length -lt 100000) {
+              throw "Release HTML unreasonably small: $($pair.Value)"
+            }
+          }
+          $lineSep = [Environment]::NewLine
+          [IO.File]::WriteAllText((Join-Path $dest 'SHA256SUMS.txt'), ($sum -join $lineSep) + $lineSep, [Text.UTF8Encoding]::new($false))
+          $st = [IO.File]::ReadAllText((Join-Path $dest 'reverse-clip-v1.1.1.html'))
+          $mt = [IO.File]::ReadAllText((Join-Path $dest 'reverse-clip-v1.1.1.mt.html'))
+          foreach ($html in @($st, $mt)) {
+            if ($html -notmatch '"version"\s*:\s*"1\.1\.1"') { throw 'Wrong app version' }
+            if ($html -notmatch "connect-src 'none'") { throw 'Runtime network is not blocked' }
+            if ($html -notmatch 'const PINGPONG_ENABLED = true;') { throw 'Ping-pong disabled' }
+            if ($html -notmatch 'const AUDIO_MUX_ENABLED = true;') { throw 'AAC disabled' }
+          }
+          if (-not $st.Contains('const RUNTIME_VARIANT = "single-thread";')) { throw 'Missing ST' }
+          if (-not $mt.Contains('const RUNTIME_VARIANT = "multi-thread";')) { throw 'Missing MT' }
+          Write-Host '[PASS] Four ST/MT standalone HTML files, licenses and checksums'
+      - uses: actions/upload-artifact@v7
+        with:
+          name: reverse-clip-v1.1.1-release
+          path: release-dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    if: github.repository == 'ttomohisa/htmlapps-reverse-clip' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: prepare
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v4
+        with:
+          name: reverse-clip-v1.1.1-release
+          path: release-dist
+      - name: Fail closed on asset set, SHA-256 or missing GPL source notice
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(printf '%s\n' LICENSE SHA256SUMS.txt THIRD_PARTY_NOTICES.md V111_RELEASE_NOTES.md reverse-clip-v1.1.1.html reverse-clip-v1.1.1.self-extract.html reverse-clip-v1.1.1.mt.html reverse-clip-v1.1.1.mt.self-extract.html | sort)"
+          actual="$(find release-dist -maxdepth 1 -type f -printf '%f\n' | sort)"
+          test "$actual" = "$expected"
+          (cd release-dist && sha256sum -c SHA256SUMS.txt)
+          grep -Fq 'GPL-2.0-or-later' release-dist/THIRD_PARTY_NOTICES.md
+          grep -Fq 'ffmpeg-wasm-sources-v1.10.6.tar.gz' release-dist/THIRD_PARTY_NOTICES.md
+          echo 'PASS exact eight Release assets and matching GPL source link'
+      - name: Tag the merge commit and publish verified assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG=v1.1.1
+          REF_API="repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG"
+          code="$(curl --silent --show-error -o "$RUNNER_TEMP/rc-tag.json" -w '%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            "https://api.github.com/$REF_API")"
+          if [[ "$code" == 404 ]]; then
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+              -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA" --silent
+          elif [[ "$code" != 200 ]]; then
+            echo "::error::Cannot verify existing tag (HTTP $code)"
+            exit 1
+          fi
+          tag_type="$(gh api "$REF_API" --jq '.object.type')"
+          tag_sha="$(gh api "$REF_API" --jq '.object.sha')"
+          if [[ "$tag_type" == tag ]]; then
+            tag_object="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_sha")"
+            tag_type="$(jq -r '.object.type' <<< "$tag_object")"
+            tag_sha="$(jq -r '.object.sha' <<< "$tag_object")"
+          fi
+          if [[ "$tag_type" != commit || "$tag_sha" != "$GITHUB_SHA" ]]; then
+            echo '::error::The existing tag points to a different object'
+            exit 1
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            if [[ "$(gh release view "$TAG" --json isDraft --jq .isDraft)" == true ]]; then
+              gh release upload "$TAG" release-dist/* --clobber
+            fi
+          else
+            gh release create "$TAG" release-dist/* --verify-tag --draft --latest=false \
+              --title 'Reverse Clip v1.1.1' --notes-file release-dist/V111_RELEASE_NOTES.md
+          fi
+          test "$(gh release view "$TAG" --json assets --jq '.assets | length')" = 8
+          downloaded="$(mktemp -d)"
+          gh release download "$TAG" -D "$downloaded"
+          for file in release-dist/*; do
+            cmp "$file" "$downloaded/$(basename "$file")"
+          done
+          if [[ "$(gh release view "$TAG" --json isDraft --jq .isDraft)" == true ]]; then
+            gh release edit "$TAG" --draft=false --latest
+          fi
+      - name: Confirm anonymous download and SHA-256 from public Release
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in release-dist/*; do
+            name="$(basename "$file")"
+            curl -fsSL --retry 3 "https://github.com/$GITHUB_REPOSITORY/releases/download/v1.1.1/$name" -o "/tmp/public-$name"
+            cmp "release-dist/$name" "/tmp/public-$name"
+          done
+          echo 'PASS unauthenticated public standalone asset downloads'
+          echo "Published Release: https://github.com/$GITHUB_REPOSITORY/releases/tag/v1.1.1" >> "$GITHUB_STEP_SUMMARY"

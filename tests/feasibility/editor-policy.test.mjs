@@ -85,3 +85,66 @@ test('the editor accepts a half-second selection with fractional endpoints',()=>
  assert.equal(settings.get('reverseButton').disabled,false);
  assert.equal(settings.get('draftButton').disabled,false);
 });
+
+
+test('encoding locks all editor settings and output buttons',()=>{
+ const start=html.indexOf('function rangeInfo()'),end=html.indexOf('function sourceIsCurrent(',start);
+ const fields=new Map([
+  ['rangeStart',{value:'0.2'}],['rangeEnd',{value:'0.7'}],
+  ['qualityInput',{value:'720'}],['fpsInput',{value:'15'}],
+  ['modeInput',{value:'reverse'}],['audioInput',{value:'reverse'}],
+ ]);
+ const $=selector=>{
+  const key=selector.slice(1);
+  if(!fields.has(key))fields.set(key,{setAttribute(){}});
+  return fields.get(key);
+ };
+ const state={ready:true,audioPresent:true,audioChecked:true,inputTransport:'workerfs'};
+ runInNewContext(html.slice(start,end)+'\nrangeInfo();',{
+  $,state,video:{duration:6},MAX_CLIP_SECONDS:10,
+  PINGPONG_ENABLED:true,AUDIO_MUX_ENABLED:true,conversionController:{},timelineZoom:false,
+  selectedFps:()=>15,outputDimensions:()=>({width:640,height:360}),
+  editorOutputPolicy:policy().editorOutputPolicy,
+  chunkFrameLimit:()=>30,planModeFrames:()=>({
+   segments:[{frames:8}],expectedDuration:.5,selectedStart:.2,selectedEnd:.7,
+  }),syncTrimControls(){},activeTimelineViewport:()=>({start:0,end:6}),
+  translate:key=>key,format:key=>key,threadingReady:()=>true,
+ });
+ for(const id of ['rangeStart','rangeEnd','trimStartSlider','trimEndSlider','qualityInput',
+   'fpsInput','markStartButton','markEndButton','timelineZoomButton','modeReverseButton',
+   'modePingpongButton','modeInput','audioInput','audioReverseOption',
+   'previewSelectionButton','draftButton','reverseButton']){
+  assert.equal(fields.get(id).disabled,true,id+' was editable during conversion');
+ }
+});
+
+test('invalid time fields clear a previous highlighted trim range',()=>{
+ const a=html.indexOf('function syncTrimControls()'),b=html.indexOf('function moveTrimHandle(',a);
+ const fields=new Map([
+  ['rangeStart',{value:'0'}],['rangeEnd',{value:'5'}],
+  ['trimStartSlider',{value:'0',min:'0',max:'10',setAttribute(){},removeAttribute(){}}],
+  ['trimEndSlider',{value:'5',min:'0',max:'10',setAttribute(){},removeAttribute(){}}],
+  ['trimSelectedTrack',{style:{left:'25%',width:'40%'}}],
+  ['trimSummary',{textContent:''}],
+ ]);
+ const sync=runInNewContext(html.slice(a,b)+'\nsyncTrimControls;',{
+  $:selector=>fields.get(selector.slice(1)),
+  state:{ready:true},video:{duration:10},
+  activeTimelineViewport:()=>({start:0,end:10}),
+  roundTrim:n=>Math.round(n*10)/10,
+  format:()=> 'valid',translate:()=> 'invalid'
+ });
+ sync();
+ assert.notEqual(fields.get('trimSelectedTrack').style.width,'0%');
+ fields.get('rangeEnd').value='0.2';
+ sync();
+ assert.equal(fields.get('trimSelectedTrack').style.width,'0%');
+ assert.equal(fields.get('trimSelectedTrack').style.left,'0%');
+ assert.equal(fields.get('trimSummary').textContent,'invalid');
+});
+
+test('video and capture buttons have equal grid cells; fallback remains secondary',()=>{
+ assert.match(html,/\.rc-drop \.button-row\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+ assert.match(html,/\.rc-drop \.button-row \.button\{display:flex;align-items:center;justify-content:center/);
+ assert.match(html,/\.file-fallback-button \{ display:none;[^\n]*border:0;[^\n]*background:transparent;/);
+});

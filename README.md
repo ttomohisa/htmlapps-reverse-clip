@@ -10,6 +10,13 @@
 Reverse a short video, or make it play forward and then backward (ping-pong), and save the result as an MP4. Everything runs in your browser without uploading the selected video. No account or installation is needed.
 
 
+## v1.1.1 fixes
+
+- MP4 creation locks the time fields, range handles, quality, frame rate, playback mode and audio settings. Use **Cancel conversion** to stop before editing.
+- Invalid start/end times clear the previous timeline highlight. Japanese/English switching also refreshes thumbnail and source-preview messages.
+- **Choose video** and **Record video** now have equal-size buttons; **Choose from files** is a smaller fallback underneath on touch/smaller screens.
+- The four v1.1.1 standalone ST/MT downloads include the current GitHub Pages UI. Older v1.1.0 Release assets remain unchanged.
+
 ## v1.1.0 editor improvements
 
 - Use an eight-thumbnail timeline, inspect boundary frames while dragging, or pause and choose **Set start/end here**.
