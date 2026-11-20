@@ -9,7 +9,7 @@ const icon=read('assets/favicon.svg');
 const config=JSON.parse(read('app.config.json'));
 
 test('v1.0 UI uses product copy without development gate jargon',()=>{
-  assert.equal(config.version,'1.1.0');
+  assert.equal(config.version,'1.1.1');
   assert.match(config.description,/forward-and-back MP4.*browser/);
   assert.match(config.descriptionJa,/動画はブラウザ内で処理します/);
   assert.doesNotMatch(config.description,/PREPARATION|G2|G3|not released/);
@@ -34,7 +34,7 @@ test('v0.8 input hardening distinguishes short but decodable source and disclose
 });
 
 test('v0.3.0 version and exact supplied 64px favicon/brand icon',()=>{
-  assert.equal(config.version,'1.1.0');
+  assert.equal(config.version,'1.1.1');
   assert.equal(createHash('sha256').update(icon).digest('hex'),
     'd0ed25d1c017d253aaf48a3d482e6d60b97e6386edff5fa97bbf13e041af0f7e');
   assert.match(icon,/viewBox="0 0 64 64"/);

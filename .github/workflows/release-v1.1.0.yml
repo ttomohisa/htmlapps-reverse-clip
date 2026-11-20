@@ -1,21 +1,8 @@
 name: Publish Reverse Clip v1.1.0 standalone Release
 
-# Build and validate the release package on PRs. Publish only when this
-# one-shot workflow is introduced or changed on main.
+# Archived v1.1.0 publication recipe. Do not trigger on newer PRs or main pushes.
 on:
-  push:
-    branches: [main]
-    paths: [".github/workflows/release-v1.1.0.yml"]
-  pull_request:
-    branches: [main]
-    paths:
-      - ".github/workflows/release-v1.1.0.yml"
-      - "docs/release/V110_RELEASE_NOTES.md"
-      - "src/**"
-      - "app.config.json"
-      - "scripts/**"
-      - "build-standalone.ps1"
-      - "reverse-runtime.lock.json"
+  workflow_dispatch:
 
 permissions:
   contents: read

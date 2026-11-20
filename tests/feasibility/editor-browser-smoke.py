@@ -40,6 +40,12 @@ def main():
      page.locator('#timelineZoomButton').click()
      page.wait_for_function("() => document.querySelector('#trimPreviewNotice').textContent.includes('サムネイル')")
      assert page.locator('#timelineFilmstrip img').count()==0,'stale thumbnails must be cleared on zoom failure'
+     # Transient status and empty-strip text update without rerendering the video.
+     page.locator('#languageButton').click()
+     assert 'Thumbnails unavailable' in page.locator('#trimPreviewNotice').inner_text()
+     assert page.locator('#timelineFilmstrip').get_attribute('data-placeholder')=='No thumbnails'
+     page.locator('#languageButton').click()
+     assert 'サムネイル' in page.locator('#trimPreviewNotice').inner_text()
      assert page.locator('#rangeStart').is_enabled()
      page.evaluate('() => {HTMLMediaElement.prototype.load=window.originalMediaLoad;}')
      assert page.locator('#timelineZoomButton').get_attribute('aria-pressed')=='true'
@@ -62,8 +68,21 @@ def main():
      page.locator('#rangeStart').fill('0.2')
      page.locator('#rangeEnd').fill('0.7')
      assert page.locator('#reverseButton').is_enabled()
+     page.locator('#rangeEnd').fill('0.3')
+     assert page.locator('#trimSelectedTrack').evaluate('(e)=>e.style.width')=='0%','invalid trim retained a previous highlight'
+     assert page.locator('#reverseButton').is_disabled()
+     page.locator('#rangeEnd').fill('0.7')
+     assert page.locator('#reverseButton').is_enabled()
      page.locator('#reverseButton').click()
+     page.wait_for_function("() => !document.querySelector('#cancelReverseButton').hidden",timeout=30000)
+     for field in ['rangeStart','rangeEnd','trimStartSlider','trimEndSlider',
+                   'qualityInput','fpsInput','modeInput','audioInput','audioReverseOption',
+                   'modeReverseButton','modePingpongButton','markStartButton','markEndButton','timelineZoomButton']:
+      assert page.locator('#'+field).is_disabled(),field+' was editable while converting'
+     assert page.locator('#cancelReverseButton').is_enabled()
      page.wait_for_function("() => !document.querySelector('#resultArea').hidden",timeout=120000)
+     assert page.locator('#rangeStart').is_enabled()
+     assert page.locator('#qualityInput').is_enabled()
      with page.expect_download() as short_download:
          page.locator('#saveReverseButton').click()
      short_out=tmp/f'short-{variant}.mp4'
