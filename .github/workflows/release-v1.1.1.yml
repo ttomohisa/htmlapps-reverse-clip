@@ -43,7 +43,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $config = Get-Content app.config.json -Raw | ConvertFrom-Json
-          if ($config.version -ne '1.1.0') { throw 'Wrong app.config.json version' }
+          if ($config.version -ne '1.1.1') { throw 'Wrong app.config.json version' }
           $dest = Join-Path $PWD 'release-dist'
           New-Item -ItemType Directory -Path $dest -Force | Out-Null
           $sources = [ordered]@{

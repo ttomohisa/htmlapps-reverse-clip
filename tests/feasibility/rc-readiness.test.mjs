@@ -7,7 +7,7 @@ const config=JSON.parse(read('app.config.json'));
 const lock=JSON.parse(read('reverse-runtime.lock.json'));
 const rc=read('docs/release/RC_CHECKLIST.md');
 test('v1.1.0 has product-facing descriptions and preserves archived RC evidence',()=>{
-  assert.equal(config.version,'1.1.0');
+  assert.equal(config.version,'1.1.1');
   assert.match(config.description,/forward-and-back MP4.*browser/);
   assert.match(config.descriptionJa,/動画はブラウザ内で処理します/);
   assert.doesNotMatch(config.description,/G2|G3|RC PREPARATION|not released/);
