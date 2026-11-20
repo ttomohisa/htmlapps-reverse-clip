@@ -12,6 +12,20 @@ page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()
 try{await page.goto(pathToFileURL(path.resolve(file)).href);await page.locator('#helpButton').waitFor();
 await page.waitForFunction(()=>/^\d+\.\d+\.\d+$/.test(document.querySelector('#buildVersion').textContent));
 if(await page.locator('html').getAttribute('lang')!==language)await page.locator('#languageButton').click();
+const primarySizes=await page.locator('#pickButton, #captureButton').evaluateAll(buttons=>buttons.map(button=>{
+ const r=button.getBoundingClientRect();return {width:r.width,height:r.height};
+}));
+assert.equal(primarySizes.length,2,label+': picker actions');
+assert.ok(Math.abs(primarySizes[0].width-primarySizes[1].width)<=1,label+': picker widths differ');
+assert.ok(Math.abs(primarySizes[0].height-primarySizes[1].height)<=1,label+': picker heights differ');
+const fallback=page.locator('#fileFallbackButton');
+assert.equal(await fallback.isVisible(),width<=767,label+': file provider fallback visibility');
+if(width<=767){
+ const style=await fallback.evaluate(e=>({fontSize:getComputedStyle(e).fontSize,bg:getComputedStyle(e).backgroundColor,height:e.getBoundingClientRect().height}));
+ assert.equal(style.fontSize,'12px',label+': fallback must be secondary');
+ assert.equal(style.bg,'rgba(0, 0, 0, 0)',label+': fallback has no filled button surface');
+ assert.ok(style.height>=40,label+': fallback tap height');
+}
 assert.equal((await page.locator('[data-i18n="localBadge"]').textContent()).trim(),language==='ja'?'完全ローカル処理':'Fully local processing');if(await page.locator('.local-badge').isVisible())await bounds(page.locator('.local-badge'),width,height,label,false);
 assert.equal(await page.locator('body > footer').isVisible(),width>cfg.bp,label+': informational footer');
 
