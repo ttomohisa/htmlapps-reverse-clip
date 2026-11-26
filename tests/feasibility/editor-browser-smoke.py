@@ -117,6 +117,9 @@ def main():
      assert page.locator('#saveReverseButton').is_visible(),'failed share discarded output'
      page.locator('#loopResultInput').check();assert page.locator('#resultVideo').evaluate('(v)=>v.loop')
      page.locator('#flowBackToEditButton').click()
+     previous_url=page.locator('#resultVideo').get_attribute('src')
+     page.locator('#modePingpongButton').click()
+     assert previous_url and page.locator('#resultVideo').get_attribute('src')==previous_url
      page.locator('#draftButton').click()
      page.wait_for_function("() => !document.querySelector('#resultArea').hidden",timeout=120000)
      assert page.locator('#draftNotice').is_visible()
@@ -157,6 +160,13 @@ def main():
      page.locator('#flowBackToEditButton').click();page.locator('#qualityInput').select_option('1280')
      assert page.locator('#reverseButton').is_disabled()
      assert page.locator('#qualityInput').input_value()=='1280'
+     assert page.locator('#previewSelectionButton').is_enabled()
+     page.locator('#previewSelectionButton').click()
+     page.wait_for_function("() => document.querySelector('#sourceVideo').currentTime>2.1 && !document.querySelector('#sourceVideo').paused")
+     page.locator('#restoreFpsButton').click()
+     assert page.locator('#fpsInput').input_value()=='15' and page.locator('#reverseButton').is_enabled()
+     assert page.locator('#qualityInput').input_value()=='1280' and page.locator('#rangeStart').input_value()=='2'
+     page.locator('#fpsInput').select_option('30')
      page.locator('#qualityInput').select_option('720');page.locator('#rangeEnd').fill('8')
      assert page.locator('#reverseButton').is_disabled()
      page.locator('#rangeEnd').fill('4')
@@ -181,6 +191,30 @@ def main():
      page.locator('#sourceInput').set_input_files(source)
      page.wait_for_function("() => document.querySelector('#loadStatus').dataset.phase==='ready'")
      page.wait_for_function("() => document.querySelectorAll('#timelineFilmstrip img').length===8")
+     # Exercise a fresh source after the legacy zoom and media checks.
+     page.set_viewport_size({'width':390,'height':844})
+     page.locator('#modeReverseButton').click()
+     page.locator('#fpsInput').select_option('15')
+     page.locator('#qualityInput').select_option('360')
+     def seek(seconds):
+      page.locator('#sourceVideo').evaluate("""(v,t)=>new Promise(done=>{
+       v.addEventListener('seeked',done,{once:true});v.currentTime=t;})""",seconds)
+     for position, expected in [(6,(6,11)),(11,(11,12)),(12,(11.5,12))]:
+      seek(position)
+      page.locator('#selectFiveButton').press('Enter')
+      assert tuple(float(page.locator('#'+key).input_value()) for key in ['rangeStart','rangeEnd'])==expected
+     page.locator('#rangeStart').fill('0')
+     page.locator('#rangeEnd').fill('1')
+     page.locator('#draftButton').click()
+     page.locator('#saveReverseButton').wait_for(state='visible',timeout=120000)
+     assert not page.locator('#createFinalButton').is_visible()
+     draft_url=page.locator('#resultVideo').get_attribute('src')
+     page.locator('#reverseFilename').fill('verified-draft')
+     with page.expect_download() as ready_draft:page.locator('#saveReverseButton').click()
+     assert ready_draft.value.url==draft_url and ready_draft.value.suggested_filename=='verified-draft.mp4'
+     page.locator('#flowBackToEditButton').click()
+     page.locator('#modeReverseButton').click()
+     assert page.locator('#resultVideo').get_attribute('src')==draft_url
      assert not errors,errors
      assert not remote,remote
      print(json.dumps({'variant':variant,'30fpsFrames':video['nb_frames'],'draftWidth':dv['width'],'errors':errors,'external':remote}))

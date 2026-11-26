@@ -655,6 +655,7 @@
         <output id="trimSummary" aria-live="off">0.0–1.0 秒</output>
       </div>
       <div class="rc-trim-actions">
+        <button class="button" id="selectFiveButton" type="button" data-i18n="selectFive" disabled>ここから5秒</button>
         <button class="button" id="markStartButton" type="button" data-i18n="markStart" disabled>今の位置を開始に</button>
         <button class="button" id="markEndButton" type="button" data-i18n="markEnd" disabled>今の位置を終了に</button>
         <button class="button" id="timelineZoomButton" type="button" aria-pressed="false" data-i18n="zoomTimeline" disabled>選択付近を拡大</button>
@@ -699,6 +700,7 @@
     </div>
     <p id="outputSummary" class="rc-output-summary" role="status"></p>
     <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
+    <button id="restoreFpsButton" class="button" type="button" data-i18n="restoreFps" hidden>15fpsに戻す</button>
     <p id="memoryEstimate" class="rc-hint"></p>
     <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声トラックを確認しています。音声なしでもMP4を作成できます。</p>
   </div>
@@ -730,7 +732,7 @@
       </div>
       <button id="shareResultButton" class="button" type="button" hidden disabled data-i18n="shareResult">動画を共有</button>
       <button id="createFinalButton" class="button primary" type="button" hidden data-i18n="createFinal">この設定でMP4を作成</button>
-      <p id="flowSaveHint" class="rc-hint" role="status" hidden data-i18n="flowSaveHint">MP4のダウンロードを開始しました。見つからない場合は、ブラウザーのダウンロードを確認するか、もう一度「MP4を保存」を押してください。</p>
+      <p id="flowSaveHint" class="rc-hint" role="status" hidden data-i18n="flowSaveHint">MP4のダウンロードを開始しました。見つからない場合はブラウザーのダウンロード履歴を確認してください。</p>
       <button id="flowBackToEditButton" class="button rc-mobile-only" type="button" data-i18n="flowBackEdit">区間・設定を変更する</button>
     </div>
   </section>
@@ -779,6 +781,7 @@
   <li data-i18n="helpStep3">再生モード・画質・対応する場合は音声を選んでMP4を作成し、結果を確認して保存します。</li>
   </ol>
   <p data-i18n="editorHelp"></p>
+  <p data-i18n="draftHelp"></p>
   <h3 data-i18n="helpPrivacyTitle">プライバシー</h3>
   <p data-i18n="helpPrivacyBody">動画は端末内で読み込み、アプリから送信しません。診断ファイルはユーザーの操作時のみ端末へ保存します。</p>
   <h3 data-i18n="helpNotesTitle">制限と注意</h3>
@@ -925,7 +928,13 @@
     "sourceVideoLabel": "元動画のプレビュー",
     "resultReverseVideoLabel": "逆再生MP4のプレビュー",
     "resultPingpongVideoLabel": "往復再生MP4のプレビュー",
-    "editorHelp": "映像を一時停止して「今の位置を開始／終了に」で区間を指定できます。選択付近の拡大、ハンドルでの調整、元動画の範囲再生も使えます。「仕上がりを試す」は低解像度・15fps・音声なしの試作です。30fpsは長辺720px以下・選択区間5秒までの試験設定です。完成結果は繰り返し確認でき、対応端末では共有先を選べます。共有は利用者の操作時のみ行います。",
+    "editorHelp": "使いたい場面で「ここから5秒」を押すと、現在位置から最大5秒を選べます。末尾に0.5秒も残っていないときは最後の0.5秒を選びます。開始・終了の個別指定、拡大、元動画の範囲再生も使えます。30fpsは長辺720px以下・5秒までです。",
+    "draftHelp": "「仕上がりを試す」は長辺360px以下・15fps・音声なしの試作です。出力設定と一致すればそのまま保存できます。異なる場合は「この設定でMP4を作成」を押してください。結果は繰り返し再生でき、対応端末では共有先を選べます。",
+    "selectFive": "ここから5秒",
+    "fiveSecondTail": "末尾まで0.5秒未満のため、最後の0.5秒を選びました。",
+    "restoreFps": "15fpsに戻す",
+    "saveMatchingDraft": "この動画を保存",
+    "matchingDraftReady": "試作が出力設定と一致しました。このまま保存できます。",
     "thumbnailLoading": "サムネイルを準備中…",
     "thumbnailUnavailableShort": "サムネイルなし",
     "markStart": "今の位置を開始に",
@@ -962,7 +971,7 @@
     "flowResultTitle": "結果を確認・保存",
     "flowResultBody": "生成したMP4を再生して確認し、ファイル名を決めて保存します。",
     "flowStepAnnouncement": "{step}を表示しています",
-    "flowSaveHint": "MP4のダウンロードを開始しました。見つからない場合は、ブラウザーのダウンロードを確認するか、もう一度「MP4を保存」を押してください。",
+    "flowSaveHint": "MP4のダウンロードを開始しました。見つからない場合はブラウザーのダウンロード履歴を確認してください。",
     "flowReplaceTitle": "作成したMP4を破棄しますか？",
     "flowReplaceMessage": "まだダウンロードしていない結果があります。別の動画を読み込むと、このMP4は使えなくなります。",
     "flowReplaceConfirm": "動画を入れ替える",
@@ -1112,7 +1121,13 @@
     "sourceVideoLabel": "Source video preview",
     "resultReverseVideoLabel": "Reversed MP4 preview",
     "resultPingpongVideoLabel": "Ping-pong MP4 preview",
-    "editorHelp": "Pause the video and use Set start/end here, zoom around the selection, or drag a range handle. Play source selection previews the original video. Try a draft renders the selected interval at low resolution, 15fps and without audio. Experimental 30fps requires a long edge up to 720px and a selection up to 5 seconds. Loop the result to check the join. On supported devices, Share video opens the system share sheet only when you request it.",
+    "editorHelp": "Use “Select 5s from here” to select up to five seconds from the playhead. With less than half a second left, it selects the last half-second. You can also mark each boundary, zoom in and play the source selection. The 30fps setting supports up to 720px long edge and five seconds.",
+    "draftHelp": "Try a draft renders at up to 360px long edge, 15fps and without audio. If it matches your output settings, you can save it immediately. Otherwise, use “Create MP4 with these settings”. Loop the result to check the join or choose a sharing destination on supported devices.",
+    "selectFive": "Select 5s from here",
+    "fiveSecondTail": "Less than half a second remained, so the last half-second is selected.",
+    "restoreFps": "Switch to 15fps",
+    "saveMatchingDraft": "Save this video",
+    "matchingDraftReady": "The draft matches your output settings and is ready to save.",
     "thumbnailLoading": "Preparing thumbnails…",
     "thumbnailUnavailableShort": "No thumbnails",
     "markStart": "Set start here",
@@ -1149,7 +1164,7 @@
     "flowResultTitle": "Preview and save result",
     "flowResultBody": "Review the generated MP4, choose a filename and download.",
     "flowStepAnnouncement": "Showing {step}",
-    "flowSaveHint": "MP4 download started. If you cannot find it, check your browser's Downloads or select Save MP4 again.",
+    "flowSaveHint": "MP4 download started. If you cannot find it, check your browser’s Downloads.",
     "flowReplaceTitle": "Discard the generated MP4?",
     "flowReplaceMessage": "This MP4 has not been downloaded yet. Loading another video will discard the result.",
     "flowReplaceConfirm": "Replace video",
@@ -1643,6 +1658,10 @@
         const next={start:which==='start'?value:start,end:which==='end'?value:end};
         return next.end-next.start>=.5-1e-8 ? next : null;
       }
+      function validSourceRange(start,end,duration) {
+        return Number.isFinite(start) && Number.isFinite(end) && start>=0 &&
+          end<=duration+.001 && end-start>=.5-1e-8;
+      }
       // EDITOR POLICY END
       function selectedFps(){return Number($('#fpsInput').value)||OUTPUT_FPS;}
       let timelineZoom=false, timelineView=null, thumbnailKey='', thumbnailTimer=0, thumbnailEpoch=0, thumbnailDecoder=null, thumbnailAbort=null;
@@ -1714,8 +1733,24 @@
         if(!state.ready || conversionController)return;
         const range=boundaryAtTime(which,video.currentTime,Number($('#rangeStart').value),Number($('#rangeEnd').value),video.duration);
         if(!range){showToast(translate('boundaryInvalid'));return;}
-        $('#rangeStart').value=range.start.toFixed(1);$('#rangeEnd').value=range.end.toFixed(1);
+        applyTrimRange(range.start,range.end);
+      }
+      function applyTrimRange(start,end){
+        if($('#rangeStart').valueAsNumber===start && $('#rangeEnd').valueAsNumber===end)return;
+        $('#rangeStart').value=start.toFixed(1);
+        $('#rangeEnd').value=end.toFixed(1);
         onOutputSettingsEdited();
+      }
+      function selectFiveSeconds(){
+        if(!state.ready || conversionController)return;
+        // Both ends use the editor's tenth-second grid and its 0.5s minimum.
+        const lastTick=Math.round(sliderMaxTime()*10);
+        const playheadTick=Math.round(video.currentTime*10);
+        const startTick=Math.min(playheadTick,lastTick-5);
+        previewSelectionActive=false;
+        video.pause();
+        applyTrimRange(startTick/10,Math.min(startTick+50,lastTick)/10);
+        setTrimPreviewNotice(startTick<playheadTick?'fiveSecondTail':'');
       }
       // Estimate a <=48MiB YUV420 frame cache per chunk. This does not bound
       // decoder/FFmpeg graphs, WASM heap, or JS memory: G2 requires measurements.
@@ -1843,8 +1878,7 @@
         for (const control of [a,b]) { control.min=String(Math.floor(minTime*10)/10); control.max=String(maxTime); control.disabled=false; }
         const rawStart=$('#rangeStart').value.trim(), rawEnd=$('#rangeEnd').value.trim();
         const start=Number(rawStart), end=Number(rawEnd);
-        const valid=Boolean(rawStart && rawEnd && Number.isFinite(start) && Number.isFinite(end) &&
-          start>=0 && end<=video.duration+.001 && end-start>=.5-1e-8);
+        const valid=rawStart && rawEnd && validSourceRange(start,end,video.duration);
         if (valid) {
           a.value=String(Math.max(0,Math.min(maxTime,roundTrim(start))));
           b.value=String(Math.max(0,Math.min(maxTime,roundTrim(end))));
@@ -1892,7 +1926,7 @@
         rangeInfo();
       }
       function previewSelectedSource() {
-        if (!state.ready || !state.validRange) return;
+        if (!state.ready || $('#previewSelectionButton').disabled) return;
         const start=Number($('#rangeStart').value);
         previewSelectionActive=true;
         video.pause();
@@ -1921,15 +1955,14 @@
         if (!state.ready) return;
         const rawStart = $('#rangeStart').value.trim(), rawEnd = $('#rangeEnd').value.trim();
         const start = Number(rawStart), end = Number(rawEnd), duration = end-start;
+        const canPreview = Boolean(rawStart && rawEnd && validSourceRange(start,end,video.duration));
         const dims = outputDimensions();
         const OUTPUT_FPS=selectedFps();
         const policy=editorOutputPolicy(Number($('#qualityInput').value),OUTPUT_FPS,duration);
         const mode=$('#modeInput').value;
         const modeAvailable=mode==='reverse' || (mode==='pingpong' && PINGPONG_ENABLED);
         let plan = null;
-        if (rawStart && rawEnd && Number.isFinite(start) && Number.isFinite(end) &&
-            start >= 0 && end <= video.duration+.001 &&
-            policy.valid && modeAvailable) {
+        if (canPreview && policy.valid && modeAvailable) {
           try { plan = planModeFrames(start,end,mode,OUTPUT_FPS,
                                       chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)); } catch (_) {}
         }
@@ -1950,7 +1983,7 @@
         const busy=Boolean(conversionController);
         // syncTrimControls may reenable sliders: lock every editor setting after it.
         for(const id of ['rangeStart','rangeEnd','trimStartSlider','trimEndSlider',
-                         'qualityInput','fpsInput','markStartButton','markEndButton',
+                         'qualityInput','fpsInput','selectFiveButton','markStartButton','markEndButton',
                          'timelineZoomButton','modeReverseButton'])$('#'+id).disabled=busy;
         $('#modeInput').disabled=busy || !PINGPONG_ENABLED;
         const canEditAudio=AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent;
@@ -1965,7 +1998,9 @@
         if(!busy)scheduleThumbnails(view);
         $('#outputSummary').textContent=format('outputSummary',{...dims,fps:OUTPUT_FPS,max:policy.maxSeconds});
         $('#draftButton').disabled=!safe || busy || !threadingReady() || state.inputTransport==='preparing' || state.inputTransport==='unreadable';
-        $('#previewSelectionButton').disabled=!safe || Boolean(conversionController);
+        $('#previewSelectionButton').disabled=!canPreview || busy;
+        $('#restoreFpsButton').hidden=busy || !canPreview || OUTPUT_FPS!==30 ||
+          policy.valid || !editorOutputPolicy(quality,15,duration).valid;
         if (safe) {
           $('#rangeNotice').textContent = format(mode==='pingpong'?'pingpongRangePlan':'rangePlan',{
             count:plan.segments.length,duration:plan.expectedDuration.toFixed(2)
@@ -1975,7 +2010,7 @@
                (standardHd ? ' '+translate('rangeHdPilotWarning') : '') +
                (fullHd ? ' '+translate('rangeFullHdPilotWarning') : '');
         } else {
-          const notice = OUTPUT_FPS===30 && !policy.valid ? 'fpsLimit' : highTooLong ? 'rangeFullHdPilotTooLong' :
+          const notice = !canPreview ? 'rangeInvalid' : OUTPUT_FPS===30 && !policy.valid ? 'fpsLimit' : highTooLong ? 'rangeFullHdPilotTooLong' :
                          !plan ? duration > MAX_CLIP_SECONDS ? 'rangeTooLong' : 'rangeInvalid'
                                : 'rangeMemoryHigh';
           $('#rangeNotice').textContent = translate(notice);
@@ -2299,10 +2334,13 @@
         const result=state.conversion;
         if(!result?.ok)return;
         $('#draftNotice').hidden=!result.draft;
-        $('#resultSaveControls').hidden=Boolean(result.draft);
-        $('#createFinalButton').hidden=!result.draft;
-        $('#shareResultButton').hidden=Boolean(result.draft) || !canShareResult();
-        $('#shareResultButton').disabled=Boolean(result.draft) || !resultBlob;
+        const matchingDraft=result.draft && !result.requiresFinalRender;
+        $('#draftNotice').textContent=translate(matchingDraft?'matchingDraftReady':'draftNotice');
+        $('#saveReverseButton').textContent=translate(matchingDraft?'saveMatchingDraft':'saveReverse');
+        $('#resultSaveControls').hidden=result.requiresFinalRender;
+        $('#createFinalButton').hidden=!result.requiresFinalRender;
+        $('#shareResultButton').hidden=result.requiresFinalRender || !canShareResult();
+        $('#shareResultButton').disabled=result.requiresFinalRender || !resultBlob;
         const isPingpong=result.mode==='pingpong', withAudio=result.audio==='reverse';
         $('#resultTitle').textContent=translate(isPingpong?'pingpongResultTitle':'resultTitle');
         $('#resultVideo').setAttribute('aria-label',
@@ -2362,6 +2400,7 @@
       function onConversionModeChanged() {
         const selected=$('#modeInput').value;
         const previous=state.lastSelectedMode;
+        if(selected===previous)return;
         const oldName=suggestOutputFilename(state.file?.name,previous);
         const newName=suggestOutputFilename(state.file?.name,selected);
         const field=$('#reverseFilename');
@@ -2435,8 +2474,10 @@
           showToast(translate('reverseSourceUnreadable')); return;
         }
         const start=Number($('#rangeStart').value), end=Number($('#rangeEnd').value);
-        const dims=outputDimensions();
-        const OUTPUT_FPS=draft?15:selectedFps();
+        const finalDimensions=outputDimensions(), finalFps=selectedFps();
+        const finalAudio=$('#audioInput').value;
+        const dims={...finalDimensions};
+        const OUTPUT_FPS=draft?15:finalFps;
         if(draft){const scale=Math.min(1,360/Math.max(dims.width,dims.height));dims.width=Math.max(16,Math.floor(dims.width*scale/2)*2);dims.height=Math.max(16,Math.floor(dims.height*scale/2)*2);}
         if (!threadingReady()) {
           showToast(translate('mtUnavailable'));
@@ -2451,7 +2492,7 @@
           !(AUDIO_MUX_ENABLED && state.audioChecked && state.audioPresent)){
           showToast(translate('audioUnavailable'));return;
         }
-        const wantsAudio=!draft && $('#audioInput').value==='reverse';
+        const wantsAudio=!draft && finalAudio==='reverse';
         let plan;
         try { plan=planModeFrames(start,end,mode,OUTPUT_FPS,
                                   chunkFrameLimit(dims.width,dims.height,OUTPUT_FPS)); }
@@ -2664,8 +2705,10 @@
               Math.abs(duration-plan.expectedDuration)>1.2/OUTPUT_FPS)
             throw new Error('Joined MP4 duration differs from selection: '+duration+' / '+plan.expectedDuration);
           const elapsed=(performance.now()-started)/1000;
+          const requiresFinalRender=draft && (resultVideo.videoWidth!==finalDimensions.width ||
+            resultVideo.videoHeight!==finalDimensions.height || OUTPUT_FPS!==finalFps || finalAudio!=='none');
           state.conversion={
-            ok:true,draft,elapsedSeconds:Number(elapsed.toFixed(2)),
+            ok:true,draft,requiresFinalRender,elapsedSeconds:Number(elapsed.toFixed(2)),
             outputBytes:outputSize,outputDuration:duration,
             outputWidth:resultVideo.videoWidth,outputHeight:resultVideo.videoHeight,
             selectedStart:plan.selectedStart,selectedEnd:plan.selectedEnd,
@@ -2682,7 +2725,8 @@
           // actual browser preview have all been checked.
           if(flowStep==='edit')setFlowStep('result',{focus:true});
           else updateFlowNavigation();
-          conversionMessageKey=draft?'draftSuccess':mode==='pingpong'?'pingpongSuccess':'reverseSuccess';
+          conversionMessageKey=draft ? (requiresFinalRender?'draftSuccess':'matchingDraftReady') :
+            (mode==='pingpong'?'pingpongSuccess':'reverseSuccess');
           const successText=translate(conversionMessageKey);
           $('#reverseStatus').textContent=successText;
           showToast(successText,{tone:'success'});
@@ -2764,7 +2808,7 @@
         }
       }
       function saveReverseResult() {
-        if(!resultUrl||!state.conversion?.ok||state.conversion.draft)return;
+        if(!resultUrl||!state.conversion?.ok||state.conversion.requiresFinalRender)return;
         const a=document.createElement('a');
         a.href=resultUrl;
         a.download=normalizeMP4Filename();
@@ -2779,7 +2823,7 @@
         try{return navigator.canShare({files:[new File([resultBlob],'reverse-clip.mp4',{type:'video/mp4'})]});}catch(_){return false;}
       }
       async function shareReverseResult(){
-        if(!state.conversion?.ok || state.conversion.draft || !canShareResult())return;
+        if(!state.conversion?.ok || state.conversion.requiresFinalRender || !canShareResult())return;
         const button=$('#shareResultButton'), generation=state.generation, epoch=conversionEpoch;
         const file=new File([resultBlob],normalizeMP4Filename(),{type:'video/mp4'});
         button.disabled=true;
@@ -2791,6 +2835,13 @@
       $('#loopResultInput').addEventListener('change',()=>{$('#resultVideo').loop=$('#loopResultInput').checked;});
       $('#markStartButton').addEventListener('click',()=>markBoundary('start'));
       $('#markEndButton').addEventListener('click',()=>markBoundary('end'));
+      $('#selectFiveButton').addEventListener('click',selectFiveSeconds);
+      $('#restoreFpsButton').addEventListener('click',()=>{
+        if(!state.ready || conversionController || $('#restoreFpsButton').hidden)return;
+        $('#fpsInput').value='15';
+        onOutputSettingsEdited();
+        $('#fpsInput').focus();
+      });
       $('#timelineZoomButton').addEventListener('click',()=>{timelineZoom=!timelineZoom;timelineView=null;rangeInfo();});
       for(const [id,mode] of [['modeReverseButton','reverse'],['modePingpongButton','pingpong']])
         $('#'+id).addEventListener('click',()=>{if(!state.ready || conversionController)return;$('#modeInput').value=mode;onConversionModeChanged();});

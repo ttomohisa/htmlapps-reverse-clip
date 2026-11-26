@@ -1,5 +1,12 @@
 # Reverse Clip / 動画逆再生 — APP_SPEC.md
 
+## Editor and draft saving (unreleased)
+
+- Repeatedly selecting the current playback mode preserves the verified result and edited filename. Switching to another mode invalidates the previous result.
+- Select 5s from here selects up to five seconds on the editor’s 0.1s grid. At the end of the source, select the remaining interval or the final 0.5s if less remains.
+- A valid source interval can be previewed independently of the encoder limits. Offer a one-click return to 15fps when that resolves a frame-rate constraint. Keep the interval and other settings.
+- A verified draft with the selected output dimensions, frame rate and audio can be downloaded or shared using its existing MP4. A differing draft still requires a final render before export.
+
 ## 2026-11-20 — v1.1.1 editor and distribution regression fixes
 
 - While an encoder job is active, numeric start/end inputs, both range handles, quality/fps/audio options, and mode controls are disabled. A user can intentionally stop the job via Cancel conversion. Settings regain their previous availability after completion, cancellation or failure.

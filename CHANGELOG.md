@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Preserve completed MP4s when the active mode is selected again.
+- Select up to five seconds from the playhead in one action, including near the end of a video.
+- Preview the source selection independently of export settings and switch to 15fps when that resolves the issue.
+- Save or share an existing draft directly when it matches the requested output.
+
 ## [1.1.1]
 
 - Disable all trim, quality, mode, fps and audio controls during conversion; the explicit Cancel control is the only supported way to stop an encode before changing settings.

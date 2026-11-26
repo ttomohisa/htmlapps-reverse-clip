@@ -23,7 +23,7 @@ Reverse a short video, or make it play forward and then backward (ping-pong), an
 - Zoom around the selection for precise trimming in long sources; return to the entire video at any time.
 - Choose **Reverse** or **Ping-pong** with visible mode buttons, and inspect the actual output dimensions and maximum selection length.
 - 15fps remains the default. Experimental 30fps requires a long-edge preset up to 720px and a selection up to 5 seconds. The source frame rate is not automatically preserved.
-- **Try a draft** renders the whole selected interval at up to 360px long edge, 15fps, without audio. Drafts are for motion review; create a full MP4 to save or share.
+- **Try a draft** renders the whole selected interval at up to 360px long edge, 15fps, without audio.
 - Loop the result to inspect the join. On supported devices, **Share video** opens the OS share sheet only on request. You choose whether and where to hand off the video.
 
 ## Live demo
@@ -65,12 +65,12 @@ The initial build needs an internet connection to fetch the fixed-version depend
 ## How to use
 
 1. **Video:** Choose a short H.264 MP4 from your device and check the source preview.
-2. **Edit:** Set the start and end points with the timeline or time fields.
+2. **Edit:** Use **Select 5s from here** at the desired scene, or set the boundaries with the timeline or time fields. Near the end it selects the remaining time, with a minimum of the final half-second. You can play a valid source selection even with incompatible export settings. Use **Switch to 15fps** when that change makes the selection exportable.
 3. Select **Reverse** or **Ping-pong**.
 4. Choose the output size. **360px or 720px long edge** is the practical initial scope; higher-resolution options are experimental.
 5. Leave **No audio** selected, or choose reverse audio if the video's audio track is recognized and that option is available.
 6. Create the MP4. Wait for the result; use Cancel if you need to stop.
-7. **Result:** Preview the output, choose a filename and select **Save MP4**.
+7. **Result:** Preview the output, choose a filename and save the MP4. For a draft, use **Save this video** when its dimensions, frame rate and audio match your output settings. Otherwise, select **Create MP4 with these settings**.
 
 Choosing another source while an unsaved result is present asks for confirmation. Failed or incomplete results are not offered as valid MP4 downloads. Download initiation does not by itself guarantee that the browser or operating system finished saving the file.
 
