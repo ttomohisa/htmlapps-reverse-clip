@@ -1,8 +1,8 @@
-# Current screenshot evidence — v1.1.0
+# Current screenshot evidence — responsive timeline editor
 
 The four current assets show the actual editor with a locally generated motion sample, in Japanese/English at 1360×900 and 390×844. Capture command: `CHROMIUM_EXE=/path/to/chromium python tests/feasibility/editor-screenshots.py`. Current hashes are in [RC_SCREENSHOT_ASSET_MANIFEST.json](RC_SCREENSHOT_ASSET_MANIFEST.json). These editor images do not prove export correctness or physical Android/iPhone behavior; real output verification is recorded separately in [V110_VERIFICATION.md](V110_VERIFICATION.md).
 
-The v0.9.0 evidence below is historical; its old manifest is retained with a `.v090.json` suffix. The asset paths now contain v1.1.0 editor captures.
+The v0.9.0 evidence below is historical. Its manifest is retained with a `.v090.json` suffix.
 
 # Reverse Clip v0.9.0 — actual screenshot evidence
 

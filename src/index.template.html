@@ -485,8 +485,6 @@
     .rc-trim-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;font-size:13px}
     .rc-trim-head strong{font-size:14px}
     .rc-trim-head output{font-variant-numeric:tabular-nums;color:var(--accent);font-weight:650}
-    .rc-trim-labels{display:flex;justify-content:space-between;gap:14px;font-size:12px;color:var(--muted)}
-    .rc-trim-labels label{cursor:pointer}
     .rc-trim-sliders{position:relative;height:52px;margin:4px 0 5px}
     .rc-trim-track{position:absolute;top:20px;left:12px;right:12px;height:12px;border-radius:99px;background:var(--line-strong);pointer-events:none}
     .rc-trim-selection{position:absolute;top:0;bottom:0;left:0;width:100%;border-radius:99px;background:var(--accent)}
@@ -558,6 +556,7 @@
       .rc-selected-summary p{margin:0 0 10px;font-size:13px;overflow-wrap:anywhere}
       .rc-selected-summary .button{min-height:44px;width:100%}
       #flowBackToEditButton{width:100%;min-height:44px;margin-top:10px}
+      #rcWorkflow[data-flow-step="video"] #resultArea,
       #rcWorkflow[data-flow-step="video"] #videoArea,
       #rcWorkflow[data-flow-step="video"] #reversePanel{display:none!important}
       #rcWorkflow[data-flow-step="edit"] #dropZone,
@@ -568,8 +567,7 @@
       #rcWorkflow[data-flow-step="result"] .rc-source-status,
       #rcWorkflow[data-flow-step="result"] #selectedSourceSummary,
       #rcWorkflow[data-flow-step="result"] #videoArea,
-      #rcWorkflow[data-flow-step="result"] #reversePanel > :not(#resultArea){display:none!important}
-      #rcWorkflow[data-flow-step="result"] #reversePanel{margin:0;padding:0;border:0}
+      #rcWorkflow[data-flow-step="result"] #reversePanel{display:none!important}
       #rcWorkflow[data-flow-step="result"] #resultArea{margin-top:0}
       .rc-save{flex-direction:column;align-items:stretch}
       .rc-save .export-field{width:100%;flex:auto}
@@ -579,6 +577,110 @@
     @media (max-width: 600px) { body > footer { display: none; } }
     #helpDialog .help-build { margin-top:20px; padding-top:12px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; overflow-wrap:anywhere; }
     #helpDialog .help-build .build-grid { grid-template-columns:minmax(0,1fr); }
+
+    /* Media, timeline, then export: the DOM keeps the same reading order at every width. */
+    .rc-editor-layout, .rc-result-media, .rc-result-controls, #videoArea, #reversePanel { min-width:0; }
+    .rc-pane-head { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; }
+    .rc-pane-head h3, #resultTitle, .rc-export .rc-section-heading { margin:0; font-size:18px; line-height:1.4; }
+    #resultTitle, #sourcePreviewHeading { scroll-margin-top:calc(var(--header-height) + 16px); }
+    .rc-source-name { color:var(--muted); font-size:13px; overflow-wrap:anywhere; }
+    .rc-import-icon { display:block; width:52px; height:52px; padding:9px; margin:0 auto 12px; color:var(--accent); background:var(--accent-soft); border-radius:12px; }
+    .rc-drop .rc-swap-title, .rc-output-jump { display:none; }
+    #workspaceTitle, #sourcePreviewHeading, #resultTitle { width:fit-content; }
+    #settingsHeading:focus-visible, #sourcePreviewHeading:focus-visible, #resultTitle:focus-visible { outline:2px solid var(--focus); outline-offset:3px; border-radius:3px; }
+    .rc-drop { padding:30px 16px; background:#f6faf8; border:1px dashed #8daa9e; }
+    .rc-drop h3 { font-size:20px; }
+    .rc-drop .button-row { max-width:370px; }
+    .rc-source-status:has(#loadStatus[data-phase="empty"]),
+    .rc-source-status:has(#loadStatus[data-phase="ready"]) { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+    .rc-trim { background:var(--surface); padding:0; margin:14px 0 6px; border:0; }
+    .rc-trim-head { margin-bottom:8px; }
+    .rc-trim-head strong { font-size:15px; }
+    .rc-timeline { position:relative; isolation:isolate; overflow:hidden; border-radius:8px; background:#21322d; }
+    .rc-timeline .rc-filmstrip { margin:0 12px; border-radius:0; }
+    .rc-timeline .rc-trim-sliders { position:absolute; inset:0; height:auto; margin:0; }
+    .rc-timeline .rc-trim-track { top:0; bottom:0; height:auto; background:transparent; border-radius:0; }
+    .rc-timeline .rc-trim-selection { background:transparent; border-radius:3px; border-block:3px solid #a8f4d0; box-shadow:0 0 0 120vw rgb(13 28 24 / 50%); }
+    .rc-timeline .rc-trim-sliders input[type=range] { top:6px; }
+    .rc-timeline input[type=range]:focus-visible { outline:0; }
+    .rc-timeline input:focus-visible::-webkit-slider-thumb { outline:3px solid #ffd269; outline-offset:1px; }
+    .rc-timeline input:focus-visible::-moz-range-thumb { outline:3px solid #ffd269; outline-offset:1px; }
+    .rc-timeline-window { margin:4px 3px 0; }
+    .rc-transport { gap:6px; margin:8px 0; }
+    .rc-transport .button { padding-inline:10px; font-size:13px; }
+    #selectFiveButton { color:var(--accent); border-color:#9cbbae; background:#f2f8f5; }
+    #trimPreviewNotice { display:block; margin:6px 0; }
+    #trimPreviewNotice:empty { display:none; }
+    .rc-range-fields, .rc-mark-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .rc-mark-actions { margin-top:4px; }
+    .rc-mark-actions .button { font-size:13px; }
+    .rc-range-fields label { grid-template-columns:auto minmax(0,1fr); align-items:center; padding-left:9px; border:1px solid var(--line-strong); border-radius:8px; }
+    .rc-range-fields input { border:0; text-align:right; font-variant-numeric:tabular-nums; }
+    .rc-advanced { margin:8px 0 0; border:0; border-top:1px solid var(--line); border-radius:0; box-shadow:none; background:transparent; }
+    .rc-advanced>summary { min-height:44px; padding:11px 2px; font-size:13px; color:var(--muted); }
+    .rc-advanced .rc-facts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding:0; }
+    .rc-export { padding:16px; background:#f5f8f6; border:1px solid #d6e1dc; border-radius:12px; }
+    .rc-mode-choices { margin:12px 0 16px; }
+    .rc-mode-choices button { grid-template-columns:auto 1fr; align-content:center; align-items:center; column-gap:7px; row-gap:4px; }
+    .rc-mode-choices svg { width:18px; height:18px; }
+    .rc-mode-choices button span { grid-column:1/-1; }
+    .rc-grid.rc-settings { grid-template-columns:1fr; gap:8px; }
+    .rc-settings label { display:grid; grid-template-columns:minmax(68px,1fr) minmax(0,2fr); align-items:center; }
+    .rc-settings label span { font-size:13px; color:var(--text); }
+    .rc-output-summary { margin:14px 0 4px; }
+    #rangeNotice { margin:5px 0 9px; }
+    #reverseStatus { margin:10px 0 4px; font-size:13px; }
+    .rc-actions { display:grid; grid-template-columns:1fr; gap:6px; margin:8px 0; }
+    .rc-actions .button, .rc-result-controls .button { min-height:44px; }
+    #cancelReverseButton { color:var(--danger); }
+    #resultArea { margin:22px 0 0; padding-top:18px; border-top:1px solid var(--line); }
+    .rc-result-controls { align-self:center; }
+    .rc-result-controls .rc-save { display:grid; }
+    .rc-result-controls .rc-save .export-field { min-width:0; }
+    .rc-result-controls .rc-hint { margin:7px 0; }
+    .rc-edit-again { color:var(--accent); }
+    .header-icon-button, .language-button { min-width:40px; min-height:44px; }
+    select:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    @media(min-width:601px){
+      #rcWorkflow .workspace-head { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop { display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 16px; align-items:center; padding:0 0 14px; margin-bottom:16px; background:transparent; border:0; border-bottom:1px solid var(--line); border-radius:0; text-align:left; }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop.is-dragover { background:var(--accent-soft); }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop h3 { font-size:14px; margin:0; color:var(--muted); }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop > :is(p,svg) { display:none; }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop .rc-import-title { display:none; }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop .rc-swap-title { display:inline; }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop .button-row { width:auto; margin:0; }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop .button { min-height:40px; padding:6px 14px; }
+      #rcWorkflow:has(#videoArea:not([hidden])) .rc-drop .primary { color:var(--accent); border-color:var(--line); background:var(--surface); }
+    }
+    @media(min-width:880px){
+      .rc-editor-layout, #resultArea:not([hidden]) { display:grid; grid-template-columns:minmax(0,1.62fr) minmax(300px,1fr); align-items:start; gap:24px; }
+      .rc-export { margin:0; padding:18px; }
+      .rc-video { max-height:360px; }
+    }
+    @media(max-width:600px){
+      .main { padding-inline:10px; }
+      .workspace { padding:12px; }
+      .main:has(#rcWorkflow:not([data-flow-step="video"])) .page-intro:not(:has(#mtBrowserNotice:not([hidden]))) { display:none; }
+      .workspace-head p { display:none; }
+      .workspace-head { margin-bottom:6px; }
+      #rcWorkflow[data-flow-step="edit"] .workspace-head { flex-direction:row; align-items:center; gap:8px; }
+      #rcWorkflow[data-flow-step="edit"] .rc-output-jump { display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:4px; font:inherit; font-size:13px; font-weight:650; color:var(--accent); background:none; border:0; cursor:pointer; }
+      .rc-output-jump svg { width:15px; height:15px; }
+      #settingsHeading { scroll-margin-top:calc(var(--header-height) + 64px); }
+      .rc-drop #fileActionHeading { display:none; }
+      .rc-drop p { margin-bottom:12px; }
+      .rc-flow-nav { margin:0 -12px 10px; padding:3px 12px 5px; gap:0; }
+      .rc-flow-nav button { border:0; border-bottom:3px solid transparent; border-radius:0; background:transparent; }
+      .rc-flow-nav button[aria-current="step"] { background:transparent; border-color:var(--accent); }
+      .rc-pane-head h3 { font-size:15px; }
+      .rc-video { margin:6px 0; }
+      .rc-trim { margin-top:10px; padding:0; }
+      .rc-transport .button { flex:1 1 auto; font-size:13px; }
+      .rc-export { margin-top:12px; padding:12px; }
+      #rcWorkflow[data-flow-step="result"] #resultArea { border:0; padding:0; }
+      .rc-result-controls { padding-top:4px; }
+    }
 </style>
 </head>
 <body>
@@ -620,6 +722,7 @@
   <div class="workspace-head">
     <div><h2 id="workspaceTitle" tabindex="-1" data-i18n="workspaceTitle">動画を読み込む</h2>
       <p id="workspaceBody" data-i18n="workspaceBody">ブラウザー内で動画を確認し、作成する区間を選びます。</p></div>
+    <button type="button" class="rc-output-jump" id="jumpToSettings"><span data-i18n="jumpToSettings">出力設定へ</span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2v11m-4-4 4 4 4-4"/></svg></button>
   </div>
   <nav id="rcFlowNav" class="rc-flow-nav" aria-label="作業の進行" data-i18n-aria-label="flowNavigation">
     <button id="flowVideoButton" data-flow-target="video" type="button" aria-current="step" data-i18n="flowVideo">動画</button>
@@ -627,8 +730,9 @@
     <button id="flowResultButton" data-flow-target="result" type="button" disabled data-i18n="flowResult">結果</button>
   </nav>
   <p id="flowAnnouncement" class="sr-only" aria-live="polite"></p>
-  <div class="rc-drop" id="dropZone" role="group" aria-labelledby="fileActionHeading">
-    <h3 id="fileActionHeading" data-i18n="dropTitle">動画を選ぶか撮影する</h3>
+  <div class="rc-drop" id="dropZone" role="group" data-i18n-aria-label="workspaceTitle" aria-label="動画を読み込む">
+    <svg class="rc-import-icon" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="26" height="22" rx="4"/><path d="M9 6v20m14-20v20M4 12h5m-5 8h5m14-8h5m-5 8h5m-12-1v-7m-3 3 3-3 3 3"/></svg>
+    <h3 id="fileActionHeading"><span class="rc-import-title" data-i18n="dropTitle">動画をここにドロップ</span><span class="rc-swap-title" data-i18n="swapVideo">動画を変更</span></h3>
     <p data-i18n="dropHint">MP4 / MOV · 上限1GiB · ファイルは送信しません</p>
     <div class="button-row rc-center">
       <button class="button primary" type="button" id="pickButton" data-i18n="pick">動画を選ぶ</button>
@@ -647,80 +751,89 @@
     <p id="selectedSourceText"></p>
     <button id="flowGoEditButton" class="button primary" type="button" disabled data-i18n="flowGoEdit">区間を編集する</button>
   </div>
-  <div id="videoArea" hidden>
-    <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" data-i18n-aria-label="sourceVideoLabel" aria-label="元動画のプレビュー"></video>
-    <div class="rc-trim" id="trimControls" aria-labelledby="trimTitle">
-      <div class="rc-trim-head">
-        <strong id="trimTitle" data-i18n="trimTitle">逆再生する区間</strong>
-        <output id="trimSummary" aria-live="off">0.0–1.0 秒</output>
-      </div>
-      <div class="rc-trim-actions">
-        <button class="button" id="selectFiveButton" type="button" data-i18n="selectFive" disabled>ここから5秒</button>
-        <button class="button" id="markStartButton" type="button" data-i18n="markStart" disabled>今の位置を開始に</button>
-        <button class="button" id="markEndButton" type="button" data-i18n="markEnd" disabled>今の位置を終了に</button>
-        <button class="button" id="timelineZoomButton" type="button" aria-pressed="false" data-i18n="zoomTimeline" disabled>選択付近を拡大</button>
-      </div>
-      <div id="timelineFilmstrip" class="rc-filmstrip" aria-hidden="true"></div>
-      <div class="rc-trim-sliders">
-        <div class="rc-trim-track" aria-hidden="true"><div class="rc-trim-selection" id="trimSelectedTrack"></div></div>
-        <input id="trimStartSlider" type="range" min="0" max="1" step="0.1" value="0" disabled aria-label="開始ハンドル" data-i18n-aria-label="trimStartLabel" aria-describedby="rangeNotice">
-        <input id="trimEndSlider" type="range" min="0" max="1" step="0.1" value="1" disabled aria-label="終了ハンドル" data-i18n-aria-label="trimEndLabel" aria-describedby="rangeNotice">
-      </div>
-      <div class="rc-timeline-window"><span id="timelineWindowStart">0.0 s</span><span id="timelineWindowEnd">0.0 s</span></div>
-      <div class="rc-trim-labels"><label for="trimStartSlider" data-i18n="trimStartLabel">開始ハンドル</label><label for="trimEndSlider" data-i18n="trimEndLabel">終了ハンドル</label></div>
-      <div class="rc-grid rc-range-fields">
-      <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
-      <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
-      </div>
-      <div class="rc-trim-actions">
-        <button class="button" id="previewSelectionButton" type="button" disabled data-i18n="previewSelectionButton">選択範囲を再生</button>
+  <div class="rc-editor-layout">
+    <section id="videoArea" aria-labelledby="sourcePreviewHeading" hidden>
+      <div class="rc-pane-head"><h3 id="sourcePreviewHeading" tabindex="-1" data-i18n="sourceVideoLabel">元動画のプレビュー</h3><span id="sourceName" class="rc-source-name"></span></div>
+      <video class="rc-video" id="sourceVideo" controls playsinline preload="metadata" data-i18n-aria-label="sourceVideoLabel" aria-label="元動画のプレビュー"></video>
+      <div class="rc-trim" id="trimControls" aria-labelledby="trimTitle">
+        <div class="rc-trim-head">
+          <strong id="trimTitle" data-i18n="trimTitle">選択区間</strong>
+          <output id="trimSummary" aria-live="off">0.0–1.0 秒</output>
+        </div>
+        <div class="rc-timeline">
+          <div id="timelineFilmstrip" class="rc-filmstrip" aria-hidden="true"></div>
+          <div class="rc-trim-sliders">
+            <div class="rc-trim-track" aria-hidden="true"><div class="rc-trim-selection" id="trimSelectedTrack"></div></div>
+            <input id="trimStartSlider" type="range" min="0" max="1" step="0.1" value="0" disabled aria-label="開始ハンドル" data-i18n-aria-label="trimStartLabel" aria-describedby="rangeNotice">
+            <input id="trimEndSlider" type="range" min="0" max="1" step="0.1" value="1" disabled aria-label="終了ハンドル" data-i18n-aria-label="trimEndLabel" aria-describedby="rangeNotice">
+          </div>
+        </div>
+        <div class="rc-timeline-window"><span id="timelineWindowStart">0.0 s</span><span id="timelineWindowEnd">0.0 s</span></div>
+        <div class="rc-trim-actions rc-transport">
+          <button class="button" id="selectFiveButton" type="button" data-i18n="selectFive" disabled>ここから5秒</button>
+          <button class="button" id="previewSelectionButton" type="button" disabled data-i18n="previewSelectionButton">選択範囲を再生</button>
+          <button class="button" id="timelineZoomButton" type="button" aria-pressed="false" data-i18n="zoomTimeline" disabled>選択付近を拡大</button>
+        </div>
         <span class="rc-hint" id="trimPreviewNotice" role="status" aria-live="polite"></span>
+        <div class="rc-grid rc-range-fields">
+          <label><span data-i18n="rangeStartLabel">開始（秒）</span><input id="rangeStart" type="number" inputmode="decimal" min="0" step="0.1" value="0" disabled></label>
+          <label><span data-i18n="rangeEndLabel">終了（秒）</span><input id="rangeEnd" type="number" inputmode="decimal" min="0.5" step="0.1" value="1" disabled></label>
+        </div>
+        <div class="rc-mark-actions">
+          <button class="button" id="markStartButton" type="button" data-i18n="markStart" disabled>今の位置を開始に</button>
+          <button class="button" id="markEndButton" type="button" data-i18n="markEnd" disabled>今の位置を終了に</button>
+        </div>
       </div>
-    </div>
-    <div class="rc-facts" aria-live="polite">
-      <div><span data-i18n="fileName">ファイル名</span><strong id="sourceName">—</strong></div>
-      <div><span data-i18n="sourceDuration">長さ</span><strong id="durationLabel">—</strong></div>
-      <div><span data-i18n="dimensions">サイズ</span><strong id="dimensionsLabel">—</strong></div>
-      <div><span data-i18n="fileSize">容量</span><strong id="filesizeLabel">—</strong></div>
-    </div>
-    <details id="sourceCompatibilityDetails" class="rc-advanced">
-      <summary data-i18n="sourceCompatibilitySummary">素材・色についての注意</summary>
-      <p class="rc-hint" data-i18n="sourceCompatibilityBody">HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsが既定で、30fpsも条件付きで選べます。元のフレームレートの自動維持はしません。</p>
-      <p class="rc-hint" data-i18n="sourceAudioSelectionNote">複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。</p>
-    </details>
-    <div class="rc-mode-choices" role="group" data-i18n-aria-label="modeLabel" aria-label="作成モード">
-      <button id="modeReverseButton" class="button" type="button" aria-pressed="true" disabled><strong data-i18n="modeReverse">逆再生</strong><span data-i18n="modeReverseHint">終わりから始めへ</span></button>
-      <button id="modePingpongButton" class="button" type="button" aria-pressed="false" disabled><strong data-i18n="modePingpong">往復再生</strong><span data-i18n="modePingpongHint">通常再生 → 逆再生</span></button>
-    </div>
-    <div class="rc-grid">
-      <label hidden><span data-i18n="modeLabel">作成モード</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option id="pingpongOption" value="pingpong" data-i18n="modePingpong" disabled>往復再生</option></select></label>
-      <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option><option value="1280" data-i18n="qualityHdPilot">標準720p級（試験）</option><option value="1920" data-i18n="qualityFullHdPilot">高画質1080p級（試験）</option></select></label>
-      <label><span data-i18n="fpsLabel">なめらかさ</span><select id="fpsInput" disabled><option value="15" data-i18n="fps15">15fps（標準）</option><option value="30" data-i18n="fps30">30fps（試験・最大5秒）</option></select></label>
-      <label><span data-i18n="audioModeLabel">音声</span><select id="audioInput" disabled><option value="none" data-i18n="audioNone">音声なし（既定）</option><option id="audioReverseOption" value="reverse" data-i18n="audioReverseOption" disabled>音声も逆再生（準備中）</option></select></label>
-    </div>
-    <p id="outputSummary" class="rc-output-summary" role="status"></p>
-    <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
-    <button id="restoreFpsButton" class="button" type="button" data-i18n="restoreFps" hidden>15fpsに戻す</button>
-    <p id="memoryEstimate" class="rc-hint"></p>
-    <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声トラックを確認しています。音声なしでもMP4を作成できます。</p>
+      <details id="sourceCompatibilityDetails" class="rc-advanced">
+        <summary data-i18n="sourceCompatibilitySummary">元動画の情報・互換性</summary>
+        <div class="rc-facts" aria-live="polite">
+          <div><span data-i18n="sourceDuration">長さ</span><strong id="durationLabel">—</strong></div>
+          <div><span data-i18n="dimensions">サイズ</span><strong id="dimensionsLabel">—</strong></div>
+          <div><span data-i18n="fileSize">容量</span><strong id="filesizeLabel">—</strong></div>
+        </div>
+        <p class="rc-hint" data-i18n="sourceCompatibilityBody">HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsが既定で、30fpsも条件付きで選べます。元のフレームレートの自動維持はしません。</p>
+        <p class="rc-hint" data-i18n="sourceAudioSelectionNote">複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。</p>
+      </details>
+    </section>
+    <section class="rc-export" id="reversePanel" hidden aria-labelledby="settingsHeading">
+      <h3 class="rc-section-heading" id="settingsHeading" tabindex="-1" data-i18n="settingsHeading">出力設定</h3>
+      <div class="rc-mode-choices" role="group" data-i18n-aria-label="modeLabel" aria-label="作成モード">
+        <button id="modeReverseButton" class="button" type="button" aria-pressed="true" disabled><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round" stroke-linecap="round"><path d="m12 5-8 7 8 7V5Zm9 0-8 7 8 7V5Z"/></svg><strong data-i18n="modeReverse">逆再生</strong><span data-i18n="modeReverseHint">終わりから始めへ</span></button>
+        <button id="modePingpongButton" class="button" type="button" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linejoin="round" stroke-linecap="round"><path d="M3 8h16m-4-4 4 4-4 4m6 4H5m4-4-4 4 4 4"/></svg><strong data-i18n="modePingpong">往復再生</strong><span data-i18n="modePingpongHint">通常再生 → 逆再生</span></button>
+      </div>
+      <div class="rc-grid rc-settings">
+        <label hidden><span data-i18n="modeLabel">作成モード</span><select id="modeInput" disabled><option value="reverse" data-i18n="modeReverse">逆再生</option><option id="pingpongOption" value="pingpong" data-i18n="modePingpong" disabled>往復再生</option></select></label>
+        <label><span data-i18n="qualityLabel">予定の画質</span><select id="qualityInput" disabled><option value="360" data-i18n="qualityStandard">長辺360px</option><option value="720" data-i18n="qualityHigh">長辺720px</option><option value="1280" data-i18n="qualityHdPilot">標準720p級（試験）</option><option value="1920" data-i18n="qualityFullHdPilot">高画質1080p級（試験）</option></select></label>
+        <label><span data-i18n="fpsLabel">なめらかさ</span><select id="fpsInput" disabled><option value="15" data-i18n="fps15">15fps（標準）</option><option value="30" data-i18n="fps30">30fps（試験・最大5秒）</option></select></label>
+        <label><span data-i18n="audioModeLabel">音声</span><select id="audioInput" disabled><option value="none" data-i18n="audioNone">音声なし（既定）</option><option id="audioReverseOption" value="reverse" data-i18n="audioReverseOption" disabled>音声も逆再生（準備中）</option></select></label>
+      </div>
+      <p id="outputSummary" class="rc-output-summary" role="status"></p>
+      <p id="rangeNotice" class="rc-hint" role="status" aria-live="polite"></p>
+      <button id="restoreFpsButton" class="button" type="button" data-i18n="restoreFps" hidden>15fpsに戻す</button>
+      <p id="reverseStatus" class="rc-status" role="status" aria-live="polite"></p>
+      <div class="rc-actions">
+        <button id="reverseButton" class="button primary" type="button" disabled data-i18n="reverseButton">逆再生MP4を作成</button>
+        <button id="draftButton" class="button" type="button" disabled data-i18n="draftButton">仕上がりを試す</button>
+        <button id="cancelReverseButton" class="button" type="button" hidden data-i18n="cancelReverse">処理を中止</button>
+      </div>
+      <progress id="reverseProgress" max="100" value="0" hidden data-i18n-aria-label="conversionProgressLabel" aria-label="MP4変換の進行状況"></progress>
+      <details id="reverseErrorDetails" hidden><summary data-i18n="errorDetailTitle">エラー詳細</summary><pre id="reverseErrorDetail" class="rc-report"></pre></details>
+      <details class="rc-advanced rc-render-notes">
+        <summary data-i18n="renderNotes">処理の詳細</summary>
+        <p id="reverseDescription" data-i18n="reverseDescription" class="rc-hint">15fps・音声なしが既定。対応動画では音声も逆再生できます。最大10秒（1080p級は5秒）。</p>
+        <p id="memoryEstimate" class="rc-hint"></p>
+        <p id="audioNotice" class="rc-hint" data-i18n="audioPreparingNotice">音声トラックを確認しています。音声なしでもMP4を作成できます。</p>
+      </details>
+    </section>
   </div>
-
-  <section class="rc-export" id="reversePanel" hidden aria-labelledby="reverseTitle">
-    <h3 id="reverseTitle" data-i18n="reverseTitle">逆再生MP4を作成</h3>
-    <p id="reverseDescription" data-i18n="reverseDescription" class="rc-hint">15fps・音声なしが既定。対応動画では音声も逆再生できます。最大10秒（1080p級は5秒）。</p>
-    <p id="reverseStatus" class="rc-status" role="status" aria-live="polite"></p>
-    <div class="rc-actions">
-      <button id="draftButton" class="button" type="button" disabled data-i18n="draftButton">仕上がりを試す</button>
-      <button id="reverseButton" class="button primary" type="button" disabled data-i18n="reverseButton">逆再生MP4を作成</button>
-      <button id="cancelReverseButton" class="button" type="button" hidden data-i18n="cancelReverse">処理を中止</button>
-    </div>
-    <progress id="reverseProgress" max="100" value="0" hidden data-i18n-aria-label="conversionProgressLabel" aria-label="MP4変換の進行状況"></progress>
-    <details id="reverseErrorDetails" hidden><summary data-i18n="errorDetailTitle">エラー詳細</summary><pre id="reverseErrorDetail" class="rc-report"></pre></details>
-        <div id="resultArea" hidden>
-      <p id="draftNotice" class="rc-output-summary" hidden data-i18n="draftNotice">試作：長辺360px以下・15fps・音声なし。保存するには通常のMP4を作成してください。</p>
-      <h4 id="resultTitle" data-i18n="resultTitle">逆再生の結果</h4>
+  <section id="resultArea" hidden aria-labelledby="resultTitle">
+    <div class="rc-result-media">
+      <h3 id="resultTitle" tabindex="-1" data-i18n="resultTitle">逆再生の結果</h3>
       <video class="rc-video" id="resultVideo" playsinline controls preload="metadata" aria-label="逆再生MP4のプレビュー"></video>
       <label class="rc-loop"><input id="loopResultInput" type="checkbox"><span data-i18n="loopResult">繰り返し再生</span></label>
+    </div>
+    <div class="rc-result-controls">
+      <p id="draftNotice" class="rc-output-summary" hidden data-i18n="draftNotice">試作：長辺360px以下・15fps・音声なし。保存するには通常のMP4を作成してください。</p>
       <p id="resultInfo" class="rc-hint"></p>
       <p id="resultDimensions" class="rc-hint"></p>
       <div class="rc-save" id="resultSaveControls">
@@ -733,7 +846,7 @@
       <button id="shareResultButton" class="button" type="button" hidden disabled data-i18n="shareResult">動画を共有</button>
       <button id="createFinalButton" class="button primary" type="button" hidden data-i18n="createFinal">この設定でMP4を作成</button>
       <p id="flowSaveHint" class="rc-hint" role="status" hidden data-i18n="flowSaveHint">MP4のダウンロードを開始しました。見つからない場合はブラウザーのダウンロード履歴を確認してください。</p>
-      <button id="flowBackToEditButton" class="button rc-mobile-only" type="button" data-i18n="flowBackEdit">区間・設定を変更する</button>
+      <button id="flowBackToEditButton" class="button rc-edit-again" type="button" data-i18n="flowBackEdit">区間・設定を変更する</button>
     </div>
   </section>
 </section>
@@ -777,7 +890,7 @@
   <h3 data-i18n="helpBasicsTitle">使い方</h3>
   <ol>
   <li data-i18n="helpStep1">動画を選択します。可能な端末では撮影からも取り込めます。</li>
-  <li data-i18n="helpStep2">元動画をプレビューして、開始・終了秒を設定します。</li>
+  <li data-i18n="helpStep2">元動画の下のサムネイルにあるハンドルで区間を選びます。スマホでは「出力設定へ」から作成操作に移れます。</li>
   <li data-i18n="helpStep3">再生モード・画質・対応する場合は音声を選んでMP4を作成し、結果を確認して保存します。</li>
   </ol>
   <p data-i18n="editorHelp"></p>
@@ -922,8 +1035,10 @@
     "brandMeta": "好きな区間を逆再生MP4に",
     "helpTitle": "使い方と注意事項",
     "close": "閉じる",
+    "settingsHeading": "出力設定",
+    "renderNotes": "処理の詳細",
     "introTitle": "動画の逆再生・往復再生",
-    "lead": "動画の好きな区間を逆再生・往復再生MP4に。対応する動画では音声も選べます。",
+    "lead": "好きな区間を逆再生・往復再生のMP4に。動画は端末内で処理します。",
     "localBadge": "完全ローカル処理",
     "sourceVideoLabel": "元動画のプレビュー",
     "resultReverseVideoLabel": "逆再生MP4のプレビュー",
@@ -980,8 +1095,10 @@
     "flowOutputDimensions": "出力：{width} × {height}px・{fps}fps",
     "workspaceTitle": "動画を読み込む",
     "workspaceBody": "ブラウザー内でプレビューして短い範囲を選びます。",
-    "dropTitle": "動画を選ぶか撮影する",
-    "dropHint": "MP4 / MOV・上限1GiB・H.264 MP4推奨。短い区間向け（通常15fps）。動画は送信しません",
+    "dropTitle": "動画をここにドロップ",
+    "swapVideo": "動画を変更",
+    "jumpToSettings": "出力設定へ",
+    "dropHint": "MP4 / MOV · 最大1 GiB · H.264 MP4推奨",
     "pick": "動画を選ぶ",
     "capture": "撮影して取り込む",
     "nothingSelected": "動画がまだ選択されていません。",
@@ -997,19 +1114,18 @@
     "multipleFiles": "動画は1つずつ選んでください。複数ファイルは同時に処理できません。",
     "cantRead": "動画をプレビューできません。対応していない形式か破損している可能性があります。",
     "sourceTooShort": "動画が0.5秒未満のため変換できません。0.5秒以上のMP4またはMOVを選んでください。",
-    "sourceCompatibilitySummary": "素材・色についての注意",
+    "sourceCompatibilitySummary": "元動画の情報・互換性",
     "sourceCompatibilityBody": "HDR・10-bitの自動判定や色の正確な維持には未対応です。元動画が対応形式でも色が変わる場合があります。出力は15fpsが既定で、30fpsも条件付きで選べます。元のフレームレートの自動維持はしません。",
     "sourceAudioSelectionNote": "複数の音声トラックを選ぶ機能はありません。音声がある場合も、利用できるトラックのみを処理します。",
-    "fileName": "ファイル名",
     "sourceDuration": "長さ",
     "dimensions": "画面サイズ",
     "fileSize": "容量",
-    "trimTitle": "逆再生する区間",
+    "trimTitle": "選択区間",
     "trimStartLabel": "開始ハンドル",
     "trimEndLabel": "終了ハンドル",
     "trimSummary": "{start}～{end} 秒（{duration} 秒）",
     "trimInvalidSummary": "開始・終了の時刻を確認してください",
-    "previewSelectionButton": "元動画の選択範囲を再生",
+    "previewSelectionButton": "区間を再生",
     "trimPreviewPlaying": "元動画の選択区間を再生中",
     "previewSelectionFailed": "元動画の選択区間を再生できませんでした。",
     "rangeStartLabel": "開始（秒）",
@@ -1046,7 +1162,7 @@
     "memoryNotice": "各区間で保持する映像フレームの概算: 最大約{mib}MiB（実際のメモリ使用量はこれより大きくなります）",
     "helpBasicsTitle": "使い方",
     "helpStep1": "動画を選択します。可能な端末では撮影からも取り込めます。",
-    "helpStep2": "元動画の直下のハンドルか秒数入力で区間を調整し、「選択範囲を再生」で確認します。",
+    "helpStep2": "元動画の下のサムネイルにあるハンドルか秒数入力で区間を調整し、「区間を再生」で確認します。スマホでは「出力設定へ」から作成操作に移れます。",
     "helpStep3": "モード・画質・必要に応じて音声を選び、MP4を作成します。結果を再生してから保存できます。",
     "helpPrivacyTitle": "プライバシー",
     "helpPrivacyBody": "動画は端末内で処理し、アプリから外部へ送信しません。生成したMP4は保存操作でダウンロードします。",
@@ -1068,7 +1184,6 @@
     "cancel": "キャンセル",
     "undo": "元に戻す",
     "rangeMemoryHigh": "推定フレーム保持量が実験版の上限48 MiBを超えています。範囲か画質を下げてください。",
-    "reverseTitle": "短い動画を逆再生",
     "reverseDescription": "15fps・音声なしが既定。対応する動画では音声も逆再生できます。区間は最大10秒（1080p級は5秒）です。高画質は端末によって処理に時間がかかる場合があります。",
     "reverseButton": "逆再生MP4を作成",
     "cancelReverse": "処理を中止",
@@ -1092,13 +1207,12 @@
     "reverseSourceUnreadable": "選択した動画を読み込めません。写真・クラウド上の動画を端末に保存してから選び直してください。",
     "reverseMemoryRetry": "直接読み込めなかったため、端末内の一時コピーで再試行しています…",
     "reverseMemoryLimit": "この動画は大きいため、読み込み方法を切り替えられません。64MiB以下の動画を端末に保存して選び直してください。",
-    "rangePlan": "{count}区間に分けて逆再生します。出力予定 {duration}秒。",
-    "pingpongRangePlan": "通常再生→逆再生の{count}区間。出力予定 {duration}秒。折り返し・ループ境界の重複フレームを除きます。",
+    "rangePlan": "完成動画の長さ：{duration}秒",
+    "pingpongRangePlan": "往復後の長さ：{duration}秒",
     "rangeSnapNote": "出力フレームの境界に合わせるため、選択時刻から最大約0.03秒ずれます。",
     "reverseChunk": "区間 {current}/{total} を逆再生中… {progress}%",
     "pingpongForwardChunk": "往路の区間 {current}/{total} を処理中… {progress}%",
     "pingpongReturnChunk": "復路の区間 {current}/{total} を処理中… {progress}%",
-    "pingpongTitle": "往復再生のMP4を作る",
     "pingpongDescription": "選択区間を通常再生→逆再生で1本のMP4にします。折り返しの重複フレームを除きます。15fps／30fps・音声選択可（対応動画のみ）。",
     "pingpongResultTitle": "往復再生の結果",
     "createPingpong": "往復再生MP4を作成",
@@ -1115,8 +1229,10 @@
     "brandMeta": "Reverse moments from your videos",
     "helpTitle": "How to use & limitations",
     "close": "Close",
+    "settingsHeading": "Output settings",
+    "renderNotes": "Processing details",
     "introTitle": "Reverse & ping-pong video",
-    "lead": "Turn a selected section into a reversed or forward-and-back MP4, with optional audio for supported videos.",
+    "lead": "Save a section as a reversed or forward-and-back MP4. Your video stays on this device.",
     "localBadge": "Fully local processing",
     "sourceVideoLabel": "Source video preview",
     "resultReverseVideoLabel": "Reversed MP4 preview",
@@ -1173,8 +1289,10 @@
     "flowOutputDimensions": "Output: {width} × {height}px · {fps}fps",
     "workspaceTitle": "Load a video",
     "workspaceBody": "Preview locally and select a short section.",
-    "dropTitle": "Choose or record a video",
-    "dropHint": "MP4 / MOV · up to 1 GiB · H.264 MP4 recommended. Short selections; 15fps by default. No upload.",
+    "dropTitle": "Drop a video here",
+    "swapVideo": "Change video",
+    "jumpToSettings": "Go to output",
+    "dropHint": "MP4 / MOV · Up to 1 GiB · H.264 MP4 recommended",
     "pick": "Choose video",
     "capture": "Record video",
     "nothingSelected": "No video selected.",
@@ -1190,19 +1308,18 @@
     "multipleFiles": "Choose one video at a time. Multiple dropped files cannot be processed together.",
     "cantRead": "This video cannot be previewed. The format may be unsupported or the file damaged.",
     "sourceTooShort": "This video is shorter than 0.5 seconds. Choose an MP4 or MOV that is at least 0.5 seconds long.",
-    "sourceCompatibilitySummary": "Source format and color limitations",
+    "sourceCompatibilitySummary": "Source details and compatibility",
     "sourceCompatibilityBody": "HDR/10-bit input is not automatically identified or color-preserved. Colors may change even if the source can be previewed. Output defaults to 15fps, with a limited 30fps option. The source frame rate is not automatically retained.",
     "sourceAudioSelectionNote": "Multiple audio tracks cannot be selected. When audio is available, only a supported track can be processed.",
-    "fileName": "File name",
     "sourceDuration": "Duration",
     "dimensions": "Dimensions",
     "fileSize": "File size",
-    "trimTitle": "Choose a section to reverse",
+    "trimTitle": "Selection",
     "trimStartLabel": "Start handle",
     "trimEndLabel": "End handle",
     "trimSummary": "{start}–{end}s ({duration}s)",
     "trimInvalidSummary": "Check the start and end times",
-    "previewSelectionButton": "Play source selection",
+    "previewSelectionButton": "Play selection",
     "trimPreviewPlaying": "Playing the selected source interval",
     "previewSelectionFailed": "Could not play the selected part of the source video.",
     "rangeStartLabel": "Start (seconds)",
@@ -1239,7 +1356,7 @@
     "memoryNotice": "Approximate buffered frames per segment: up to ~{mib}MiB (actual RAM use is higher).",
     "helpBasicsTitle": "How to use",
     "helpStep1": "Choose a video, or record one where supported.",
-    "helpStep2": "Drag the start/end handles below the source video, or enter times; play the selected portion to check it.",
+    "helpStep2": "Drag the handles on the thumbnail strip or enter start and end times. Use Play selection to check the source. On a phone, use Go to output to reach the export controls.",
     "helpStep3": "Choose Reverse or Ping-pong, output quality and optional reverse audio when supported. Create the MP4, preview the result and save it.",
     "helpPrivacyTitle": "Privacy",
     "helpPrivacyBody": "Your video is processed in the browser and is not uploaded by the app. Saving the generated MP4 starts a browser download.",
@@ -1261,7 +1378,6 @@
     "cancel": "Cancel",
     "undo": "Undo",
     "rangeMemoryHigh": "Estimated frame cache exceeds the experimental 48 MiB limit. Reduce time or quality.",
-    "reverseTitle": "Reverse a short clip",
     "reverseDescription": "15fps · silent by default; optional reverse audio for supported videos. Up to 10 seconds (5 seconds at 1080p-class). High-quality output can take longer or fail on some devices.",
     "reverseButton": "Create reversed MP4",
     "cancelReverse": "Cancel conversion",
@@ -1285,13 +1401,12 @@
     "reverseSourceUnreadable": "Could not read the selected video. Save it locally on your device, then select it again instead of selecting it directly from a cloud or photo provider.",
     "reverseMemoryRetry": "Direct reading failed. Retrying with a temporary local copy…",
     "reverseMemoryLimit": "This file is too large for safe in-memory fallback. Save a local video under 64 MiB and select it again.",
-    "rangePlan": "Reversing {count} segments; expected output {duration}s.",
-    "pingpongRangePlan": "{count} forward/return segments; expected output {duration}s. Duplicate turn and loop-end frames are excluded.",
+    "rangePlan": "Output length: {duration}s",
+    "pingpongRangePlan": "Round-trip length: {duration}s",
     "rangeSnapNote": "Selection boundaries may shift by up to about 0.03s to align output frames.",
     "reverseChunk": "Reversing segment {current}/{total}… {progress}%",
     "pingpongForwardChunk": "Processing forward segment {current}/{total}… {progress}%",
     "pingpongReturnChunk": "Processing return segment {current}/{total}… {progress}%",
-    "pingpongTitle": "Create a ping-pong MP4",
     "pingpongDescription": "Forward then backward in one MP4, without duplicate turning/loop frames. H.264 at 15fps or 30fps; optional audio for supported sources.",
     "pingpongResultTitle": "Ping-pong result",
     "createPingpong": "Create ping-pong MP4",
@@ -1492,6 +1607,11 @@
         // Automatic transitions must not strand keyboard focus in a hidden
         // panel. Manual nav taps leave focus on the visible nav button.
         if(onMobile&&focus)$('#workspaceTitle').focus({preventScroll:true});
+        if(!onMobile && focus && scroll && step!=='video'){
+          const heading=step==='result'?$('#resultTitle'):$('#sourcePreviewHeading');
+          heading.focus({preventScroll:true});
+          heading.scrollIntoView({block:'start',behavior:'instant'});
+        }
         // html {scroll-behavior:smooth} makes behavior:auto animate.
         // Stop a focused heading from remaining hidden during that animation.
         // Restore the template's normal scroll preference immediately.
@@ -1632,6 +1752,8 @@
         }, SOURCE_LOAD_TIMEOUT_MS);
       }
       function humanSize(bytes) {
+        if(bytes<1024)return bytes+' B';
+        if(bytes<1048576)return (bytes/1024).toFixed(1)+' KiB';
         return (bytes / 1048576).toFixed(1) + ' MiB';
       }
       function threadingReady() {
@@ -2305,7 +2427,6 @@
         $('#modePingpongButton').disabled=!state.ready || !PINGPONG_ENABLED || Boolean(conversionController);
         $('#modeInput').disabled=!state.ready || !PINGPONG_ENABLED || Boolean(conversionController);
         $('#reverseButton').textContent=translate(isPingpong?'createPingpong':'reverseButton');
-        $('#reverseTitle').textContent=translate(isPingpong?'pingpongTitle':'reverseTitle');
         $('#reverseDescription').textContent=translate(isPingpong?'pingpongDescription':'reverseDescription');
         $('#resultTitle').textContent=translate(isPingpong?'pingpongResultTitle':'resultTitle');
         $('#resultVideo').setAttribute('aria-label',
@@ -2834,6 +2955,11 @@
       $('#shareResultButton').addEventListener('click',shareReverseResult);
       $('#loopResultInput').addEventListener('change',()=>{$('#resultVideo').loop=$('#loopResultInput').checked;});
       $('#markStartButton').addEventListener('click',()=>markBoundary('start'));
+      $('#jumpToSettings').addEventListener('click',()=>{
+        const heading=$('#settingsHeading');
+        heading.focus({preventScroll:true});
+        heading.scrollIntoView({block:'start',behavior:'instant'});
+      });
       $('#markEndButton').addEventListener('click',()=>markBoundary('end'));
       $('#selectFiveButton').addEventListener('click',selectFiveSeconds);
       $('#restoreFpsButton').addEventListener('click',()=>{

@@ -20,8 +20,8 @@ with tempfile.TemporaryDirectory() as tmp:
     page.locator('#sourceVideo').evaluate("async v => {await v.play();v.pause();v.currentTime=.7;}")
     page.wait_for_function("() => {const v=document.querySelector('#sourceVideo');return !v.seeking && v.readyState>=2 && Math.abs(v.currentTime-.7)<.02;}")
     page.wait_for_function("() => !document.querySelector('#appToast').classList.contains('show')")
-    page.evaluate("() => window.scrollTo({top:document.querySelector('#sourceVideo').getBoundingClientRect().top+scrollY-150,behavior:'instant'})")
-    page.wait_for_function("() => Math.abs(document.querySelector('#sourceVideo').getBoundingClientRect().top-150)<2")
+    page.evaluate("() => window.scrollTo({top:0,behavior:'instant'})")
+    page.wait_for_function("() => scrollY===0")
     out='assets/screenshot'+('-mobile' if width==390 else '')+('-en' if lang=='en' else '')+'.png'
     page.screenshot(path=out);print(out,flush=True);ctx.close()
   browser.close()

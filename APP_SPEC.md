@@ -2,6 +2,7 @@
 
 ## Editor and draft saving (unreleased)
 
+- Desktop widths of 880px and above place source and timeline beside output settings and conversion actions. Phones retain the Video, Edit and Result steps and provide a keyboard-accessible jump to output settings. Start/end handles overlay the source filmstrip. File facts and processing notes are available through disclosures, with errors and recovery actions visible in the editor.
 - Repeatedly selecting the current playback mode preserves the verified result and edited filename. Switching to another mode invalidates the previous result.
 - Select 5s from here selects up to five seconds on the editor’s 0.1s grid. At the end of the source, select the remaining interval or the final 0.5s if less remains.
 - A valid source interval can be previewed independently of the encoder limits. Offer a one-click return to 15fps when that resolves a frame-rate constraint. Keep the interval and other settings.

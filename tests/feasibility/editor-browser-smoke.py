@@ -178,6 +178,18 @@ def main():
       for width in [320,390,1360]:
        page.set_viewport_size({'width':width,'height':900 if width==1360 else 700})
        assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(variant,language,width)
+       # Read both rectangles in one frame; scrolling can move them between API calls.
+       strip,handles=page.evaluate("""() => ['#timelineFilmstrip','.rc-trim-sliders'].map(
+        selector=>document.querySelector(selector).getBoundingClientRect().toJSON())""")
+       assert abs(strip['y']-handles['y'])<2 and abs(strip['height']-handles['height'])<2,(width,strip,handles)
+       if width==1360:
+        source_box=page.locator('#sourceVideo').bounding_box()
+        export_box=page.locator('#reverseButton').bounding_box()
+        assert export_box['x']>=source_box['x']+source_box['width']
+       else:
+        page.locator('#jumpToSettings').press('Enter')
+        assert page.locator('#settingsHeading').evaluate("el => el===document.activeElement && el.getBoundingClientRect().top>=document.querySelector('#rcFlowNav').getBoundingClientRect().bottom-1")
+        page.locator('#flowEditButton').click()
        if width in [390,1360] and variant=='index.html':
         folder=ROOT/'rc-evidence/editor';folder.mkdir(parents=True,exist_ok=True)
         page.evaluate('() => window.scrollTo(0,0)')

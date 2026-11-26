@@ -34,7 +34,7 @@ The root page runs the **single-thread (ST)** version. An [isolated multi-thread
 
 [![Reverse Clip timeline editor in desktop Chromium](assets/screenshot-en.png)](https://ttomohisa.github.io/htmlapps-reverse-clip/)
 
-Actual v1.1.0 editor showing a locally generated sample video in Chromium. This screenshot is **not physical Android device certification**.
+The editor shows a locally generated sample in Chromium. Drag the handles on the filmstrip to select a section. Desktop export settings sit beside the video. On a phone, use **Go to output** to reach them. This screenshot is **not physical Android device certification**.
 
 ## Features
 

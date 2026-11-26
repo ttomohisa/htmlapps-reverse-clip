@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Place the timeline directly on the thumbnails, keep desktop export controls beside the video, and add a shortcut to output settings on phones.
 - Preserve completed MP4s when the active mode is selected again.
 - Select up to five seconds from the playhead in one action, including near the end of a video.
 - Preview the source selection independently of export settings and switch to 15fps when that resolves the issue.

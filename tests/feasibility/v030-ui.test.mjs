@@ -109,7 +109,8 @@ test('mobile workflow navigation and saved-result step are implemented with nati
   }
   assert.ok(html.includes('aria-current="step"'));
   assert.ok(html.includes('position:sticky;top:var(--header-height)'));
-  assert.ok(html.includes('#rcWorkflow[data-flow-step="result"] #reversePanel > :not(#resultArea)'));
+  assert.ok(html.includes('#rcWorkflow[data-flow-step="result"] #reversePanel{display:none!important}'));
+  assert.ok(html.includes('#rcWorkflow[data-flow-step="video"] #resultArea,'));
   assert.ok(!html.includes('position:fixed;bottom:0'));
   for(const marker of [
     "function updateFlowNavigation()","function setFlowStep(step,",
