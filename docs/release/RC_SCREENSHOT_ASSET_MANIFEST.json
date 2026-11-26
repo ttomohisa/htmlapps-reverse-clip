@@ -9,29 +9,29 @@
         "viewport": "desktop",
         "language": "ja",
         "file": "reverse-clip-desktop-ja.png",
-        "bytes": 155131,
-        "sha256": "3c4baa7fad56f6699d35b23f91247518d1324982ed025e8e990d0ff67340ff20"
+        "bytes": 154298,
+        "sha256": "82610cacf4fe9a88837cdf5b7f5434863dd95abc73517b37098473f2842feeb9"
       },
       {
         "viewport": "desktop",
         "language": "en",
         "file": "reverse-clip-desktop-en.png",
-        "bytes": 118867,
-        "sha256": "d883ea0afd22c71eecfbe0a9b7cdc3994cbc6173b9d8ed87a54170b5041e56f4"
+        "bytes": 115395,
+        "sha256": "a0a432d62bd3ef82012929a9c3f78e44be07dbca93acfde24a0db0d33b416e45"
       },
       {
         "viewport": "mobile",
         "language": "ja",
         "file": "reverse-clip-mobile-ja.png",
-        "bytes": 69060,
-        "sha256": "35a84f57f76afc3a19cfdc49197f69b0408c1fe3af139cd44f33d346189427af"
+        "bytes": 69176,
+        "sha256": "3a91b668a0a186da4988b7a7b6587238bbaf3fcfdd93241e296107a96fc85300"
       },
       {
         "viewport": "mobile",
         "language": "en",
         "file": "reverse-clip-mobile-en.png",
-        "bytes": 51781,
-        "sha256": "f71e332b045ff9be6941a2b1968c971762e8c4b35427009cd82b30d295d7576a"
+        "bytes": 51925,
+        "sha256": "33a17b557085d8fa2f08219d2434faa92b4d3fb3fc290d46ca4711df558e5cfc"
       }
     ]
   },

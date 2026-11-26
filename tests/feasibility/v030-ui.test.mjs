@@ -237,9 +237,15 @@ test('developer diagnostic and development panels are gone; relevant error detai
   assert.ok(!html.includes('困ったときの診断'));
   assert.ok(!html.includes('開発中の機能と制限'));
   assert.ok(!html.includes('実機検証中です。'));
-  assert.ok(html.includes('"introTitle": "動画の逆再生・往復再生"'));
-  assert.ok(html.includes('"introTitle": "Reverse & ping-pong video"'));
-  assert.ok(!html.includes('動画の逆再生・往復再生（実験版）'));
   assert.ok(html.includes("$('#versionBadge').textContent='v'+APP_CONFIG.version;"));
   assert.ok(html.includes("$('#reverseErrorDetails').open=true;"));
+});
+
+test('the introduction describes the export in both languages without a separate heading',()=>{
+  const ja='動画の一部を選んで、逆再生や往復再生のMP4を作れます。';
+  assert.ok(!html.includes('heroTitle'));
+  assert.ok(!html.includes('introTitle'));
+  assert.ok(html.includes('<p data-i18n="lead">'+ja+'</p>'));
+  assert.ok(html.includes('"lead": "'+ja+'"'));
+  assert.ok(html.includes('"lead": "Save part of a video as an MP4 that plays backward or forward and back."'));
 });

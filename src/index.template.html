@@ -80,6 +80,7 @@
     .brand-name {
       margin: 0;
       font-size: 17px;
+      font-weight: inherit;
       line-height: 1.2;
       letter-spacing: .01em;
       white-space: nowrap;
@@ -166,25 +167,20 @@
     }
     .page-intro {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
       gap: 20px;
       padding: 0 2px 18px;
     }
-    .page-intro h2 {
-      margin: 0;
-      font-size: clamp(21px, 3vw, 26px);
-      line-height: 1.3;
-      letter-spacing: -.025em;
-    }
-    .page-intro p { margin: 5px 0 0; max-width: 760px; color: var(--muted); font-size: 13px; }
+    .page-intro p { margin: 0; max-width: 760px; }
+    .page-intro [data-i18n="lead"] { text-wrap: balance; }
+    .page-intro .rc-hint { margin-top: 6px; }
     .local-badge {
       display: inline-flex;
       align-items: center;
       gap: 7px;
       flex: 0 0 auto;
-      margin-top: 3px;
-      padding: 7px 0;
+      padding: 0;
       border: 0;
       border-radius: 0;
       color: var(--accent);
@@ -691,7 +687,7 @@
           <img id="appBrandIcon" src="__APP_ICON_DATA_URI__" alt="">
         </div>
         <div class="brand-copy">
-          <p class="brand-name"><span id="brandName">Reverse Clip</span><span class="version-badge" id="versionBadge">v0.1.0</span></p>
+          <h1 class="brand-name"><span id="brandName">Reverse Clip</span><span class="version-badge" id="versionBadge">v0.1.0</span></h1>
           <p class="brand-meta"><span data-i18n="brandMeta">好きな区間を逆再生MP4に</span></p>
         </div>
       </div>
@@ -705,17 +701,16 @@
   </header>
 
   <main class="main">
-    <section class="page-intro" aria-labelledby="heroTitle">
+    <div class="page-intro">
       <div>
-        <h2 id="heroTitle" data-i18n="introTitle">動画の逆再生・往復再生</h2>
-        <p data-i18n="lead">好きな区間を逆再生・往復再生MP4に。対応動画では音声も選べます。</p>
-    <p id="mtBrowserNotice" class="rc-hint" hidden role="status" aria-live="polite"></p>
+        <p data-i18n="lead">動画の一部を選んで、逆再生や往復再生のMP4を作れます。</p>
+        <p id="mtBrowserNotice" class="rc-hint" hidden role="status" aria-live="polite"></p>
       </div>
       <div class="local-badge">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8 7 10 4.2-2 7-5.4 7-10V6z"/><path d="m9 12 2 2 4-5"/></svg>
         <span data-i18n="localBadge">完全ローカル処理</span>
       </div>
-    </section>
+    </div>
 
     <!-- APP:BEGIN Video editor and export -->
 <section class="shell workspace" id="rcWorkflow" data-flow-step="video" aria-labelledby="workspaceTitle">
@@ -731,7 +726,11 @@
   </nav>
   <p id="flowAnnouncement" class="sr-only" aria-live="polite"></p>
   <div class="rc-drop" id="dropZone" role="group" data-i18n-aria-label="workspaceTitle" aria-label="動画を読み込む">
-    <svg class="rc-import-icon" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="26" height="22" rx="4"/><path d="M9 6v20m14-20v20M4 12h5m-5 8h5m14-8h5m-5 8h5m-12-1v-7m-3 3 3-3 3 3"/></svg>
+    <svg class="rc-import-icon" viewBox="0 0 32 32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="26" height="22" rx="4"/>
+      <path d="M9 6v20m14-20v20M4 12h5m-5 8h5m14-8h5m-5 8h5"/>
+      <path d="M16 11v10m-4-4 4 4 4-4"/>
+    </svg>
     <h3 id="fileActionHeading"><span class="rc-import-title" data-i18n="dropTitle">動画をここにドロップ</span><span class="rc-swap-title" data-i18n="swapVideo">動画を変更</span></h3>
     <p data-i18n="dropHint">MP4 / MOV · 上限1GiB · ファイルは送信しません</p>
     <div class="button-row rc-center">
@@ -1037,8 +1036,7 @@
     "close": "閉じる",
     "settingsHeading": "出力設定",
     "renderNotes": "処理の詳細",
-    "introTitle": "動画の逆再生・往復再生",
-    "lead": "好きな区間を逆再生・往復再生のMP4に。動画は端末内で処理します。",
+    "lead": "動画の一部を選んで、逆再生や往復再生のMP4を作れます。",
     "localBadge": "完全ローカル処理",
     "sourceVideoLabel": "元動画のプレビュー",
     "resultReverseVideoLabel": "逆再生MP4のプレビュー",
@@ -1231,8 +1229,7 @@
     "close": "Close",
     "settingsHeading": "Output settings",
     "renderNotes": "Processing details",
-    "introTitle": "Reverse & ping-pong video",
-    "lead": "Save a section as a reversed or forward-and-back MP4. Your video stays on this device.",
+    "lead": "Save part of a video as an MP4 that plays backward or forward and back.",
     "localBadge": "Fully local processing",
     "sourceVideoLabel": "Source video preview",
     "resultReverseVideoLabel": "Reversed MP4 preview",
