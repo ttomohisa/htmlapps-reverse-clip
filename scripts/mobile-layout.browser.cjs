@@ -5,7 +5,7 @@ const {pathToFileURL}=require('node:url'),{chromium}=require('playwright');
 const cfg={"slug": "reverse-clip", "bp": 600, "nav": "#rcFlowNav"};
 const evidence=path.resolve('test-results/mobile-layout');
 async function bounds(locator,width,height,label,vertical=true){const r=await locator.boundingBox();assert.ok(r&&r.x>=-1&&r.x+r.width<=width+1&&(!vertical||(r.y>=-1&&r.y+r.height<=height+1)),label+': bounds '+JSON.stringify(r));}
-async function main(){fs.mkdirSync(evidence,{recursive:true});const browser=await chromium.launch();
+async function main(){fs.mkdirSync(evidence,{recursive:true});const browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXE});
 try{const cases=[];for(const language of ['ja','en'])for(const [width,height]of [[1360,900],[cfg.bp+1,568],[cfg.bp,568],[320,568],[393,252]])cases.push({file:'dist/index.html',language,width,height});cases.push({file:'dist/index.self-extract.html',language:'en',width:360,height:640},{file:cfg.slug+'.html',language:'ja',width:1360,height:900},{file:'dist/index.mt.html',language:'en',width:320,height:568},{file:'dist/index.mt.self-extract.html',language:'ja',width:360,height:640});
 for(const {file,language,width,height}of cases){const context=await browser.newContext({viewport:{width,height},locale:language,reducedMotion:'reduce'}),page=await context.newPage(),errors=[],requests=[],label=`${file} ${language} ${width}x${height}`;
 page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('request',r=>{if(/^https?:/.test(r.url()))requests.push(r.url());});

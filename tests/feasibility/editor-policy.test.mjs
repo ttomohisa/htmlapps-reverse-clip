@@ -6,7 +6,7 @@ const html=readFileSync(new URL('../../src/index.template.html',import.meta.url)
 function policy(){
  const start=html.indexOf('function editorOutputPolicy('), end=html.indexOf('// EDITOR POLICY END',start);
  assert.ok(start>=0 && end>start,'editor policies are defined');
- return runInNewContext(html.slice(start,end)+'\n({editorOutputPolicy,timelineViewport,boundaryAtTime})');
+ return runInNewContext(html.slice(start,end)+'\n({editorOutputPolicy,timelineViewport,boundaryAtTime,validSourceRange})');
 }
 test('30fps is allowed only for <=720px and <=5s, default 15fps keeps existing limits',()=>{
  const {editorOutputPolicy:p}=policy();
@@ -73,7 +73,7 @@ test('the editor accepts a half-second selection with fractional endpoints',()=>
   state, video:{duration:8}, MAX_CLIP_SECONDS:10,
   PINGPONG_ENABLED:true, AUDIO_MUX_ENABLED:true, conversionController:null,
   timelineZoom:false, selectedFps:()=>30, outputDimensions:()=>({width:640,height:360}),
-  editorOutputPolicy:policy().editorOutputPolicy,
+  ...policy(),
   chunkFrameLimit:()=>60, planModeFrames:()=>({
    segments:[{frames:15}],expectedDuration:.5,selectedStart:.2,selectedEnd:.7,
   }),
@@ -104,18 +104,19 @@ test('encoding locks all editor settings and output buttons',()=>{
   $,state,video:{duration:6},MAX_CLIP_SECONDS:10,
   PINGPONG_ENABLED:true,AUDIO_MUX_ENABLED:true,conversionController:{},timelineZoom:false,
   selectedFps:()=>15,outputDimensions:()=>({width:640,height:360}),
-  editorOutputPolicy:policy().editorOutputPolicy,
+  ...policy(),
   chunkFrameLimit:()=>30,planModeFrames:()=>({
    segments:[{frames:8}],expectedDuration:.5,selectedStart:.2,selectedEnd:.7,
   }),syncTrimControls(){},activeTimelineViewport:()=>({start:0,end:6}),
   translate:key=>key,format:key=>key,threadingReady:()=>true,
  });
  for(const id of ['rangeStart','rangeEnd','trimStartSlider','trimEndSlider','qualityInput',
-   'fpsInput','markStartButton','markEndButton','timelineZoomButton','modeReverseButton',
+   'fpsInput','selectFiveButton','markStartButton','markEndButton','timelineZoomButton','modeReverseButton',
    'modePingpongButton','modeInput','audioInput','audioReverseOption',
    'previewSelectionButton','draftButton','reverseButton']){
   assert.equal(fields.get(id).disabled,true,id+' was editable during conversion');
  }
+ assert.equal(fields.get('restoreFpsButton').hidden,true);
 });
 
 test('invalid time fields clear a previous highlighted trim range',()=>{
@@ -129,7 +130,7 @@ test('invalid time fields clear a previous highlighted trim range',()=>{
  ]);
  const sync=runInNewContext(html.slice(a,b)+'\nsyncTrimControls;',{
   $:selector=>fields.get(selector.slice(1)),
-  state:{ready:true},video:{duration:10},
+  state:{ready:true},video:{duration:10},validSourceRange:policy().validSourceRange,
   activeTimelineViewport:()=>({start:0,end:10}),
   roundTrim:n=>Math.round(n*10)/10,
   format:()=> 'valid',translate:()=> 'invalid'

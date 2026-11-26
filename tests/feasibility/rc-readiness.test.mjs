@@ -73,7 +73,7 @@ test('reducing stress does not weaken input memory, privacy or stale-result safe
 
 test('actual JA/EN desktop and mobile screenshots match the reviewed CI manifest',()=>{
   const evidence=JSON.parse(read('docs/release/RC_SCREENSHOT_ASSET_MANIFEST.json'));
-  assert.match(evidence.evidence.app,/v1\.1\.0 editor/);
+  assert.match(evidence.evidence.app,/responsive timeline editor/);
   assert.match(evidence.capture_command,/editor-screenshots\.py/);
   assert.equal(evidence.evidence.runtime,'single-thread Chrome (not Android/iPhone QA)');
   const cases=[

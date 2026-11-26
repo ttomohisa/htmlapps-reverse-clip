@@ -1,40 +1,40 @@
 {
-  "note": "Actual v1.1.0 editor screenshots in Chromium; not physical-device testing.",
+  "note": "Actual responsive timeline editor in Chromium at desktop and phone viewport sizes.",
   "evidence": {
     "source": "Locally generated deterministic 384x216 30fps 2s motion sample; editor view, not output verification",
-    "app": "Reverse Clip v1.1.0 editor improvements (unreleased)",
+    "app": "Reverse Clip responsive timeline editor (unreleased)",
     "runtime": "single-thread Chrome (not Android/iPhone QA)",
     "screenshots": [
       {
         "viewport": "desktop",
         "language": "ja",
         "file": "reverse-clip-desktop-ja.png",
-        "bytes": 103599,
-        "sha256": "07e60ef7dae80456f0d915ec5059c827f6aa4614abe80c97301709338254d674"
+        "bytes": 154298,
+        "sha256": "82610cacf4fe9a88837cdf5b7f5434863dd95abc73517b37098473f2842feeb9"
       },
       {
         "viewport": "desktop",
         "language": "en",
         "file": "reverse-clip-desktop-en.png",
-        "bytes": 94019,
-        "sha256": "4353056172e301ecf9a184fb88b714668d8c2aed25997cadb611282449c58ba0"
+        "bytes": 115395,
+        "sha256": "a0a432d62bd3ef82012929a9c3f78e44be07dbca93acfde24a0db0d33b416e45"
       },
       {
         "viewport": "mobile",
         "language": "ja",
         "file": "reverse-clip-mobile-ja.png",
-        "bytes": 60320,
-        "sha256": "301b8c9cfa7866768c5b387902fd7eea9d1a03168829762b24129b9a3691aa99"
+        "bytes": 69176,
+        "sha256": "3a91b668a0a186da4988b7a7b6587238bbaf3fcfdd93241e296107a96fc85300"
       },
       {
         "viewport": "mobile",
         "language": "en",
         "file": "reverse-clip-mobile-en.png",
-        "bytes": 54181,
-        "sha256": "52c20b89a011bf01cad663d70671c94845167068b9ad83e783269944a1e56d18"
+        "bytes": 51925,
+        "sha256": "33a17b557085d8fa2f08219d2434faa92b4d3fb3fc290d46ca4711df558e5cfc"
       }
     ]
   },
-  "capture_date": "2026-11-06",
+  "capture_date": "2026-11-27",
   "capture_command": "CHROMIUM_EXE=/path/to/chromium python tests/feasibility/editor-screenshots.py"
 }
